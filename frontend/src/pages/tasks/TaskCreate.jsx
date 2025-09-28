@@ -1,6 +1,7 @@
 // src/pages/tasks/TaskCreate.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function TaskCreate() {
   const navigate = useNavigate();
@@ -40,7 +41,7 @@ export default function TaskCreate() {
         payload.append("attachments", attachments[i]);
       }
 
-      const res = await fetch("http://localhost:5000/api/tasks", {
+      const res = await fetch(`${API_URL}/api/tasks`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

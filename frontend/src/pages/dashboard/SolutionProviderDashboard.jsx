@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function SolutionProviderDashboard() {
   const [tasks, setTasks] = useState([]);
@@ -10,7 +11,7 @@ export default function SolutionProviderDashboard() {
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/tasks", {
+        const res = await fetch(`${API_URL}/api/tasks`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();

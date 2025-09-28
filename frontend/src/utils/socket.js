@@ -1,7 +1,7 @@
 // src/utils/socket.js
 import { io } from "socket.io-client";
 
-const URL = "http://localhost:5000"; // backend URL
-export const socket = io(URL, {
+const API_URL = import.meta.env.VITE_API_URL; // backend URL
+export const socket = io(API_URL, {
   autoConnect: false,
 });

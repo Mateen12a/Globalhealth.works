@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function PublicProfile() {
   const { id } = useParams();
@@ -9,7 +10,7 @@ export default function PublicProfile() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/auth/users/${id}/public`);
+        const res = await fetch(`${API_URL}/api/auth/users/${id}/public`);
         if (!res.ok) throw new Error("Failed to fetch profile");
         const data = await res.json();
         setProfile(data);
@@ -43,7 +44,7 @@ export default function PublicProfile() {
             src={
               profile.profileImage?.startsWith("http")
                 ? profile.profileImage
-                : `http://localhost:5000${profile.profileImage}`
+                : `${API_URL}${profile.profileImage}`
             }
             alt={profile.name}
             className="w-24 h-24 rounded-full object-cover border shadow"

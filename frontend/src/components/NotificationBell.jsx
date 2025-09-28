@@ -1,6 +1,7 @@
 // src/components/NotificationBell.jsx
 import { useEffect, useState } from "react";
 import { Bell } from "lucide-react";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function NotificationBell() {
   const token = localStorage.getItem("token");
@@ -9,7 +10,7 @@ export default function NotificationBell() {
 
   const fetchNotifications = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/notifications", {
+      const res = await fetch(`${API_URL}/api/notifications`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();

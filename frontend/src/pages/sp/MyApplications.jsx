@@ -1,6 +1,7 @@
 // src/pages/sp/MyApplications.jsx
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function MyApplications() {
   const token = localStorage.getItem("token");
@@ -10,7 +11,7 @@ export default function MyApplications() {
   useEffect(() => {
     const fetchApplications = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/tasks/my-applications", {
+        const res = await fetch(`${API_URL}/api/tasks/my-applications`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();

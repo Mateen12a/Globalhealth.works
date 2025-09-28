@@ -4,6 +4,7 @@ import DashboardLayout from "../../components/dashboard/DashboardLayout";
 import UsersTable from "../../components/admin/UsersTable";
 import TasksTable from "../../components/admin/TasksTable";
 import FeedbackTable from "../../components/admin/FeedbackTable";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("users");
@@ -12,7 +13,7 @@ export default function AdminDashboard() {
   const token = localStorage.getItem("token");
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/admin/stats", {
+    fetch(`${API_URL}/api/admin/stats`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())

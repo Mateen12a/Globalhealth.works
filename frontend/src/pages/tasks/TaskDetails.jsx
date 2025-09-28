@@ -7,6 +7,7 @@ import FeedbackList from "../../components/FeedbackList";
 import EditTaskModal from "../../components/tasks/EditTaskModal"; // we'll create this
 import PublicProfileModal from "../../components/profile/PublicProfileModal";
 import { jwtDecode } from "jwt-decode";
+const API_URL = import.meta.env.VITE_API_URL;
 
 
 export default function TaskDetails() {
@@ -37,7 +38,7 @@ export default function TaskDetails() {
   useEffect(() => {
     const fetchTask = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/tasks/${id}`, {
+        const res = await fetch(`${API_URL}/api/tasks/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
@@ -55,7 +56,7 @@ export default function TaskDetails() {
   useEffect(() => {
     const fetchProposal = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/proposals/${id}`, {
+        const res = await fetch(`${API_URL}/api/proposals/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
@@ -75,7 +76,7 @@ export default function TaskDetails() {
       const fetchProposals = async () => {
         try {
           const res = await fetch(
-            `http://localhost:5000/api/proposals/task/${id}`,
+            `${API_URL}/api/proposals/task/${id}`,
             {
               headers: { Authorization: `Bearer ${token}` },
             }
@@ -93,7 +94,7 @@ export default function TaskDetails() {
   // update task status
   const updateStatus = async (newStatus) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/tasks/${id}/status`, {
+      const res = await fetch(`${API_URL}/api/tasks/${id}/status`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -117,7 +118,7 @@ export default function TaskDetails() {
   const handleProposalAction = async (proposalId, action) => {
     try {
       const res = await fetch(
-        `http://localhost:5000/api/proposals/${proposalId}/status`,
+        `${API_URL}/api/proposals/${proposalId}/status`,
         {
           method: "PATCH",
           headers: {
@@ -146,7 +147,7 @@ export default function TaskDetails() {
 const startConversation = async (toUserId, taskId = null, proposalId = null) => {
   try {
     // 1. Check existing conversations first
-    const res1 = await fetch("http://localhost:5000/api/conversations", {
+    const res1 = await fetch(`${API_URL}/api/conversations`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const existing = await res1.json();
@@ -166,7 +167,7 @@ const startConversation = async (toUserId, taskId = null, proposalId = null) => 
     }
 
     // 2. Otherwise, create a new conversation
-    const res2 = await fetch("http://localhost:5000/api/conversations/start", {
+    const res2 = await fetch(`${API_URL}/api/conversations/start`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -264,7 +265,7 @@ const startConversation = async (toUserId, taskId = null, proposalId = null) => 
                 {task.attachments.map((a, i) => {
                   const fileUrl = a.startsWith("http")
                     ? a
-                    : `http://localhost:5000${a}`;
+                    : `${API_URL}${a}`;
                   const fileName = a.split("/").pop();
                   return (
                     <li
@@ -400,7 +401,7 @@ const startConversation = async (toUserId, taskId = null, proposalId = null) => 
                             p.fromUser.profileImage
                               ? p.fromUser.profileImage.startsWith("http")
                                 ? p.fromUser.profileImage
-                                : `http://localhost:5000${p.fromUser.profileImage}`
+                                : `${API_URL}${p.fromUser.profileImage}`
                               : "/uploads/default.jpg"
                           }
                           alt=""
@@ -432,7 +433,7 @@ const startConversation = async (toUserId, taskId = null, proposalId = null) => 
                                 href={
                                   a.startsWith("http")
                                     ? a
-                                    : `http://localhost:5000${a}`
+                                    : `${API_URL}${a}`
                                 }
                                 className="text-[#357FE9] underline"
                               >

@@ -1,5 +1,6 @@
 // src/components/admin/UsersTable.jsx
 import { useEffect, useState } from "react";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function UsersTable() {
   const token = localStorage.getItem("token");
@@ -7,7 +8,7 @@ export default function UsersTable() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/admin/users", {
+    fetch(`${API_URL}/api/admin/users`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -16,7 +17,7 @@ export default function UsersTable() {
   }, [token]);
 
   const toggleBlock = async (id) => {
-    const res = await fetch(`http://localhost:5000/api/admin/users/${id}/toggle-block`, {
+    const res = await fetch(`${API_URL}/api/admin/users/${id}/toggle-block`, {
       method: "PATCH",
       headers: { Authorization: `Bearer ${token}` },
     });

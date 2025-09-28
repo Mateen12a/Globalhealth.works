@@ -1,5 +1,6 @@
 // src/components/admin/TaskTable.jsx
 import { useEffect, useState } from "react";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function TasksTable() {
   const token = localStorage.getItem("token");
@@ -7,7 +8,7 @@ export default function TasksTable() {
   const [filter, setFilter] = useState("all");
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/admin/tasks", {
+    fetch(`${API_URL}/api/admin/tasks`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -16,7 +17,7 @@ export default function TasksTable() {
   }, [token]);
 
   const updateStatus = async (id, status) => {
-    const res = await fetch(`http://localhost:5000/api/admin/tasks/${id}/status`, {
+    const res = await fetch(`${API_URL}/api/admin/tasks/${id}/status`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify({ status }),

@@ -1,5 +1,6 @@
 // src/components/proposals/ProposalModal.jsx
 import { useState } from "react";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function ProposalModal({ taskId, onClose, onSubmitted }) {
   const token = localStorage.getItem("token");
@@ -26,7 +27,7 @@ export default function ProposalModal({ taskId, onClose, onSubmitted }) {
       if (duration) form.append("proposedDuration", duration);
       files.forEach((f) => form.append("attachments", f));
 
-      const res = await fetch("http://localhost:5000/api/proposals", {
+      const res = await fetch(`${API_URL}/api/proposals`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: form,

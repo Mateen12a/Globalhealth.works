@@ -1,12 +1,13 @@
 // src/components/admin/FeedbackTable.jsx
 import { useEffect, useState } from "react";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function FeedbackTable() {
   const token = localStorage.getItem("token");
   const [feedback, setFeedback] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/admin/feedback", {
+    fetch(`${API_URL}/api/admin/feedback`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
@@ -15,7 +16,7 @@ export default function FeedbackTable() {
   }, [token]);
 
   const deleteFeedback = async (id) => {
-    const res = await fetch(`http://localhost:5000/api/admin/feedback/${id}`, {
+    const res = await fetch(`${API_URL}/api/admin/feedback/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });

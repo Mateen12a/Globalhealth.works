@@ -1,5 +1,6 @@
 // src/components/tasks/EditTaskModal.jsx
 import { useState } from "react";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function EditTaskModal({ task, onClose, onUpdated }) {
   const token = localStorage.getItem("token");
@@ -84,7 +85,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
       });
 
       // Send request
-      const res = await fetch(`http://localhost:5000/api/tasks/${task._id}`, {
+      const res = await fetch(`${API_URL}/api/tasks/${task._id}`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`, // don't add Content-Type, browser sets it for FormData

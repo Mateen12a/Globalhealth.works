@@ -2,7 +2,8 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
-import CountrySelect from "../components/CountrySelect"
+import CountrySelect from "../components/CountrySelect";
+const API_URL = import.meta.env.VITE_API_URL;
 
 // Shared options
 const orgTypes = [
@@ -148,7 +149,7 @@ function SignupForm({ role, navigate, goBack }) {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/auth/register", {
+      const res = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...formData, role }),

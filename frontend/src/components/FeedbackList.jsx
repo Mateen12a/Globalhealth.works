@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import FeedbackSummaryCard from "./FeedbackSummaryCard";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function FeedbackList({ userId }) {
   const token = localStorage.getItem("token");
@@ -10,7 +11,7 @@ export default function FeedbackList({ userId }) {
   useEffect(() => {
     if (!userId) return;
 
-    fetch(`http://localhost:5000/api/feedback/received/${userId}`, {
+    fetch(`${API_URL}/api/feedback/received/${userId}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())

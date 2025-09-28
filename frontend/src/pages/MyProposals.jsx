@@ -1,6 +1,7 @@
 // src/pages/MyProposal.jsx
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function MyProposals() {
   const token = localStorage.getItem("token");
@@ -9,7 +10,7 @@ export default function MyProposals() {
   useEffect(() => {
     const fetchMy = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/proposals/mine", {
+        const res = await fetch( `${API_URL}/api/proposals/mine`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
@@ -39,7 +40,7 @@ export default function MyProposals() {
                   {p.status === "pending" && (
                     <button onClick={async () => {
                       if (!confirm("Withdraw proposal?")) return;
-                      const res = await fetch(`http://localhost:5000/api/proposals/${p._id}/withdraw`, {
+                      const res = await fetch(`${API_URL}/api/proposals/${p._id}/withdraw`, {
                         method: "PATCH",
                         headers: { Authorization: `Bearer ${token}` },
                       });

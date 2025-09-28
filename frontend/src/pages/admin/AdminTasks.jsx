@@ -1,5 +1,6 @@
 // src/pages/admin/AdminTasks.jsx
 import { useEffect, useState } from "react";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function AdminTasks() {
   const token = localStorage.getItem("token");
@@ -9,7 +10,7 @@ export default function AdminTasks() {
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/admin/tasks", {
+        const res = await fetch(`${API_URL}/api/admin/tasks`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
@@ -25,7 +26,7 @@ export default function AdminTasks() {
 
   const handleAction = async (id, action) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/tasks/${id}/${action}`, {
+      const res = await fetch(`${API_URL}/api/admin/tasks/${id}/${action}`, {
         method: "PATCH",
         headers: { Authorization: `Bearer ${token}` },
       });

@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import NotificationBell from "../NotificationBell";
 import logo from "../../assets/logo.png";
+const API_URL = import.meta.env.VITE_API_URL;
+
 
 export default function DashboardLayout({ children, role, title }) {
   const navigate = useNavigate();
@@ -24,7 +26,7 @@ export default function DashboardLayout({ children, role, title }) {
 
   useEffect(() => {
     if (!token) return;
-    fetch("http://localhost:5000/api/messages/unread/count", {
+    fetch(`${API_URL}/api/messages/unread/count`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())

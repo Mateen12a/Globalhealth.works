@@ -4,9 +4,10 @@ import DashboardLayout from "../components/dashboard/DashboardLayout";
 import { UploadCloud, RotateCcw } from "lucide-react";
 import CountrySelect from "../components/CountrySelect";
 import FeedbackList from "../components/FeedbackList";
+const API_URL = import.meta.env.VITE_API_URL;
 
 
-const BASE_URL = "http://localhost:5000";
+
 
 export default function ProfileSettings() {
   const token = localStorage.getItem("token");
@@ -26,7 +27,7 @@ export default function ProfileSettings() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await fetch(`${BASE_URL}/api/auth/me`, {
+        const res = await fetch(`${API_URL}/api/auth/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
@@ -67,7 +68,7 @@ export default function ProfileSettings() {
       if (imageFile) {
         const form = new FormData();
         form.append("avatar", imageFile);
-        const resUpload = await fetch(`${BASE_URL}/api/auth/upload-avatar`, {
+        const resUpload = await fetch(`${API_URL}/api/auth/upload-avatar`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
           body: form,
@@ -76,7 +77,7 @@ export default function ProfileSettings() {
         if (resUpload.ok) avatarUrl = uploadData.url;
       }
 
-      const res = await fetch(`${BASE_URL}/api/auth/me`, {
+      const res = await fetch(`${API_URL}/api/auth/me`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -103,7 +104,7 @@ export default function ProfileSettings() {
 
   const handleResetAvatar = async () => {
     try {
-      const res = await fetch(`${BASE_URL}/api/auth/reset-avatar`, {
+      const res = await fetch(`${API_URL}/api/auth/reset-avatar`, {
         method: "PATCH",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -129,7 +130,7 @@ export default function ProfileSettings() {
 
   const getImageUrl = (img) => {
     if (!img) return "";
-    return img.startsWith("http") ? img : `${BASE_URL}${img}`;
+    return img.startsWith("http") ? img : `${API_URL}${img}`;
   };
 
   return (

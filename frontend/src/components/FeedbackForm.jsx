@@ -1,5 +1,6 @@
 // src/components/FeedbackForm.jsx
 import { useState } from "react";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function FeedbackForm({ taskId, toUser, onFeedbackSubmitted }) {
   const token = localStorage.getItem("token");
@@ -14,7 +15,7 @@ export default function FeedbackForm({ taskId, toUser, onFeedbackSubmitted }) {
     e.preventDefault();
     setLoading(true);
 
-    const res = await fetch("http://localhost:5000/api/feedback", {
+    const res = await fetch(`${API_URL}/api/feedback`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

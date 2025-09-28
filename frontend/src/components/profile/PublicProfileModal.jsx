@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+const API_URL = import.meta.env.VITE_API_URL;
 
 export default function PublicProfileModal({ userId, onClose }) {
   const [profile, setProfile] = useState(null);
@@ -12,7 +13,7 @@ export default function PublicProfileModal({ userId, onClose }) {
       try {
         setLoading(true);
         const res = await fetch(
-          `http://localhost:5000/api/auth/users/${userId}/public`
+          `${API_URL}/api/auth/users/${userId}/public`
         );
         if (!res.ok) throw new Error("Failed to fetch profile");
         const data = await res.json();
@@ -75,7 +76,7 @@ export default function PublicProfileModal({ userId, onClose }) {
                   src={
                     profile.profileImage?.startsWith("http")
                       ? profile.profileImage
-                      : `http://localhost:5000${profile.profileImage}`
+                      : `${API_URL}${profile.profileImage}`
                   }
                   alt={profile.name}
                   className="w-24 h-24 rounded-full object-cover border shadow"
