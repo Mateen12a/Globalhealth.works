@@ -14,6 +14,7 @@ const proposalRoutes = require("./routes/proposalRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const matchRoutes = require("./routes/matchRoutes");
 const messageRoutes = require("./routes/messageRoutes");
+const conversationRoutes = require("./routes/conversationRoutes")
 const { setSocket } = require("./controllers/messageController"); // ✅ inject io
 const messageController = require("./controllers/messageController");
 const conversationController = require("./controllers/conversationController");
@@ -27,7 +28,7 @@ const server = http.createServer(app); // ✅ create HTTP server for Socket.io
 // ✅ setup Socket.io
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5174", // your React dev server
+    origin:  "*", // your React dev server
     methods: ["GET", "POST"],
   },
 });
@@ -53,8 +54,7 @@ app.use("/api/proposals", proposalRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/match", matchRoutes);
 app.use("/api/messages", messageRoutes);
-app.use("/api/messages", require("./routes/messageRoutes"));
-app.use("/api/conversations", require("./routes/conversationRoutes"));
+app.use("/api/conversations", conversationRoutes);
 
 // Serve uploaded files
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
