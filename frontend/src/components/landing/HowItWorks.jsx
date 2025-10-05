@@ -42,21 +42,6 @@ export default function HowItWorks() {
           </div>
         ))}
       </div>
-
-      {/* Mobile Stacked Steps */}
-      <div className="md:hidden flex flex-col items-center mt-16 space-y-12">
-        {steps.map((step, i) => (
-          <div key={i} className="flex flex-col items-center w-full">
-            <div className="w-14 h-14 flex items-center justify-center rounded-full bg-gradient-to-r from-[#E96435] to-[#F7B526] text-white font-bold text-lg shadow-md mb-4">
-              {i + 1}
-            </div>
-            <div className="bg-white rounded-xl p-5 shadow-md text-center w-full">
-              <h3 className="font-semibold text-[#1E376E] text-lg mb-2">{step.title}</h3>
-              <p className="text-gray-600 text-sm">{step.desc}</p>
-            </div>
-          </div>
-        ))}
-      </div>
     </section>
   );
 }

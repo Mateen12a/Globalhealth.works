@@ -210,8 +210,9 @@ function SignupForm({ role, navigate, goBack }) {
         </h2>
 
         {/* Basic Info */}
-        <div className="grid grid-cols-4 gap-3">
-          <div>
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
+          {/* Title */}
+          <div className="md:col-span-1">
             <Label text="Title" required />
             <select
               name="title"
@@ -228,7 +229,9 @@ function SignupForm({ role, navigate, goBack }) {
               ))}
             </select>
           </div>
-          <div>
+
+          {/* First Name */}
+          <div className="md:col-span-2">
             <Label text="First Name" required />
             <input
               name="firstName"
@@ -238,7 +241,9 @@ function SignupForm({ role, navigate, goBack }) {
               required
             />
           </div>
-          <div className="col-span-2">
+
+          {/* Last Name */}
+          <div className="md:col-span-3">
             <Label text="Last Name" required />
             <input
               name="lastName"
@@ -249,6 +254,7 @@ function SignupForm({ role, navigate, goBack }) {
             />
           </div>
         </div>
+
 
         {/* Email & Password */}
         <div>
