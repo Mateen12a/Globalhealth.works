@@ -1,29 +1,22 @@
-// controllers/taskController.js
 const Task = require("../models/Task");
 const createNotification = require("../utils/createNotification");
 const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
 
-// ✅ Multer setup for task attachments
+// === Multer setup ===
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/tasks/");
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname);
-  },
+  destination: (req, file, cb) => cb(null, "uploads/tasks/"),
+  filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname),
 });
-
 const upload = multer({ storage });
 
-// ✅ Allow both attachments and removeAttachments field
 exports.uploadTaskAttachments = upload.fields([
   { name: "attachments", maxCount: 5 },
-  { name: "removeAttachments" }, // 👈 ensures removeAttachments passes through
+  { name: "removeAttachments" },
 ]);
 
-// ✅ Create new task (Task Owner only)
+// ✅ Create task
 exports.createTask = async (req, res) => {
   try {
     const {
@@ -35,27 +28,24 @@ exports.createTask = async (req, res) => {
       location,
       duration,
       startDate,
-      languages,
-      fundingStatus,
     } = req.body;
 
-    // Handle uploaded files
-    const attachments = req.files && req.files.attachments
-      ? req.files.attachments.map((f) => `/uploads/tasks/${f.filename}`)
-      : [];
-
+    const attachments =
+      req.files?.attachments?.map((f) => `/uploads/tasks/${f.filename}`) || [];
 
     const newTask = new Task({
       title,
       summary,
       description,
-      requiredSkills: requiredSkills ? requiredSkills.split(",").map((s) => s.trim()) : [],
-      focusAreas: focusAreas ? focusAreas.split(",").map((f) => f.trim()) : [],
+      requiredSkills: requiredSkills
+        ? requiredSkills.split(",").map((s) => s.trim())
+        : [],
+      focusAreas: focusAreas
+        ? focusAreas.split(",").map((f) => f.trim())
+        : [],
       location,
       duration,
       startDate,
-      languages: languages ? languages.split(",").map((l) => l.trim()) : [],
-      fundingStatus,
       attachments,
       owner: req.user.id,
     });
@@ -68,51 +58,52 @@ exports.createTask = async (req, res) => {
   }
 };
 
-
 // ✅ Update task
 exports.updateTask = async (req, res) => {
   try {
     const task = await Task.findById(req.params.id);
     if (!task) return res.status(404).json({ msg: "Task not found" });
+
+    // Authorization
     if (String(task.owner) !== req.user.id && req.user.role !== "admin") {
       return res.status(403).json({ msg: "Not allowed" });
     }
-    // 🟢 Defensive log (debug)
-    console.log("req.body:", req.body);
-    console.log("req.files:", req.files);
 
-    // 🔹 Update basic fields (Multer parses them into req.body as strings)
-    if (req.body.title) task.title = req.body.title;
-    if (req.body.summary) task.summary = req.body.summary;
-    if (req.body.description) task.description = req.body.description;
+    // === Basic fields ===
+    const updatableFields = [
+      "title",
+      "summary",
+      "description",
+      "location",
+      "duration",
+      "startDate",
+    ];
+
+    updatableFields.forEach((field) => {
+      if (req.body[field]) task[field] = req.body[field];
+    });
+
+    // === Array fields ===
+    const parseArray = (value) => {
+      try {
+        return Array.isArray(value)
+          ? value
+          : JSON.parse(value);
+      } catch {
+        return value
+          ? value.split(",").map((v) => v.trim())
+          : [];
+      }
+    };
 
     if (req.body.requiredSkills) {
-      try {
-        task.requiredSkills = JSON.parse(req.body.requiredSkills);
-      } catch {
-        task.requiredSkills = req.body.requiredSkills.split(",").map((s) => s.trim());
-      }
+      task.requiredSkills = parseArray(req.body.requiredSkills);
     }
-
     if (req.body.focusAreas) {
-      try {
-        task.focusAreas = JSON.parse(req.body.focusAreas);
-      } catch {
-        task.focusAreas = req.body.focusAreas.split(",").map((s) => s.trim());
-      }
+      task.focusAreas = parseArray(req.body.focusAreas);
     }
 
-    if (req.body.languages) {
-      try {
-        task.languages = JSON.parse(req.body.languages);
-      } catch {
-        task.languages = req.body.languages.split(",").map((l) => l.trim());
-      }
-    }
-
-    if (req.body.fundingStatus) task.fundingStatus = req.body.fundingStatus;
-
-    // 🔹 Handle new attachments
+    // === Handle attachments ===
     if (req.files && req.files.attachments) {
       const newFiles = req.files.attachments.map(
         (file) => `/uploads/tasks/${file.filename}`
@@ -120,27 +111,16 @@ exports.updateTask = async (req, res) => {
       task.attachments = [...task.attachments, ...newFiles];
     }
 
-    // 🔹 Handle removed attachments
     if (req.body.removeAttachments) {
       let toRemove = req.body.removeAttachments;
-
-      // Multer gives a string if one, array if many
-      if (!Array.isArray(toRemove)) {
-        toRemove = [toRemove];
-      }
+      if (!Array.isArray(toRemove)) toRemove = [toRemove];
 
       for (const fileUrl of toRemove) {
-        // Remove from DB
         task.attachments = task.attachments.filter((a) => a !== fileUrl);
 
-        // Remove from filesystem
         const filePath = path.join(__dirname, "..", fileUrl.replace(/^\//, ""));
         fs.unlink(filePath, (err) => {
-          if (err) {
-            console.error("Failed to delete file:", filePath, err.message);
-          } else {
-            console.log("Deleted file:", filePath);
-          }
+          if (err) console.error("File delete error:", err.message);
         });
       }
     }
@@ -153,29 +133,24 @@ exports.updateTask = async (req, res) => {
   }
 };
 
-// Get all tasks
+// ✅ Get tasks
 exports.getTasks = async (req, res) => {
   try {
-    let filter = {};
-    if (req.user.role === "taskOwner") {
-      filter.owner = req.user.id;
-    }
-    // Admin sees all
-    const tasks = await Task.find(filter).populate("owner", "name email role");
+    const filter = req.user.role === "taskOwner" ? { owner: req.user.id } : {};
+    const tasks = await Task.find(filter)
+      .populate("owner", "firstName lastName email role");
     res.json(tasks);
   } catch (err) {
     res.status(500).json({ msg: "Server error" });
   }
 };
 
-
-
-// Get single task
+// ✅ Get single task
 exports.getTask = async (req, res) => {
   try {
     const task = await Task.findById(req.params.id)
-      .populate("owner", "name email")
-      .populate("applicants", "name email expertise");
+      .populate("owner", "firstName lastName email")
+      .populate("applicants", "firstName lastName email expertise");
     if (!task) return res.status(404).json({ msg: "Task not found" });
     res.json(task);
   } catch (err) {
@@ -183,7 +158,7 @@ exports.getTask = async (req, res) => {
   }
 };
 
-// Apply to task (Solution Provider)
+// ✅ Apply to task
 exports.applyToTask = async (req, res) => {
   try {
     const task = await Task.findById(req.params.id).populate("owner");
@@ -196,22 +171,20 @@ exports.applyToTask = async (req, res) => {
     task.applicants.push(req.user.id);
     await task.save();
 
-    // Notify Task Owner
     await createNotification(
       task.owner._id,
       "application",
-      `${req.user.name} applied to your task "${task.title}"`,
+      `${req.user.firstName} ${req.user.lastName} applied to your task "${task.title}"`,
       `/tasks/${task._id}`
     );
 
     res.json({ msg: "Applied successfully", task });
   } catch (err) {
-    console.error("Apply error:", err);
     res.status(500).json({ msg: "Server error" });
   }
 };
 
-// Accept applicant (Task Owner)
+// ✅ Accept applicant
 exports.acceptApplicant = async (req, res) => {
   try {
     const task = await Task.findById(req.params.id);
@@ -229,7 +202,6 @@ exports.acceptApplicant = async (req, res) => {
     task.accepted = spId;
     await task.save();
 
-    // Notify SP
     await createNotification(
       spId,
       "proposal",
@@ -239,12 +211,11 @@ exports.acceptApplicant = async (req, res) => {
 
     res.json({ msg: "Applicant accepted", task });
   } catch (err) {
-    console.error("Accept error:", err);
     res.status(500).json({ msg: "Server error" });
   }
 };
 
-// Reject applicant (Task Owner)
+// ✅ Reject applicant
 exports.rejectApplicant = async (req, res) => {
   try {
     const task = await Task.findById(req.params.id);
@@ -262,7 +233,6 @@ exports.rejectApplicant = async (req, res) => {
     task.applicants = task.applicants.filter((id) => String(id) !== spId);
     await task.save();
 
-    // Notify SP
     await createNotification(
       spId,
       "proposal",
@@ -272,12 +242,11 @@ exports.rejectApplicant = async (req, res) => {
 
     res.json({ msg: "Applicant rejected", task });
   } catch (err) {
-    console.error("Reject error:", err);
     res.status(500).json({ msg: "Server error" });
   }
 };
 
-// Update status (Task Owner)
+// ✅ Update status
 exports.updateStatus = async (req, res) => {
   try {
     const task = await Task.findById(req.params.id);
@@ -290,7 +259,6 @@ exports.updateStatus = async (req, res) => {
     task.status = req.body.status;
     await task.save();
 
-    // Notify all applicants of status change
     for (const spId of task.applicants) {
       await createNotification(
         spId,
@@ -302,20 +270,18 @@ exports.updateStatus = async (req, res) => {
 
     res.json({ msg: "Status updated", task });
   } catch (err) {
-    console.error("Status update error:", err);
     res.status(500).json({ msg: "Server error" });
   }
 };
 
-// Get tasks the logged-in SP applied to
+// ✅ Get my applications
 exports.getMyApplications = async (req, res) => {
   try {
     const tasks = await Task.find({ applicants: req.user.id })
-      .populate("owner", "name email")
+      .populate("owner", "firstName lastName email")
       .sort({ createdAt: -1 });
     res.json(tasks);
   } catch (err) {
-    console.error("Get my applications error:", err);
     res.status(500).json({ msg: "Server error" });
   }
 };

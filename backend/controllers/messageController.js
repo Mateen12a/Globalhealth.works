@@ -52,24 +52,29 @@ exports.setSocket = (socketInstance) => {
   io = socketInstance;
 
   io.on("connection", (socket) => {
-    // join user room for personal events
+    // 1. Join user room for personal events (used for receiving messages/notifications)
     socket.on("join", (userId) => {
       socket.join(userId);
-      io.emit("presence:update", { userId, online: true });
+      // Removed presence:update for simplicity, can be added later
     });
 
+    // 2. Leave user room
     socket.on("leave", (userId) => {
       socket.leave(userId);
-      io.emit("presence:update", { userId, online: false });
+      // Removed presence:update
     });
 
+    // 3. Typing (emitted from ChatPage, received by other participant)
     socket.on("typing", ({ conversationId, from, to }) => {
-      if (to) io.to(to).emit("typing", { conversationId, from });
+      if (to) io.to(to).emit("typing", { conversationId, userId: from }); // Use userId for consistency with frontend
     });
 
+    // 4. Stop Typing
     socket.on("stopTyping", ({ conversationId, from, to }) => {
-      if (to) io.to(to).emit("stopTyping", { conversationId, from });
+      if (to) io.to(to).emit("stopTyping", { conversationId, userId: from }); // Use userId for consistency with frontend
     });
+    
+    // Note: The message:send event from the old ChatPage is no longer needed
   });
 };
 
@@ -97,19 +102,16 @@ const buildAttachmentsFromFiles = (files) => {
   });
 };
 
+// ---------- CONTROLLERS (UPDATED) ----------
+
 /**
  * Send a message.
- * Body (multipart/form-data):
- * - conversationId (optional) OR receiverId (required)
- * - text (optional if attachments)
- * - replyTo (optional)
- * - attachments[] (files)
- * - taskId/proposalId (optional) -> used when creating a new convo
+ * POST /api/messages
  */
 exports.sendMessage = async (req, res) => {
   try {
     const { conversationId, receiverId, text, replyTo, taskId, proposalId } = req.body;
-    const sender = req.user._id;
+    const sender = req.user.id;
 
     if (!conversationId && !receiverId) return res.status(400).json({ msg: "conversationId or receiverId required" });
     const hasFiles = req.files && req.files.length > 0;
@@ -117,14 +119,17 @@ exports.sendMessage = async (req, res) => {
 
     // ensure conversation exists or create it
     let convoId = conversationId;
+    let finalReceiver = receiverId;
+    
     if (!convoId) {
-      // find existing convo between sender and receiver
+      // 1. Find or create the conversation
       let convo = await Conversation.findOne({
         participants: { $all: [sender, receiverId] },
         isTaskConversation: !!taskId,
         ...(taskId ? { taskId } : {}),
         ...(proposalId ? { proposalId } : {}),
       });
+
       if (!convo) {
         convo = new Conversation({
           participants: [sender, receiverId],
@@ -137,28 +142,24 @@ exports.sendMessage = async (req, res) => {
 
         // notify other user of new conversation
         if (io) {
-          io.to(receiverId).emit("conversation:new", { conversationId: convo._id, from: sender.toString(), isTaskConversation: !!taskId, taskId, proposalId });
+          io.to(receiverId).emit("conversation:new", { conversationId: convo.id, from: sender.toString(), isTaskConversation: !!taskId, taskId, proposalId });
         }
       }
-      convoId = convo._id;
+      convoId = convo.id;
     } else {
-      // verify participant
-      const c = await Conversation.findById(convoId);
-      if (!c) return res.status(404).json({ msg: "Conversation not found" });
-      if (!c.participants.some((p) => String(p) === String(sender))) return res.status(403).json({ msg: "Not authorized" });
-    }
-
-    // Construct attachments
-    const attachments = buildAttachmentsFromFiles(req.files);
-
-    // Determine receiver if not provided (conversation participants)
-    let finalReceiver = receiverId;
-    if (!finalReceiver) {
+      // 2. Conversation ID provided, verify sender is a participant and get receiver
       const convo = await Conversation.findById(convoId);
+      if (!convo) return res.status(404).json({ msg: "Conversation not found" });
+      if (!convo.participants.some((p) => String(p) === String(sender))) return res.status(403).json({ msg: "Not authorized" });
+      
+      // Determine receiver from conversation participants if not explicitly provided
       finalReceiver = convo.participants.find((p) => String(p) !== String(sender));
     }
 
-    // Create message
+    // 3. Construct attachments
+    const attachments = buildAttachmentsFromFiles(req.files);
+
+    // 4. Create message
     const message = new Message({
       conversationId: convoId,
       sender,
@@ -171,26 +172,24 @@ exports.sendMessage = async (req, res) => {
 
     await message.save();
 
-    // update conversation lastMessage
+    // 5. update conversation lastMessage
     await Conversation.findByIdAndUpdate(convoId, {
       lastMessage: { text: message.text || (attachments[0] && "[attachment]") || "", sender, createdAt: message.createdAt }
     }, { new: true });
 
-    // Realtime emits
+    // 6. Realtime emits
     if (io) {
-      // message to receiver
-      io.to(finalReceiver.toString()).emit("message:new", {
+      const messageData = {
         ...message.toObject(),
         sender: message.sender.toString(),
         receiver: message.receiver.toString(),
-      });
+      };
+      
+      // message to receiver
+      io.to(finalReceiver.toString()).emit("message:new", messageData);
 
       // notify sender too (for local echo)
-      io.to(sender.toString()).emit("message:new", {
-        ...message.toObject(),
-        sender: message.sender.toString(),
-        receiver: message.receiver.toString(),
-      });
+      io.to(sender.toString()).emit("message:new", messageData);
 
       // conversation update (for inbox)
       io.to(finalReceiver.toString()).emit("conversationUpdate", {
@@ -205,9 +204,11 @@ exports.sendMessage = async (req, res) => {
       });
     }
 
-    // create in-app notification
+    // 7. create in-app notification
     try {
-      await createNotification(finalReceiver, "message", `${req.user.name} sent you a message`, `/messages/${sender}`);
+      // Assuming req.user.name is available
+      const senderName = req.user.name || "A user"; 
+      await createNotification(finalReceiver, "message", `${senderName} sent you a message`, `/chat/${convoId}`);
     } catch (nerr) {
       // non-fatal
       console.warn("createNotification failed", nerr);
@@ -217,6 +218,7 @@ exports.sendMessage = async (req, res) => {
   } catch (err) {
     console.error("sendMessage error:", err);
     if (err instanceof multer.MulterError || err.message === "Unsupported file type") {
+      // Ensure file cleanup if necessary, but multer handles file deletion on error sometimes
       return res.status(400).json({ msg: err.message });
     }
     res.status(500).json({ msg: "Server error" });
@@ -231,7 +233,7 @@ exports.getMessagesByConversation = async (req, res) => {
   try {
     const { conversationId } = req.params;
     const { page = 1, limit = 20 } = req.query;
-    const myId = req.user._id;
+    const myId = req.user.id;
 
     const convo = await Conversation.findById(conversationId);
     if (!convo) return res.status(404).json({ msg: "Conversation not found" });
@@ -267,7 +269,6 @@ exports.getMessagesByConversation = async (req, res) => {
 /**
  * Edit message (only sender can edit)
  * PATCH /api/messages/:messageId
- * body: { text, attachmentsToAdd[], attachmentsToRemove[] }
  */
 exports.editMessage = async (req, res) => {
   try {
@@ -276,7 +277,7 @@ exports.editMessage = async (req, res) => {
 
     const msg = await Message.findById(messageId);
     if (!msg) return res.status(404).json({ msg: "Message not found" });
-    if (String(msg.sender) !== String(req.user._id)) return res.status(403).json({ msg: "Not authorized to edit" });
+    if (String(msg.sender) !== String(req.user.id)) return res.status(403).json({ msg: "Not authorized to edit" });
 
     // remove attachments if provided (local files left on disk for now; implement cleanup later)
     if (Array.isArray(attachmentsToRemove) && attachmentsToRemove.length > 0) {
@@ -317,7 +318,7 @@ exports.editMessage = async (req, res) => {
 exports.deleteMessage = async (req, res) => {
   try {
     const { messageId } = req.params;
-    const myId = req.user._id;
+    const myId = req.user.id;
 
     const msg = await Message.findById(messageId);
     if (!msg) return res.status(404).json({ msg: "Message not found" });
@@ -347,10 +348,10 @@ exports.deleteMessage = async (req, res) => {
 exports.markAsRead = async (req, res) => {
   try {
     const { messageId } = req.params;
-    const myId = req.user._id;
+    const myId = req.user.id;
 
     const msg = await Message.findOneAndUpdate(
-      { _id: messageId, receiver: myId },
+      { id: messageId, receiver: myId },
       { $set: { read: true, readAt: new Date(), status: "seen" } },
       { new: true }
     );
@@ -358,7 +359,7 @@ exports.markAsRead = async (req, res) => {
     if (!msg) return res.status(404).json({ msg: "Message not found or unauthorized" });
 
     if (io) {
-      io.to(msg.sender.toString()).emit("message:seen", { messageId: msg._id.toString(), seenBy: myId.toString(), readAt: msg.readAt });
+      io.to(msg.sender.toString()).emit("message:seen", { messageId: msg.id.toString(), seenBy: myId.toString(), readAt: msg.readAt });
       // conversation update too
       io.to(msg.sender.toString()).emit("conversationUpdate", { conversationId: msg.conversationId.toString(), lastMessage: { text: msg.text, createdAt: msg.createdAt, read: true, readAt: msg.readAt } });
     }
@@ -377,7 +378,7 @@ exports.markAsRead = async (req, res) => {
 exports.markConversationRead = async (req, res) => {
   try {
     const { conversationId } = req.params;
-    const myId = req.user._id;
+    const myId = req.user.id;
 
     const convo = await Conversation.findById(conversationId);
     if (!convo) return res.status(404).json({ msg: "Conversation not found" });
@@ -401,53 +402,69 @@ exports.markConversationRead = async (req, res) => {
 /**
  * Inbox (conversations list) with pagination and unread count:
  * GET /api/messages/inbox?page=1&limit=20
- *
- * NOTE: For one-to-one, Conversation model stores lastMessage so we query Conversation.
+ */
+// controllers/messageController.js (Focus on getInbox)
+
+/**
+ * Inbox (conversations list) with pagination and unread count:
+ * GET /api/messages/inbox?page=1&limit=20
  */
 exports.getInbox = async (req, res) => {
-  try {
-    const userId = req.user._id;
-    const { page = 1, limit = 20 } = req.query;
+    try {
+        const userId = req.user.id;
+        const { page = 1, limit = 20 } = req.query;
 
-    const convos = await Conversation.find({ participants: userId })
-      .sort({ "lastMessage.createdAt": -1, updatedAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(Number(limit))
-      .populate("participants", "name profileImage")
-      .lean();
+        const convos = await Conversation.find({ participants: userId })
+            .sort({ "lastMessage.createdAt": -1, updatedAt: -1 })
+            .skip((page - 1) * limit)
+            .limit(Number(limit))
+            // 🔑 IMPORTANT: Mongoose Populated fields use `_id` and the fields you requested: firstName, lastName
+            .populate("participants", "firstName lastName profileImage") 
+            .lean();
 
-    // compute unread counts per conversation
-    const results = await Promise.all(convos.map(async (c) => {
-      const other = c.participants.find((p) => String(p._id) !== String(userId));
-      const unreadCount = await Message.countDocuments({ conversationId: c._id, receiver: userId, read: false });
-      return {
-        conversationId: c._id.toString(),
-        otherUser: other ? { _id: other._id.toString(), name: other.name, profileImage: other.profileImage } : null,
-        isTaskConversation: c.isTaskConversation,
-        taskId: c.taskId,
-        proposalId: c.proposalId,
-        lastMessage: c.lastMessage,
-        unreadCount,
-        updatedAt: c.updatedAt
-      };
-    }));
+        // compute unread counts per conversation
+        const results = await Promise.all(convos.map(async (c) => {
+            // Find the other participant using their _id from the populated object
+            const other = c.participants.find((p) => String(p._id) !== String(userId));
+            
+            // Unread count check: use c._id for the conversation ID
+            const unreadCount = await Message.countDocuments({ conversationId: c._id, receiver: userId, read: false });
 
-    res.json(results);
-  } catch (err) {
-    console.error("getInbox error:", err);
-    res.status(500).json({ msg: "Server error" });
-  }
+            return {
+                // Use c._id or c.id consistently. Sticking with c._id to be safe after .lean()
+                conversationId: c._id.toString(), 
+                otherUser: other 
+                    ? { 
+                        // Use the correct populated field accessors
+                        _id: other._id.toString(), 
+                        name: `${other.firstName} ${other.lastName}`.trim(), // 🔑 FIX: Combine firstName and lastName
+                        profileImage: other.profileImage 
+                    } 
+                    : null,
+                isTaskConversation: c.isTaskConversation,
+                taskId: c.taskId,
+                proposalId: c.proposalId,
+                lastMessage: c.lastMessage,
+                unreadCount,
+                updatedAt: c.updatedAt
+            };
+        }));
+
+        res.json(results);
+    } catch (err) {
+        console.error("getInbox error:", err);
+        res.status(500).json({ msg: "Server error" });
+    }
 };
 
 /**
  * Reactions: POST /api/messages/:messageId/reactions
- * body: { emoji }
  */
 exports.addReaction = async (req, res) => {
   try {
     const { messageId } = req.params;
     const { emoji } = req.body;
-    const userId = req.user._id;
+    const userId = req.user.id;
 
     if (!emoji) return res.status(400).json({ msg: "emoji required" });
 
@@ -484,7 +501,7 @@ exports.addReaction = async (req, res) => {
  */
 exports.searchMessages = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user.id;
     const { q, page = 1, limit = 20 } = req.query;
     if (!q) return res.status(400).json({ msg: "query (q) required" });
 
@@ -509,18 +526,14 @@ exports.searchMessages = async (req, res) => {
 };
 
 
-
-// ---------- HELPERS ----------
-
-
-// ---------- CONTROLLERS ----------
-
-// (sendMessage, getMessagesByConversation, editMessage, deleteMessage, markAsRead, markConversationRead remain same as in your code — already good with emits)
-
-// EXTRA: Get unread count for all conversations
+/**
+ * EXTRA: Get unread count for all conversations (Needed by InboxPage.jsx)
+ * GET /api/messages/unread/count
+ */
 exports.getUnreadCount = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user.id;
+    // Count documents where the current user is the receiver and the message is not read
     const count = await Message.countDocuments({ receiver: userId, read: false });
     res.json({ unreadCount: count });
   } catch (err) {

@@ -9,91 +9,92 @@ const User = require("../models/User");
  */
 exports.startConversation = async (req, res) => {
   try {
-    const { toUserId, taskId, proposalId } = req.body;
-    const me = req.user?._id;
+    const fromUserId = req.user.id; // logged-in user
+    const { toUserId, taskId = null, proposalId = null } = req.body;
 
-    if (!me) return res.status(401).json({ msg: "Unauthorized" });
-    if (!toUserId) return res.status(400).json({ msg: "toUserId required" });
-    if (String(toUserId) === String(me)) {
+    if (!toUserId) {
+      return res.status(400).json({ msg: "Recipient user ID is required" });
+    }
+
+    if (toUserId === fromUserId) {
       return res.status(400).json({ msg: "Cannot start conversation with yourself" });
     }
 
-    // Ensure both users exist
-    const [meUser, otherUser] = await Promise.all([
-      User.findById(me).select("_id"),
-      User.findById(toUserId).select("_id"),
-    ]);
-    if (!meUser || !otherUser) {
-      return res.status(404).json({ msg: "User not found" });
+    // Check if recipient exists
+    const recipient = await User.findById(toUserId);
+    if (!recipient) {
+      return res.status(404).json({ msg: "Recipient user not found" });
     }
 
-    // Try to find existing one-to-one conversation
-    let convo = await Conversation.findOne({
-      isTaskConversation: !!taskId,
-      participants: { $all: [me, toUserId], $size: 2 },
-      ...(taskId ? { taskId } : {}),
-      ...(proposalId ? { proposalId } : {}),
+    // Check if a conversation already exists
+    const existingConversation = await Conversation.findOne({
+      $or: [
+        { participants: [fromUserId, toUserId] },
+        { participants: [toUserId, fromUserId] }
+      ],
+      ...(taskId && { taskId }),
+      ...(proposalId && { proposalId }),
     });
 
-    if (!convo) {
-      convo = new Conversation({
-        participants: [me, toUserId], // ✅ both guaranteed
-        isTaskConversation: !!taskId,
-        taskId: taskId || undefined,
-        proposalId: proposalId || undefined,
-      });
-      await convo.save();
+    if (existingConversation) {
+      return res.status(200).json({ _id: existingConversation._id, msg: "Conversation already exists" });
     }
 
-    // Populate minimal info
-    const populated = await Conversation.findById(convo._id)
-      .populate("participants", "name profileImage");
+    // Create new conversation
+    const newConversation = new Conversation({
+      participants: [fromUserId, toUserId],
+      taskId: taskId || null,
+      proposalId: proposalId || null,
+      messages: [],
+    });
 
-    res.json(populated);
+    await newConversation.save();
+
+    res.status(201).json({ _id: newConversation._id, msg: "Conversation started" });
   } catch (err) {
-    console.error("startConversation error:", err);
-    res.status(500).json({ msg: "Server error" });
+    console.error("StartConversation error:", err);
+    res.status(500).json({ msg: "Server error starting conversation" });
   }
 };
 
-/**
- * GET /api/conversations
- * Query: page, limit
- * Returns user's conversations with lastMessage and participant info
- */
+// GET /api/conversations
 exports.getConversations = async (req, res) => {
   try {
-    const userId = req.user._id;
-    const { page = 1, limit = 20 } = req.query;
+    const userId = req.user.id;
+    const conversations = await Conversation.find({
+      participants: userId,
+    })
+      .populate("participants", "firstName lastName profileImage")
+      .sort({ updatedAt: -1 });
 
-    const convos = await Conversation.find({ participants: userId })
-      .sort({ "lastMessage.createdAt": -1, updatedAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(Number(limit))
-      .populate("participants", "name profileImage")
-      .lean();
-
-    const mapped = convos.map((c) => {
-      const other = c.participants.find((p) => String(p._id) !== String(userId));
-      return {
-        conversationId: c._id.toString(),
-        isTaskConversation: c.isTaskConversation,
-        taskId: c.taskId,
-        proposalId: c.proposalId,
-        otherUser: other
-          ? { _id: other._id.toString(), name: other.name, profileImage: other.profileImage }
-          : null,
-        lastMessage: c.lastMessage,
-        updatedAt: c.updatedAt,
-        pinnedFor: c.pinnedFor || [],
-        mutedFor: c.mutedFor || [],
-      };
-    });
-
-    res.json(mapped);
+    res.json(conversations);
   } catch (err) {
-    console.error("getConversations error:", err);
-    res.status(500).json({ msg: "Server error" });
+    console.error("GetConversations error:", err);
+    res.status(500).json({ msg: "Server error fetching conversations" });
+  }
+};
+
+// GET /api/conversations/:conversationId
+exports.getConversationById = async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const conversation = await Conversation.findById(conversationId)
+      .populate("participants", "firstName lastName profileImage")
+      .populate("messages");
+
+    if (!conversation) {
+      return res.status(404).json({ msg: "Conversation not found" });
+    }
+
+    // Ensure user is part of the conversation
+    if (!conversation.participants.some(p => p._id.toString() === req.user.id)) {
+      return res.status(403).json({ msg: "Access denied" });
+    }
+
+    res.json(conversation);
+  } catch (err) {
+    console.error("GetConversationById error:", err);
+    res.status(500).json({ msg: "Server error fetching conversation" });
   }
 };
 
@@ -104,13 +105,15 @@ exports.getConversations = async (req, res) => {
 exports.getConversationById = async (req, res) => {
   try {
     const convo = await Conversation.findById(req.params.conversationId)
-      .populate("participants", "name profileImage")
+      .populate("participants", "firstName lastName profileImage")
       .lean();
     if (!convo) return res.status(404).json({ msg: "Conversation not found" });
 
     const isParticipant = convo.participants.some(
-      (p) => String(p._id) === String(req.user._id)
+      (p) => String(p._id) === String(req.user.id)
     );
+    console.log(isParticipant);
+
     if (!isParticipant) return res.status(403).json({ msg: "Not authorized" });
 
     res.json(convo);

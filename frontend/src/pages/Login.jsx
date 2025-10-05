@@ -1,6 +1,7 @@
 // src/pages/Login.jsx
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { ArrowLeft, Info } from "lucide-react";
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function Login() {
@@ -85,6 +86,12 @@ export default function Login() {
             Sign up
           </Link>
         </p>
+        <Link
+            to="/"
+            className="text-gray-500 hover:text-gray-700 text-sm flex items-center gap-1"
+          >
+            <ArrowLeft className="w-4 h-4" /> Back to Landing Page
+          </Link>
       </form>
     </div>
   );

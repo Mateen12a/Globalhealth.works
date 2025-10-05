@@ -9,7 +9,9 @@ const path = require("path");
 exports.register = async (req, res) => {
   try {
     const {
-      name,
+      title,
+      firstName,
+      lastName,
       email,
       password,
       role,
@@ -18,19 +20,19 @@ exports.register = async (req, res) => {
       organisationType,
       country,
       gender,
+      genderSelfDescribe,
       expertise,
       focusAreas,
       affiliation,
       bio,
-      portfolio,
-      links,
+      professionalLink,
       supportNeeded,
     } = req.body;
 
-    if (!name || !email || !password || !role) {
-      return res
-        .status(400)
-        .json({ msg: "Name, email, password, and role are required" });
+    if (!firstName || !lastName || !email || !password || !role) {
+      return res.status(400).json({
+        msg: "First name, last name, email, password, and role are required",
+      });
     }
 
     const existing = await User.findOne({ email });
@@ -41,13 +43,16 @@ exports.register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = new User({
-      name,
+      title,
+      firstName,
+      lastName,
       email,
       password: hashedPassword,
       role,
       country,
       gender,
-      profileImage: "/uploads/default.jpg", // ✅ assign default image
+      genderSelfDescribe,
+      profileImage: "/uploads/default.jpg",
     });
 
     if (role === "taskOwner") {
@@ -62,8 +67,7 @@ exports.register = async (req, res) => {
       user.expertise = expertise || [];
       user.focusAreas = focusAreas || [];
       user.bio = bio;
-      user.portfolio = portfolio;
-      user.links = links || [];
+      user.professionalLink = professionalLink;
     }
 
     await user.save();
@@ -79,7 +83,10 @@ exports.register = async (req, res) => {
       token,
       user: {
         id: user._id,
-        name: user.name,
+        title: user.title,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        name: `${user.title ? user.title + " " : ""}${user.firstName} ${user.lastName}`,
         role: user.role,
         email: user.email,
         profileImage: user.profileImage,
@@ -91,7 +98,7 @@ exports.register = async (req, res) => {
   }
 };
 
-// Login (unchanged)
+// Login
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -112,7 +119,10 @@ exports.login = async (req, res) => {
       token,
       user: {
         id: user._id,
-        name: user.name,
+        title: user.title,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        name: `${user.title ? user.title + " " : ""}${user.firstName} ${user.lastName}`,
         role: user.role,
         email: user.email,
         profileImage: user.profileImage,
@@ -124,20 +134,27 @@ exports.login = async (req, res) => {
   }
 };
 
-// Middleware (unchanged)
+
+// Middleware
 exports.authMiddleware = (req, res, next) => {
-  const token = req.header("Authorization")?.replace("Bearer ", "");
-  if (!token)
+  const authHeader = req.headers.authorization || req.headers.Authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    console.log("No or invalid auth header:", authHeader);
     return res.status(401).json({ msg: "No token, authorization denied" });
+  }
+
+  const token = authHeader.split(" ")[1];
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
     next();
   } catch (err) {
+    console.error("JWT verify error:", err);
     res.status(401).json({ msg: "Token is not valid" });
   }
 };
+
 
 exports.requireRole = (role) => {
   return (req, res, next) => {
@@ -165,12 +182,14 @@ exports.updateMe = async (req, res) => {
   try {
     const updates = req.body;
     const allowedFields = [
-      "name",
+      "title",
+      "firstName",
+      "lastName",
       "country",
       "gender",
+      "genderSelfDescribe",
       "bio",
-      "portfolio",
-      "links",
+      "professionalLink",
       "organisationName",
       "organisationType",
       "phone",
@@ -197,14 +216,13 @@ exports.updateMe = async (req, res) => {
   }
 };
 
-// POST /upload-avatar
+// Upload avatar
 exports.uploadAvatar = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ msg: "No file uploaded" });
 
     const user = await User.findById(req.user.id);
 
-    // ✅ delete old avatar if not default.jpg
     if (user.profileImage && user.profileImage !== "/uploads/default.jpg") {
       const oldPath = path.join(__dirname, "..", user.profileImage);
       if (fs.existsSync(oldPath)) {
@@ -212,7 +230,6 @@ exports.uploadAvatar = async (req, res) => {
       }
     }
 
-    // save new one
     const fileUrl = `/uploads/${req.file.filename}`;
     user.profileImage = fileUrl;
     await user.save();
@@ -224,12 +241,11 @@ exports.uploadAvatar = async (req, res) => {
   }
 };
 
-// PATCH /reset-avatar
+// Reset avatar
 exports.resetAvatar = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
 
-    // delete current avatar if not default
     if (user.profileImage && user.profileImage !== "/uploads/default.jpg") {
       const oldPath = path.join(__dirname, "..", user.profileImage);
       if (fs.existsSync(oldPath)) {
@@ -237,7 +253,7 @@ exports.resetAvatar = async (req, res) => {
       }
     }
 
-    user.profileImage = "/uploads/default.jpg"; // ✅ reset
+    user.profileImage = "/uploads/default.jpg";
     await user.save();
 
     res.json({ msg: "Avatar reset to default", profileImage: user.profileImage });
@@ -247,12 +263,13 @@ exports.resetAvatar = async (req, res) => {
   }
 };
 
-// GET /users/:id/public
+// Public profile
 exports.getPublicProfile = async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await User.findById(id)
-      .select("-password -email -isActive -isVerified -lastLogin -oauthProvider");
+    const user = await User.findById(id).select(
+      "-password -email -isActive -isVerified -lastLogin -oauthProvider"
+    );
 
     if (!user) return res.status(404).json({ msg: "User not found" });
 

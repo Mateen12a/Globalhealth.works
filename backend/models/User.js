@@ -4,7 +4,9 @@ const mongoose = require("mongoose");
 const userSchema = new mongoose.Schema(
   {
     // Shared fields
-    name: { type: String, required: true },
+    title: { type: String }, // Dr., Mr., Ms. etc.
+    firstName: { type: String, required: true },
+    lastName: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String }, // only if not using OAuth
     role: {
@@ -14,7 +16,8 @@ const userSchema = new mongoose.Schema(
     },
     country: { type: String },
     gender: { type: String },
-    profileImage: { type: String }, // avatar or uploaded image
+    genderSelfDescribe: { type: String },
+    profileImage: { type: String, default: "/uploads/default.jpg" },
     oauthProvider: { type: String }, // "google", "linkedin", or "local"
     lastLogin: { type: Date },
 
@@ -23,9 +26,8 @@ const userSchema = new mongoose.Schema(
     expertise: [{ type: String }], // "Digital Solutions", "Policy", etc.
     focusAreas: [{ type: String }], // health taxonomy
     availableForWork: { type: Boolean, default: true },
-    portfolio: { type: String }, // CV link / portfolio
+    professionalLink: { type: String }, // LinkedIn, CV, portfolio
     bio: { type: String, maxlength: 1000 },
-    links: [{ type: String }], // Optional links (LinkedIn, GitHub, etc.)
 
     // Task Owner-specific
     phone: { type: String },

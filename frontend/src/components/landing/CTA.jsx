@@ -6,7 +6,7 @@ export default function CTA() {
     <section className="bg-[#1E376E] text-white text-center py-16 px-6">
       <h2 className="text-3xl font-bold mb-6">Ready to Join GlobalHealth.Works?</h2>
       <p className="max-w-2xl mx-auto mb-8 text-gray-200">
-        Post your challenges, apply your expertise, and collaborate for global health impact.
+        Post a task. Solve a task. Together, let’s make global health work.
       </p>
       <div className="flex justify-center gap-4">
         <Link
