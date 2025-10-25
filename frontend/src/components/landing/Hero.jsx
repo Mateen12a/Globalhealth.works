@@ -11,7 +11,7 @@ export default function Hero() {
       <div className="relative z-10 text-center py-28 px-6">
         {/* Hero Title */}
         <h1 className="text-4xl md:text-6xl font-extrabold text-[#1E376E] mb-6 leading-tight animate-fade-in-up">
-          The Digital Marketplace for <br />{" "}
+          The Digital Community for <br />{" "}
           <span className="text-gradient bg-gradient-to-r from-[#E96435] via-[#F7B526] to-[#357FE9] bg-clip-text text-transparent">
             Global Health Solutions
           </span>
@@ -20,8 +20,8 @@ export default function Hero() {
         {/* Hero Subtitle */}
         <p className="text-gray-700 max-w-2xl mx-auto mb-12 text-lg md:text-xl animate-fade-in-up delay-200">
           Post a task. Solve a{" "}
-          <span className="text-[#E96435] font-semibold">task.</span> Together, let’s make{" "}
-          <span className="text-[#2159a8] font-semibold">global health work</span>.
+          <span className="font-semibold">task.</span> Together, let’s make{" "}
+          <span className="font-semibold">global health work</span>.
         </p>
 
         {/* Role Buttons */}

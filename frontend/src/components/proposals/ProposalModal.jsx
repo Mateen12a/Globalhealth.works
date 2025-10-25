@@ -101,7 +101,7 @@ export default function ProposalModal({ taskId, onClose, onSubmitted }) {
 
           {/* Budget & Duration */}
           <div className="grid md:grid-cols-2 gap-4">
-            <div>
+            {/* <div>
               <Label text="Proposed Budget (USD)" />
               <div className="relative">
                 <DollarSign className="absolute left-3 top-3.5 text-gray-400 w-4 h-4" />
@@ -114,7 +114,7 @@ export default function ProposalModal({ taskId, onClose, onSubmitted }) {
                   className="w-full border pl-9 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#357FE9] outline-none"
                 />
               </div>
-            </div>
+            </div> */}
             <div>
               <Label text="Proposed Duration" />
               <div className="relative">

@@ -1,4 +1,3 @@
-// routes/authRoutes.js
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
@@ -11,30 +10,56 @@ const {
   updateMe,
   uploadAvatar,
   resetAvatar,
-  getPublicProfile
+  uploadCV, // ✅ New
+  getPublicProfile,
 } = require("../controllers/authController");
 
-// File upload setup
-const storage = multer.diskStorage({
+// Avatar upload setup
+const avatarStorage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "uploads/"); // make sure "uploads" folder exists
+    cb(null, "uploads/avatars/");
   },
   filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname)); // e.g., 1695674.png
+    cb(null, Date.now() + path.extname(file.originalname));
   },
 });
-const upload = multer({ storage });
+const uploadAvatarFile = multer({ storage: avatarStorage });
 
-// Auth routes
+// CV upload setup ✅
+const cvStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/cv/");
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
+});
+const uploadCVFile = multer({
+  storage: cvStorage,
+  fileFilter: (req, file, cb) => {
+    const allowed = [".pdf", ".doc", ".docx"];
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (!allowed.includes(ext)) {
+      return cb(new Error("Only PDF, DOC, or DOCX files are allowed"));
+    }
+    cb(null, true);
+  },
+});
+
+// Routes
 router.post("/register", register);
 router.post("/login", login);
 
 // Profile routes
 router.get("/me", authMiddleware, getMe);
 router.put("/me", authMiddleware, updateMe);
-router.post("/upload-avatar", authMiddleware, upload.single("avatar"), uploadAvatar);
-router.patch("/reset-avatar", authMiddleware, resetAvatar); // ✅ reset to default
-// Public profile route (no auth needed)
+
+// Uploads
+router.post("/upload-avatar", authMiddleware, uploadAvatarFile.single("avatar"), uploadAvatar);
+router.post("/upload-cv", authMiddleware, uploadCVFile.single("cv"), uploadCV); // ✅ New CV route
+router.patch("/reset-avatar", authMiddleware, resetAvatar);
+
+// Public profile
 router.get("/users/:id/public", getPublicProfile);
 
 module.exports = router;

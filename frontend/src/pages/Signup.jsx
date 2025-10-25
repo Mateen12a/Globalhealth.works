@@ -1,8 +1,16 @@
-// src/pages/SignUp.jsx
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Info } from "lucide-react";
+import {
+  ArrowLeft,
+  Eye,
+  EyeOff,
+  Info,
+  Upload,
+  Loader2,
+} from "lucide-react";
 import CountrySelect from "../components/CountrySelect";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 import logo from "../assets/logo.png";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -19,30 +27,6 @@ const orgTypes = [
   "Faith-Based Organisation",
   "Other",
 ];
-
-const expertiseNeeds = [
-  "Strategy & Planning",
-  "Research & Analysis",
-  "Design & Creative",
-  "Technology & Digital Solutions",
-  "Communications & Marketing",
-  "Training & Capacity Building",
-  "Data & Monitoring",
-  "Operations & Management",
-];
-
-const focusAreas = [
-  "Maternal & Child Health",
-  "Infectious Diseases",
-  "Non-Communicable Diseases",
-  "Mental Health",
-  "Health Systems & Policy",
-  "Environmental Health",
-  "Community Health",
-  "Global Health Security",
-  "Other",
-];
-
 const expertiseOptions = [
   "Delivery & Implementation",
   "Training, Capacity Building & Learning",
@@ -52,7 +36,6 @@ const expertiseOptions = [
   "Communications & Engagement",
   "Policy & Strategy",
 ];
-
 const affiliations = [
   "NGO / Non-profit",
   "Academic / Research Institution",
@@ -65,7 +48,6 @@ const affiliations = [
   "Faith-Based Organisation",
   "Other",
 ];
-
 const genders = ["Female", "Male", "Prefer not to say", "Prefer to self-describe"];
 
 export default function Signup() {
@@ -75,31 +57,24 @@ export default function Signup() {
   if (!role) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#F9FAFB] to-[#EEF2F7] p-6">
-        {/* Logo */}
         <Link to="/" className="mb-8">
           <img src={logo} alt="GlobalHealth.Works" className="h-20 w-auto object-contain" />
         </Link>
-        <h2 className="text-4xl font-extrabold text-[#1E376E] mb-8">
-          Join the Community
-        </h2>
+        <h2 className="text-4xl font-extrabold text-[#1E376E] mb-8">Join the Community</h2>
         <div className="grid md:grid-cols-2 gap-8 w-full max-w-3xl">
           <button
             onClick={() => setRole("taskOwner")}
             className="border border-[#357FE9] bg-white shadow-md p-8 rounded-2xl hover:bg-[#357FE9] hover:text-white transition transform hover:scale-[1.02]"
           >
             <h3 className="text-2xl font-semibold">Task Owner</h3>
-            <p className="text-sm mt-2 text-gray-600">
-              Post health projects & connect with experts.
-            </p>
+            <p className="text-sm mt-2 text-gray-600">Post health projects & connect with experts.</p>
           </button>
           <button
             onClick={() => setRole("solutionProvider")}
             className="border border-[#E96435] bg-white shadow-md p-8 rounded-2xl hover:bg-[#E96435] hover:text-white transition transform hover:scale-[1.02]"
           >
             <h3 className="text-2xl font-semibold">Solution Provider</h3>
-            <p className="text-sm mt-2 text-gray-600">
-              Work on tasks and showcase your skills.
-            </p>
+            <p className="text-sm mt-2 text-gray-600">Work on tasks and showcase your skills.</p>
           </button>
         </div>
         <p className="mt-8 text-gray-700">
@@ -125,19 +100,114 @@ function SignupForm({ role, navigate, goBack }) {
     phone: "",
     organisationName: "",
     organisationType: "",
-    supportNeeded: "",
-    areaOfInterest: "",
     country: "",
     gender: "",
     genderSelfDescribe: "",
     expertise: [],
-    focusAreas: [],
     affiliation: [],
     bio: "",
     professionalLink: "",
+    resume: null,
   });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
+  const [showMissingTooltip, setShowMissingTooltip] = useState(false);
+
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) setFormData({ ...formData, resume: e.target.files[0] });
+  };
+
+  const handleMultiSelect = (field, value) => {
+    setFormData((prev) => {
+      const exists = prev[field].includes(value);
+      return {
+        ...prev,
+        [field]: exists ? prev[field].filter((v) => v !== value) : [...prev[field], value],
+      };
+    });
+  };
+
+  const getPasswordStrength = (password) => {
+    const criteria = [/.{8,}/, /[A-Z]/, /[a-z]/, /[0-9]/, /[^A-Za-z0-9]/];
+    return criteria.reduce((acc, regex) => acc + (regex.test(password) ? 1 : 0), 0);
+  };
+  const passwordStrength = getPasswordStrength(formData.password);
+
+  // merged requiredFields logic
+  const requiredFields = useMemo(() => {
+    const fields = ["title", "firstName", "lastName", "email", "password", "phone", "country", "gender"];
+    if (role === "taskOwner") {
+      fields.push("organisationName", "organisationType");
+    } else if (role === "solutionProvider") {
+      fields.push("affiliation");
+      if (!formData.resume) fields.push("resume");
+      if (formData.expertise.length === 0) fields.push("expertise");
+    }
+    return fields;
+  }, [role, formData]);
+
+  const missingFields = requiredFields.filter((f) => {
+    if (f === "expertise") return formData.expertise.length === 0;
+    return !formData[f];
+  });
+
+  const allFilled = missingFields.length === 0;
+
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (!allFilled) return;
+
+  setLoading(true);
+  try {
+    // 1️⃣ Register user first
+    const res = await fetch(`${API_URL}/api/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...formData, role }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.msg || "Registration failed");
+      setLoading(false);
+      return;
+    }
+
+    // Save user + token
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("role", data.user.role);
+    localStorage.setItem("user", JSON.stringify(data.user));
+
+    // 2️⃣ Upload CV if solutionProvider & file chosen
+    if (role === "solutionProvider" && formData.cvFile) {
+      const token = data.token;
+      const cvForm = new FormData();
+      cvForm.append("cv", formData.cvFile);
+
+      const cvRes = await fetch(`${API_URL}/api/auth/upload-cv`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: cvForm,
+      });
+
+      const cvData = await cvRes.json();
+      if (cvRes.ok) console.log("CV uploaded:", cvData.url);
+      else console.warn("CV upload failed:", cvData.msg);
+    }
+
+    // 3️⃣ Navigate to dashboard
+    navigate(role === "taskOwner" ? "/dashboard/to" : "/dashboard/sp");
+  } catch (err) {
+    console.error("Register error:", err);
+    alert("Something went wrong. Try again.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const Label = ({ text, required }) => (
     <label className="block font-semibold text-gray-800 mb-1">
@@ -145,63 +215,23 @@ function SignupForm({ role, navigate, goBack }) {
     </label>
   );
 
-  const handleChange = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-
-  const handleMultiSelect = (field, value) => {
-    setFormData((prev) => {
-      const exists = prev[field].includes(value);
-      return {
-        ...prev,
-        [field]: exists
-          ? prev[field].filter((v) => v !== value)
-          : [...prev[field], value],
-      };
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_URL}/api/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, role }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok && data.token) {
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("role", data.user.role);
-        localStorage.setItem("user", JSON.stringify(data.user));
-        navigate(role === "taskOwner" ? "/dashboard/to" : "/dashboard/sp");
-      } else {
-        alert(data.msg || "Signup failed");
-      }
-    } catch (err) {
-      console.error("Signup error:", err);
-      alert("Something went wrong. Try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="min-h-screen flex items-start justify-center bg-gradient-to-br from-[#F9FAFB] to-[#EEF2F7] py-12 px-4">
       <form
         onSubmit={handleSubmit}
+        encType="multipart/form-data"
         className="bg-white shadow-xl rounded-2xl p-10 w-full max-w-2xl space-y-6 relative"
+        style={{
+          animation: "fadeIn 0.3s ease-out forwards",
+          "@keyframes fadeIn": {
+            from: { opacity: 0, transform: "translateY(8px)" },
+            to: { opacity: 1, transform: "translateY(0)" },
+          },
+        }}
       >
-        <div className="flex items-center space-x-4 mb-4">
-          <button
-            type="button"
-            onClick={goBack}
-            className="flex items-center text-gray-600 hover:text-[#357FE9]"
-          >
-            <ArrowLeft className="w-5 h-5 mr-1" />
-            Back
+        <div className="flex items-center mb-4">
+          <button type="button" onClick={goBack} className="flex items-center text-gray-600 hover:text-[#357FE9]">
+            <ArrowLeft className="w-5 h-5 mr-1" /> Back
           </button>
         </div>
 
@@ -209,54 +239,46 @@ function SignupForm({ role, navigate, goBack }) {
           {role === "taskOwner" ? "Task Owner" : "Solution Provider"} Registration
         </h2>
 
-        {/* Basic Info */}
+        {/* Name Section */}
         <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
-          {/* Title */}
           <div className="md:col-span-1">
             <Label text="Title" required />
             <select
               name="title"
               value={formData.title}
               onChange={handleChange}
-              className="w-full border p-3 rounded-lg shadow-sm"
+              className="w-full border p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#357FE9]"
               required
             >
               <option value="">Select</option>
               {titles.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
+                <option key={t} value={t}>{t}</option>
               ))}
             </select>
           </div>
-
-          {/* First Name */}
           <div className="md:col-span-2">
             <Label text="First Name" required />
             <input
               name="firstName"
               value={formData.firstName}
               onChange={handleChange}
-              className="w-full border p-3 rounded-lg shadow-sm"
+              className="w-full border p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#357FE9]"
               required
             />
           </div>
-
-          {/* Last Name */}
           <div className="md:col-span-3">
             <Label text="Last Name" required />
             <input
               name="lastName"
               value={formData.lastName}
               onChange={handleChange}
-              className="w-full border p-3 rounded-lg shadow-sm"
+              className="w-full border p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#357FE9]"
               required
             />
           </div>
         </div>
 
-
-        {/* Email & Password */}
+        {/* Email */}
         <div>
           <Label text="Email Address" required />
           <input
@@ -264,44 +286,98 @@ function SignupForm({ role, navigate, goBack }) {
             name="email"
             value={formData.email}
             onChange={handleChange}
-            className="w-full border p-3 rounded-lg shadow-sm"
+            className="w-full border p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#357FE9]"
             required
           />
         </div>
 
+        {/* Password */}
         <div>
           <Label text="Password" required />
-          <input
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            className="w-full border p-3 rounded-lg shadow-sm"
-            required
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              className="w-full border p-3 rounded-lg shadow-sm pr-10 focus:ring-2 focus:ring-[#357FE9]"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-3 text-gray-500 hover:text-gray-700"
+            >
+              {showPassword ? <EyeOff /> : <Eye />}
+            </button>
+          </div>
+
+          {formData.password && (
+            <div className="mt-2">
+              <div className="h-2 bg-gray-200 rounded overflow-hidden">
+                <div
+                  className={`h-2 transition-all duration-300 rounded ${
+                    passwordStrength <= 2
+                      ? "bg-red-500 w-1/4"
+                      : passwordStrength === 3
+                      ? "bg-yellow-400 w-2/4"
+                      : passwordStrength === 4
+                      ? "bg-blue-400 w-3/4"
+                      : "bg-green-500 w-full"
+                  }`}
+                ></div>
+              </div>
+              <p
+                className={`text-xs mt-1 font-medium transition-all duration-300 ${
+                  passwordStrength <= 2
+                    ? "text-red-500"
+                    : passwordStrength === 3
+                    ? "text-yellow-600"
+                    : passwordStrength === 4
+                    ? "text-blue-600"
+                    : "text-green-600"
+                }`}
+              >
+                {passwordStrength <= 2
+                  ? "Weak password, try adding uppercase letters, numbers, and a symbol."
+                  : passwordStrength === 3
+                  ? "Good password strength, add one more symbol or number for extra security."
+                  : passwordStrength === 4
+                  ? "Strong password, this password is quite secure."
+                  : "Excellent! Your password is very strong."}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Phone with Country Code */}
+        <div>
+          <Label text="Phone Number" required />
+          <PhoneInput
+            country={"ng"}
+            value={formData.phone}
+            onChange={(phone) => setFormData({ ...formData, phone })}
+            inputStyle={{
+              width: "100%",
+              height: "48px",
+              borderRadius: "8px",
+              border: "1px solid #ccc",
+            }}
+            buttonStyle={{
+              borderRadius: "8px 0 0 8px",
+              border: "1px solid #ccc",
+            }}
           />
         </div>
 
-        {/* Task Owner Section */}
+        {/* Task Owner Fields */}
         {role === "taskOwner" && (
           <>
-            <div>
-              <Label text="Phone Number" required />
-              <input
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                className="w-full border p-3 rounded-lg shadow-sm"
-                required
-              />
-            </div>
-
-            {/* Organisation Name + Tooltip */}
             <div className="relative">
               <Label text="Organisation Name" required />
               <div className="absolute top-1 right-1">
                 <button
                   type="button"
-                  onClick={() => setShowTooltip(!showTooltip)}
                   onMouseEnter={() => setShowTooltip(true)}
                   onMouseLeave={() => setShowTooltip(false)}
                   className="text-gray-400 hover:text-[#357FE9]"
@@ -310,80 +386,38 @@ function SignupForm({ role, navigate, goBack }) {
                 </button>
               </div>
               {showTooltip && (
-                <div className="absolute top-8 right-0 bg-gray-800 text-white text-sm rounded-lg shadow-lg p-3 w-64 z-10 animate-fadeIn">
-                  Task Owners must work in an organization working in global health.
-                  Individual personal projects are not permitted.
+                <div className="absolute top-8 right-0 bg-gray-800 text-white text-sm rounded-lg shadow-lg p-3 w-64 z-10">
+                  Task Owners must work in an organization in global health.
                 </div>
               )}
               <input
                 name="organisationName"
                 value={formData.organisationName}
                 onChange={handleChange}
-                className="w-full border p-3 rounded-lg shadow-sm mt-1"
+                className="w-full border p-3 rounded-lg shadow-sm mt-1 focus:ring-2 focus:ring-[#357FE9]"
                 required
               />
             </div>
 
-            {/* Organisation Type */}
             <div>
               <Label text="Organisation Type" required />
               <select
                 name="organisationType"
                 value={formData.organisationType}
                 onChange={handleChange}
-                className="w-full border p-3 rounded-lg shadow-sm"
+                className="w-full border p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#357FE9]"
                 required
               >
                 <option value="">Select</option>
                 {orgTypes.map((o) => (
-                  <option key={o} value={o}>
-                    {o}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Support Needed */}
-            <div>
-              <Label text="What kind of support or expertise do you need?" required />
-              <select
-                name="supportNeeded"
-                value={formData.supportNeeded}
-                onChange={handleChange}
-                className="w-full border p-3 rounded-lg shadow-sm"
-                required
-              >
-                <option value="">Select one</option>
-                {expertiseNeeds.map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Area of Interest */}
-            <div>
-              <Label text="Areas of Interest" required />
-              <select
-                name="areaOfInterest"
-                value={formData.areaOfInterest}
-                onChange={handleChange}
-                className="w-full border p-3 rounded-lg shadow-sm"
-                required
-              >
-                <option value="">Select one</option>
-                {focusAreas.map((f) => (
-                  <option key={f} value={f}>
-                    {f}
-                  </option>
+                  <option key={o} value={o}>{o}</option>
                 ))}
               </select>
             </div>
           </>
         )}
 
-        {/* Solution Provider Section */}
+        {/* Solution Provider Fields */}
         {role === "solutionProvider" && (
           <>
             <div>
@@ -394,20 +428,18 @@ function SignupForm({ role, navigate, goBack }) {
                 onChange={(e) =>
                   setFormData({ ...formData, affiliation: [e.target.value] })
                 }
-                className="w-full border p-3 rounded-lg shadow-sm"
+                className="w-full border p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#357FE9]"
                 required
               >
                 <option value="">Select your affiliation</option>
                 {affiliations.map((a) => (
-                  <option key={a} value={a}>
-                    {a}
-                  </option>
+                  <option key={a} value={a}>{a}</option>
                 ))}
               </select>
             </div>
 
             <div>
-              <Label text="What kind of support or expertise do you offer?" required />
+              <Label text="What kind of expertise do you offer?" required />
               <div className="flex flex-wrap gap-2">
                 {expertiseOptions.map((e) => (
                   <button
@@ -426,24 +458,47 @@ function SignupForm({ role, navigate, goBack }) {
               </div>
             </div>
 
+            {/* Resume Upload */}
             <div>
-              <Label text="Tell us about your areas of interest" required />
-              <div className="flex flex-wrap gap-2">
-                {focusAreas.map((fa) => (
-                  <button
-                    key={fa}
-                    type="button"
-                    onClick={() => handleMultiSelect("focusAreas", fa)}
-                    className={`px-3 py-2 rounded-full border text-sm ${
-                      formData.focusAreas.includes(fa)
-                        ? "bg-[#1E376E] text-white border-[#1E376E]"
-                        : "border-gray-300 text-gray-700 hover:border-[#1E376E]"
-                    }`}
-                  >
-                    {fa}
-                  </button>
-                ))}
+              <Label text="Upload Resume / CV" required />
+              <div className="relative">
+                <label
+                  htmlFor="resume-upload"
+                  className="group flex items-center gap-3 border-2 border-dashed border-gray-400 rounded-lg p-5 cursor-pointer hover:border-[#357FE9] hover:bg-[#F7FAFC] transition relative z-10"
+                >
+                  <Upload className="w-6 h-6 text-gray-600 group-hover:text-[#357FE9]" />
+                  <span className="text-gray-600 group-hover:text-[#357FE9]">
+                    Click to upload or drag & drop (PDF, DOC, DOCX)
+                  </span>
+                </label>
+                <input
+                  id="resume-upload"
+                  type="file"
+                  accept=".pdf,.doc,.docx"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
               </div>
+
+              {formData.resume && (
+                <div className="mt-3 flex items-center justify-between bg-gray-50 border rounded-lg p-3 text-sm">
+                  <div>
+                    <p className="font-medium text-gray-700 truncate max-w-[200px]">
+                      {formData.resume.name}
+                    </p>
+                    <p className="text-gray-500 text-xs">
+                      {(formData.resume.size / 1024).toFixed(1)} KB
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, resume: null })}
+                    className="text-red-500 hover:text-red-600 font-semibold"
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
             </div>
           </>
         )}
@@ -463,14 +518,12 @@ function SignupForm({ role, navigate, goBack }) {
             name="gender"
             value={formData.gender}
             onChange={handleChange}
-            className="w-full border p-3 rounded-lg shadow-sm"
+            className="w-full border p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#357FE9]"
             required
           >
             <option value="">Select</option>
             {genders.map((g) => (
-              <option key={g} value={g}>
-                {g}
-              </option>
+              <option key={g} value={g}>{g}</option>
             ))}
           </select>
           {formData.gender === "Prefer to self-describe" && (
@@ -480,12 +533,12 @@ function SignupForm({ role, navigate, goBack }) {
               placeholder="Please specify"
               value={formData.genderSelfDescribe}
               onChange={handleChange}
-              className="w-full border p-3 rounded-lg shadow-sm mt-2"
+              className="w-full border p-3 rounded-lg shadow-sm mt-2 focus:ring-2 focus:ring-[#357FE9]"
             />
           )}
         </div>
 
-        {/* Bio & Links */}
+        {/* Bio & Link */}
         <div>
           <Label text="Short Bio" />
           <textarea
@@ -493,8 +546,8 @@ function SignupForm({ role, navigate, goBack }) {
             value={formData.bio}
             onChange={handleChange}
             rows={4}
-            className="w-full border p-3 rounded-lg shadow-sm"
-            placeholder="Tell us briefly about yourself and your experience..."
+            className="w-full border p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#357FE9]"
+            placeholder="Briefly describe your experience..."
           />
         </div>
 
@@ -505,18 +558,58 @@ function SignupForm({ role, navigate, goBack }) {
             name="professionalLink"
             value={formData.professionalLink}
             onChange={handleChange}
-            className="w-full border p-3 rounded-lg shadow-sm"
+            className="w-full border p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#357FE9]"
             placeholder="https://linkedin.com/in/yourprofile"
           />
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-gradient-to-r from-[#357FE9] to-[#1E376E] text-white py-3 rounded-lg font-semibold shadow hover:opacity-90 disabled:opacity-50 transition"
-        >
-          {loading ? "Creating Account..." : "Create Account"}
-        </button>
+        {/* Submit button + tooltip */}
+        <div className="relative mt-6">
+          <button
+            type="submit"
+            disabled={!allFilled || loading}
+            onMouseEnter={() => !allFilled && setShowMissingTooltip(true)}
+            onMouseLeave={() => setShowMissingTooltip(false)}
+            className={`w-full py-3 rounded-lg font-semibold shadow transition-all duration-300 flex justify-center items-center ${
+              allFilled
+                ? "bg-gradient-to-r from-[#357FE9] to-[#1E376E] text-white hover:opacity-90"
+                : "bg-gray-300 text-gray-600 cursor-not-allowed"
+            }`}
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" /> Creating Account...
+              </>
+            ) : (
+              "Create Account"
+            )}
+          </button>
+
+          {!allFilled && showMissingTooltip && (
+            <div
+              className="absolute left-1/2 -translate-x-1/2 -top-28 bg-white border border-gray-200 shadow-xl rounded-xl p-4 w-72 z-50"
+              style={{
+                animation: "fadeIn 0.3s ease-out forwards",
+                "@keyframes fadeIn": {
+                  from: { opacity: 0, transform: "translateY(6px)" },
+                  to: { opacity: 1, transform: "translateY(0)" },
+                },
+              }}
+            >
+              <div className="flex items-center gap-2 mb-2 text-[#1E376E] font-semibold">
+                <Info size={18} />
+                <span>Complete the following fields:</span>
+              </div>
+              <ul className="list-disc pl-6 text-sm text-gray-700 space-y-1">
+                {missingFields.map((field) => (
+                  <li key={field} className="capitalize">
+                    {field.replace(/([A-Z])/g, " $1")}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
       </form>
     </div>
   );

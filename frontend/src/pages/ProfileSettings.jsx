@@ -8,9 +8,12 @@ import {
   ArrowLeft,
   Edit3,
   Lock,
+  FileText,
+  Trash2,
 } from "lucide-react";
 import CountrySelect from "../components/CountrySelect";
 import FeedbackList from "../components/FeedbackList";
+
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -69,6 +72,7 @@ export default function ProfileSettings() {
   const [user, setUser] = useState({});
   const [role, setRole] = useState(storedUser.role || localStorage.getItem("role") || "solutionProvider");
   const [imageFile, setImageFile] = useState(null);
+  const [cvFile, setCvFile] = useState(null);
   const [saving, setSaving] = useState(false);
   const [editableFields, setEditableFields] = useState({});
 
@@ -140,6 +144,52 @@ export default function ProfileSettings() {
     }
   };
 
+  const handleUploadCv = async () => {
+    if (!cvFile) return alert("Select a file first");
+    try {
+      const form = new FormData();
+      form.append("cv", cvFile);
+      const res = await fetch(`${API_URL}/api/auth/upload-cv`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: form,
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setUser((prev) => ({ ...prev, cvFile: data.url }));
+        alert("CV uploaded successfully");
+      } else alert(data.msg || "CV upload failed");
+    } catch (err) {
+      console.error("Upload CV error:", err);
+    }
+  };
+
+  const handleRemoveCv = async () => {
+    if (!user.cvFile) return;
+    const confirmDelete = confirm("Are you sure you want to remove your CV?");
+    if (!confirmDelete) return;
+    try {
+      const res = await fetch(`${API_URL}/api/auth/me`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ cvFile: "" }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setUser((prev) => ({ ...prev, cvFile: "" }));
+        alert("CV removed successfully");
+      } else alert(data.msg || "Failed to remove CV");
+    } catch (err) {
+      console.error("Remove CV error:", err);
+    }
+  };
+  const handleCv = (e) => {
+    const file = e.target.files[0];
+    if (file) setCvFile(file);
+  };
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -329,7 +379,7 @@ export default function ProfileSettings() {
         <Label text="Affiliation" field="affiliation" />
         <select
           name="affiliation"
-          value={user.affiliation || ""}
+          value={Array.isArray(user.affiliation) ? user.affiliation[0] || "" : user.affiliation || ""}
           onChange={handleChange}
           disabled={!editableFields.affiliation}
           className={`w-full border p-2 rounded transition ${
@@ -366,25 +416,42 @@ export default function ProfileSettings() {
           ))}
         </div>
       </div>
+      {/* CV Upload Section */}
+      <div className="md:col-span-2 mt-4 border-t pt-4">
+        <h3 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+          <FileText className="w-5 h-5 text-[#1E376E]" /> Resume (CV)
+        </h3>
 
-      <div className="md:col-span-2">
-        <Label text="Focus Areas" field="focusAreas" />
-        <div className="flex flex-wrap gap-2">
-          {focusAreas.map((f) => (
-            <button
-              key={f}
-              type="button"
-              onClick={() => editableFields.focusAreas && handleMultiSelect("focusAreas", f)}
-              className={`px-3 py-1 rounded-full border text-sm transition ${
-                user.focusAreas?.includes(f)
-                  ? "bg-[#1E376E] text-white border-[#1E376E]"
-                  : "border-gray-300 text-gray-700"
-              } ${!editableFields.focusAreas ? "opacity-50 cursor-not-allowed" : "hover:border-[#1E376E]"}`}
+        {user.cvFile ? (
+          <div className="flex items-center justify-between bg-gray-50 border rounded p-3">
+            <a
+              href={`${API_URL}${user.cvFile}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#1E376E] hover:underline flex items-center gap-2"
             >
-              {f}
+              <FileText className="w-4 h-4" /> View Uploaded CV
+            </a>
+            <button
+              type="button"
+              onClick={handleRemoveCv}
+              className="text-red-600 hover:text-red-800 flex items-center gap-1 text-sm"
+            >
+              <Trash2 className="w-4 h-4" /> Remove
             </button>
-          ))}
-        </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3">
+            <input type="file" accept=".pdf,.doc,.docx" onChange={handleCv} />
+            <button
+              type="button"
+              onClick={handleUploadCv}
+              className="bg-[#1E376E] text-white px-4 py-1.5 rounded hover:opacity-90 text-sm"
+            >
+              Upload CV
+            </button>
+          </div>
+        )}
       </div>
     </>
   );

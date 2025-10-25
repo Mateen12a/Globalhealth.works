@@ -16,6 +16,7 @@ exports.register = async (req, res) => {
       password,
       role,
       phone,
+      countryCode, // ✅ New
       organisationName,
       organisationType,
       country,
@@ -50,6 +51,7 @@ exports.register = async (req, res) => {
       password: hashedPassword,
       role,
       country,
+      countryCode, // ✅ New
       gender,
       genderSelfDescribe,
       profileImage: "/uploads/default.jpg",
@@ -97,6 +99,28 @@ exports.register = async (req, res) => {
     res.status(500).json({ msg: "Server error" });
   }
 };
+
+// ✅ Upload CV
+exports.uploadCV = async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ msg: "No file uploaded" });
+
+    const user = await User.findById(req.user.id);
+    if (user.cvFile && fs.existsSync(path.join(__dirname, "..", user.cvFile))) {
+      fs.unlinkSync(path.join(__dirname, "..", user.cvFile));
+    }
+
+    const fileUrl = `/uploads/cv/${req.file.filename}`;
+    user.cvFile = fileUrl;
+    await user.save();
+
+    res.json({ msg: "CV uploaded successfully", url: fileUrl });
+  } catch (err) {
+    console.error("UploadCV error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
 
 // Login
 exports.login = async (req, res) => {
@@ -186,6 +210,7 @@ exports.updateMe = async (req, res) => {
       "firstName",
       "lastName",
       "country",
+      "countryCode", // ✅ Added
       "gender",
       "genderSelfDescribe",
       "bio",
@@ -198,6 +223,7 @@ exports.updateMe = async (req, res) => {
       "expertise",
       "focusAreas",
       "profileImage",
+      "cvFile", // ✅ Added
     ];
 
     const filtered = {};
