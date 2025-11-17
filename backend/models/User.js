@@ -3,22 +3,22 @@ const mongoose = require("mongoose");
 const userSchema = new mongoose.Schema(
   {
     // Shared fields
-    title: { type: String }, // Dr., Mr., Ms., etc.
+    title: { type: String },
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    password: { type: String }, // only if not using OAuth
+    password: { type: String },
     role: {
       type: String,
       enum: ["solutionProvider", "taskOwner", "admin"],
       required: true,
     },
     country: { type: String },
-    countryCode: { type: String }, // e.g. +44, +234
+    countryCode: { type: String },
     gender: { type: String },
     genderSelfDescribe: { type: String },
     profileImage: { type: String, default: "/uploads/default.jpg" },
-    oauthProvider: { type: String }, // "google", "linkedin", or "local"
+    oauthProvider: { type: String },
     lastLogin: { type: Date },
 
     // Solution Provider-specific
@@ -28,7 +28,7 @@ const userSchema = new mongoose.Schema(
     availableForWork: { type: Boolean, default: true },
     professionalLink: { type: String },
     bio: { type: String, maxlength: 1000 },
-    cvFile: { type: String }, // Uploaded CV path
+    cvFile: { type: String },
 
     // Task Owner-specific
     phone: { type: String },
@@ -41,6 +41,10 @@ const userSchema = new mongoose.Schema(
     // Admin / system-specific
     isActive: { type: Boolean, default: true },
     isVerified: { type: Boolean, default: false },
+
+    // ✅ New approval fields
+    isApproved: { type: Boolean, default: false },
+    approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
   },
   { timestamps: true }
 );

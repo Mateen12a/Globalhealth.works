@@ -60,7 +60,7 @@ export default function AdminTasks() {
         <tbody>
           {tasks.map((t) => (
             <tr key={t._id} className="hover:bg-gray-50">
-              <td className="border p-2">{t.title}</td>
+              <td className="border p-2"><a href={`/tasks/${t._id}`} target="_blank" rel="noopener noreferrer">{t.title}</a></td>
               <td className="border p-2">{t.owner?.name}</td>
               <td className="border p-2 capitalize">{t.status}</td>
               <td className="border p-2 flex gap-2">

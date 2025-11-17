@@ -2,16 +2,48 @@
 const User = require("../models/User");
 const Task = require("../models/Task");
 const Feedback = require("../models/Feedback")
+const { sendMail, Templates } = require("../utils/mailer");
 
 // === USERS ===
 
 // Get all users
 exports.getAllUsers = async (req, res) => {
   try {
-    const users = await User.find().select("-password");
+    const users = await User.find().select("-password").populate("approvedBy", "firstName lastName email");
     res.json(users);
   } catch (err) {
     console.error("Get users error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
+// Approve a user
+exports.approveUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const adminId = req.user.id;
+
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ msg: "User not found" });
+
+    if (user.isApproved) return res.status(400).json({ msg: "User already approved" });
+
+    user.isApproved = true;
+    user.approvedBy = adminId;
+    await user.save();
+
+    await sendMail(user.email, "Your Account Has Been Approved", Templates.userApprovalNotice(user));
+    await sendMail(req.user.email, "User Account Approved", Templates.approvalConfirmedAdminNotice(req.user, user));
+
+
+
+
+    // Optional: send email to user (to be added with ZohoMail)
+    console.log(`User ${user.email} approved by admin ${adminId}`);
+
+    res.json({ msg: "User approved successfully", user });
+  } catch (err) {
+    console.error("Approve user error:", err);
     res.status(500).json({ msg: "Server error" });
   }
 };
@@ -57,6 +89,47 @@ exports.deleteUser = async (req, res) => {
     res.status(500).json({ msg: "Server error" });
   }
 };
+
+exports.rejectUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+    const adminId = req.user.id;
+
+    if (!reason || reason.trim() === "") {
+      return res.status(400).json({ msg: "Rejection reason is required" });
+    }
+
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ msg: "User not found" });
+
+    // Save reason to user
+    user.rejectionReason = reason;
+    user.isApproved = false;
+    await user.save();
+
+    // Send emails
+    await sendMail(
+      user.email,
+      "Your Account Could Not Be Approved",
+      Templates.rejectionNotice(user, reason)
+    );
+
+    await sendMail(
+      req.user.email,
+      "User Account Rejected",
+      Templates.rejectionConfirmedAdminNotice(req.user, user, reason)
+    );
+
+    console.log(`User ${user.email} rejected by admin ${adminId}. Reason: ${reason}`);
+
+    res.json({ msg: "User rejected successfully", reason });
+  } catch (err) {
+    console.error("Reject user error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
 
 // === TASKS ===
 

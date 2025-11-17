@@ -4,6 +4,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const fs = require("fs");
 const path = require("path");
+const { sendMail, Templates } = require("../utils/mailer");
 
 // Register
 exports.register = async (req, res) => {
@@ -16,7 +17,7 @@ exports.register = async (req, res) => {
       password,
       role,
       phone,
-      countryCode, // ✅ New
+      countryCode,
       organisationName,
       organisationType,
       country,
@@ -51,10 +52,11 @@ exports.register = async (req, res) => {
       password: hashedPassword,
       role,
       country,
-      countryCode, // ✅ New
+      countryCode,
       gender,
       genderSelfDescribe,
       profileImage: "/uploads/default.jpg",
+      isApproved: false, // Wait for admin approval
     });
 
     if (role === "taskOwner") {
@@ -73,32 +75,60 @@ exports.register = async (req, res) => {
     }
 
     await user.save();
-
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
+    // Notify admin of new registration
+    await sendMail(
+      user.email,
+      "Welcome to GlobalHealth.Works",
+      Templates.welcomePending(user)
     );
 
+    // Get all active admins
+const admins = await User.find({ role: "admin", isActive: true }).select("email");
+
+// Build admin recipient list (ensure fallbacks)
+const adminEmails = [
+  ...admins.map((a) => a.email),
+  "admin@globalhealth.works",
+  "ajidagbamateen12@gmail.com",
+];
+
+// Send alert to all admins
+await Promise.all(
+  adminEmails.map((email) =>
+    sendMail(
+      email,
+      "New User Registration Pending Approval",
+      Templates.newUserAdminAlert(user)
+    )
+  )
+);
+
+
+
+    // Optional: send admin notification email here later with ZohoMail
+    console.log(`New ${role} registration pending approval: ${email}`);
+
+    // Generate **temporary token for CV upload** (short expiry)
+    let tempToken = null;
+    if (role === "solutionProvider") {
+      tempToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "5m" });
+    }
+
+    // Send response to frontend
     res.status(201).json({
-      msg: "User registered successfully",
-      token,
+      msg: "Registration successful. Your account is pending admin approval.",
+      tempToken,
       user: {
-        id: user._id,
-        title: user.title,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        name: `${user.title ? user.title + " " : ""}${user.firstName} ${user.lastName}`,
         role: user.role,
-        email: user.email,
-        profileImage: user.profileImage,
       },
     });
+
   } catch (err) {
     console.error("Register error:", err);
     res.status(500).json({ msg: "Server error" });
   }
 };
+
 
 // ✅ Upload CV
 exports.uploadCV = async (req, res) => {
@@ -121,6 +151,42 @@ exports.uploadCV = async (req, res) => {
   }
 };
 
+// Upload CV without token
+exports.uploadCVPublic = async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ msg: "No file uploaded" });
+
+    // Optionally link CV to a pending user email
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ msg: "Email is required to link CV" });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      // If user does not exist yet, just save CV with temp name or store separately
+      return res.status(200).json({
+        msg: "CV uploaded successfully. Link it after registration.",
+        url: `/uploads/cv/${req.file.filename}`,
+      });
+    }
+
+    // If user exists (maybe registered already), attach CV
+    if (user.cvFile && fs.existsSync(path.join(__dirname, "..", user.cvFile))) {
+      fs.unlinkSync(path.join(__dirname, "..", user.cvFile));
+    }
+
+    const fileUrl = `/uploads/cv/${req.file.filename}`;
+    user.cvFile = fileUrl;
+    await user.save();
+
+    res.json({ msg: "CV uploaded successfully", url: fileUrl });
+  } catch (err) {
+    console.error("UploadCVPublic error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
 
 // Login
 exports.login = async (req, res) => {
@@ -133,6 +199,12 @@ exports.login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ msg: "Invalid credentials" });
 
+    if (!user.isApproved) {
+      return res.status(403).json({
+        msg: "Your account is awaiting admin approval. You’ll be notified once approved.",
+      });
+    }
+
     const token = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
@@ -140,6 +212,7 @@ exports.login = async (req, res) => {
     );
 
     res.json({
+      msg: "Login successful",
       token,
       user: {
         id: user._id,
@@ -158,12 +231,10 @@ exports.login = async (req, res) => {
   }
 };
 
-
 // Middleware
 exports.authMiddleware = (req, res, next) => {
   const authHeader = req.headers.authorization || req.headers.Authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    console.log("No or invalid auth header:", authHeader);
     return res.status(401).json({ msg: "No token, authorization denied" });
   }
 
@@ -178,7 +249,6 @@ exports.authMiddleware = (req, res, next) => {
     res.status(401).json({ msg: "Token is not valid" });
   }
 };
-
 
 exports.requireRole = (role) => {
   return (req, res, next) => {
@@ -293,13 +363,63 @@ exports.resetAvatar = async (req, res) => {
 exports.getPublicProfile = async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await User.findById(id).select(
-      "-password -email -isActive -isVerified -lastLogin -oauthProvider"
-    );
+
+    // find user and include approvedBy basic info
+    const user = await User.findById(id)
+      .select("-password -oauthProvider -lastLogin")
+      .populate("approvedBy", "firstName lastName email");
 
     if (!user) return res.status(404).json({ msg: "User not found" });
 
-    res.json(user);
+    // Check requester - allow admins to see everything
+    const authHeader = req.headers.authorization || req.headers.Authorization;
+    let requester = null;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      try {
+        const token = authHeader.split(" ")[1];
+        const jwt = require("jsonwebtoken");
+        requester = jwt.verify(token, process.env.JWT_SECRET);
+      } catch (err) {
+        requester = null; // invalid token -> treat as public viewer
+      }
+    }
+
+    const isAdmin = requester && requester.role === "admin";
+
+    // If not admin, only allow when approved and not suspended
+    if (!isAdmin) {
+      if (!user.isApproved) {
+        return res.status(403).json({ msg: "Profile not available" });
+      }
+      if (user.status === "suspended") {
+        return res.status(403).json({ msg: "Profile not available" });
+      }
+    }
+
+    // send safe public profile fields
+    const publicProfile = {
+      id: user._id,
+      title: user.title,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      name: `${user.title ? user.title + " " : ""}${user.firstName} ${user.lastName}`,
+      role: user.role,
+      country: user.country,
+      profileImage: user.profileImage,
+      bio: user.bio,
+      expertise: user.expertise || [],
+      focusAreas: user.focusAreas || [],
+      links: user.links || [],
+      recentTasks: user.recentTasks || [],
+      isApproved: user.isApproved,
+      status: user.status || "active",
+      rejectionReason: user.rejectionReason || null,
+      approvedBy: user.approvedBy || null,
+      // do NOT include email unless isAdmin
+      email: isAdmin ? user.email : undefined,
+    };
+
+    res.json(publicProfile);
   } catch (err) {
     console.error("GetPublicProfile error:", err);
     res.status(500).json({ msg: "Server error" });

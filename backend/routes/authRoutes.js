@@ -61,5 +61,7 @@ router.patch("/reset-avatar", authMiddleware, resetAvatar);
 
 // Public profile
 router.get("/users/:id/public", getPublicProfile);
+router.get("/admin/review/:id", getPublicProfile);
+
 
 module.exports = router;

@@ -8,15 +8,23 @@ const {
   getAllTasks,
   updateTaskStatus,
   deleteTask,
-  getStats
+  getStats,
+  approveUser,
+  rejectUser
 } = require("../controllers/adminController");
 
 const router = express.Router();
 
 // Users
 router.get("/users", authMiddleware, requireRole("admin"), getAllUsers);
-router.patch("/users/:id/:action", authMiddleware, requireRole("admin"), updateUserStatus);
-router.delete("/users/:id", authMiddleware, requireRole("admin"), deleteUser);
+router.put("/approve/:id", authMiddleware, requireRole("admin"), approveUser);
+router.put("/reject/:id", authMiddleware, requireRole("admin"), rejectUser);
+router.put("/user/:id/suspend", authMiddleware, requireRole("admin"), updateUserStatus);
+router.put("/user/:id/activate", authMiddleware, requireRole("admin"), updateUserStatus);
+
+
+
+
 
 // Tasks
 router.get("/tasks", authMiddleware, requireRole("admin"), getAllTasks);

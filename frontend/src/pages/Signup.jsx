@@ -90,6 +90,7 @@ export default function Signup() {
   return <SignupForm role={role} navigate={navigate} goBack={() => setRole(null)} />;
 }
 
+
 function SignupForm({ role, navigate, goBack }) {
   const [formData, setFormData] = useState({
     title: "",
@@ -113,6 +114,8 @@ function SignupForm({ role, navigate, goBack }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [showMissingTooltip, setShowMissingTooltip] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
   const handleFileChange = (e) => {
@@ -155,13 +158,15 @@ function SignupForm({ role, navigate, goBack }) {
 
   const allFilled = missingFields.length === 0;
 
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
   e.preventDefault();
   if (!allFilled) return;
 
+  // Make sure nothing remains from old sessions
+  localStorage.clear(); 
   setLoading(true);
   try {
-    // 1️⃣ Register user first
+    // 1️⃣ Register user
     const res = await fetch(`${API_URL}/api/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -176,20 +181,14 @@ function SignupForm({ role, navigate, goBack }) {
       return;
     }
 
-    // Save user + token
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("role", data.user.role);
-    localStorage.setItem("user", JSON.stringify(data.user));
-
-    // 2️⃣ Upload CV if solutionProvider & file chosen
-    if (role === "solutionProvider" && formData.cvFile) {
-      const token = data.token;
+    // 2️⃣ Upload CV if solutionProvider
+    if (role === "solutionProvider" && formData.resume) {
       const cvForm = new FormData();
-      cvForm.append("cv", formData.cvFile);
+      cvForm.append("cv", formData.resume);
 
       const cvRes = await fetch(`${API_URL}/api/auth/upload-cv`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${data.tempToken}` }, // temporary token only for CV upload
         body: cvForm,
       });
 
@@ -198,8 +197,19 @@ function SignupForm({ role, navigate, goBack }) {
       else console.warn("CV upload failed:", cvData.msg);
     }
 
-    // 3️⃣ Navigate to dashboard
-    navigate(role === "taskOwner" ? "/dashboard/to" : "/dashboard/sp");
+    // 3️⃣ Ensure no login occurs
+    // Remove any token/state that could log in the user
+    delete data.tempToken;
+    delete data.user;
+    delete data.role;
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
+
+    // 4️⃣ Show success modal
+    setShowSuccessModal(true);
+
   } catch (err) {
     console.error("Register error:", err);
     alert("Something went wrong. Try again.");
@@ -207,6 +217,7 @@ function SignupForm({ role, navigate, goBack }) {
     setLoading(false);
   }
 };
+
 
 
   const Label = ({ text, required }) => (
@@ -611,6 +622,43 @@ function SignupForm({ role, navigate, goBack }) {
           )}
         </div>
       </form>
+      {showSuccessModal && (
+  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 text-center animate-fadeIn">
+      <img src={logo} alt="GlobalHealth.Works" className="h-16 mx-auto mb-4" />
+      <h2 className="text-2xl font-bold text-[#1E376E] mb-3">
+        Registration Successful!
+      </h2>
+      <p className="text-gray-600 text-sm mb-6">
+        Your account has been successfully created.  
+        It will be reviewed by an admin and approved within 24 hours.
+        You’ll receive an email once it’s verified.
+      </p>
+      <button
+        onClick={() => {
+          setShowSuccessModal(false);
+          ["token", "user", "role"].forEach((k) => localStorage.removeItem(k));
+          navigate("/login");
+        }}
+        className="w-full py-3 rounded-lg font-semibold bg-gradient-to-r from-[#357FE9] to-[#1E376E] text-white hover:opacity-90 transition-all duration-300"
+      >
+        Go to Login
+      </button>
+    </div>
+  </div>
+)}
+<style>
+{`
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fadeIn {
+    animation: fadeIn 0.4s ease-out forwards;
+  }
+`}
+</style>
+
     </div>
   );
 }

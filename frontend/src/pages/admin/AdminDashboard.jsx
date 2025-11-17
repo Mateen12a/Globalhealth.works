@@ -1,7 +1,7 @@
 // src/pages/admin/AdminDashboard.jsx
 import { useEffect, useState } from "react";
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
-import UsersTable from "../../components/admin/UsersTable";
+import AdminUsers from "./AdminUsers";
 import TasksTable from "../../components/admin/TasksTable";
 import FeedbackTable from "../../components/admin/FeedbackTable";
 const API_URL = import.meta.env.VITE_API_URL;
@@ -59,7 +59,7 @@ export default function AdminDashboard() {
 
         {/* Panel */}
         <div className="bg-white rounded-xl shadow-md p-6">
-          {activeTab === "users" && <UsersTable />}
+          {activeTab === "users" && <AdminUsers />}
           {activeTab === "tasks" && <TasksTable />}
           {activeTab === "feedback" && <FeedbackTable />}
         </div>

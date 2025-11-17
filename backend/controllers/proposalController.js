@@ -4,6 +4,7 @@ const Task = require("../models/Task");
 const User = require("../models/User");
 const path = require("path");
 const fs = require("fs");
+const { sendMail, Templates } = require("../utils/mailer");
 
 // Create a proposal (multipart/form-data if attachments)
 exports.createProposal = async (req, res) => {
@@ -46,6 +47,26 @@ exports.createProposal = async (req, res) => {
     // await task.save();
 
     // TODO: trigger notification to task.owner (in-app / email)
+
+    // After saving the proposal
+    try {
+      const taskOwner = task.owner; // already populated
+      const applicant = await User.findById(fromUserId).lean();
+
+      // Email to task owner
+      if (taskOwner.email) {
+        const htmlOwner = Templates.proposalSubmitted(taskOwner, applicant, task, proposal);
+        await sendMail(taskOwner.email, `New proposal for your task "${task.title}"`, htmlOwner);
+      }
+
+      // Email to applicant (solution provider)
+      if (applicant.email) {
+        const htmlApplicant = Templates.proposalSubmissionConfirmation(applicant, task, proposal);
+        await sendMail(applicant.email, `Your proposal for "${task.title}" was submitted`, htmlApplicant);
+      }
+    } catch (emailErr) {
+      console.warn("Proposal email failed:", emailErr);
+    }
     res.status(201).json({ msg: "Proposal submitted", proposal });
   } catch (err) {
     console.error("createProposal error:", err);

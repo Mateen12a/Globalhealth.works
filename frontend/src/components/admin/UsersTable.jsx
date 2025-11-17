@@ -50,14 +50,16 @@ export default function UsersTable() {
         </thead>
         <tbody>
           {users
-            .filter((u) =>
-              [u.name, u.email].some((field) =>
-                field.toLowerCase().includes(search.toLowerCase())
-              )
-            )
+            .filter((u) => {
+              const name = `${u.firstName ?? ""} ${u.lastName ?? ""}`.toLowerCase();
+              const email = u.email?.toLowerCase() || "";
+              const s = search.toLowerCase();
+
+              return name.includes(s) || email.includes(s);
+            })
             .map((u) => (
               <tr key={u._id} className="border-b">
-                <td className="p-2">{u.name}</td>
+                <td className="p-2"><a href={`/review/${u._id}`}>{u.firstName} {u.lastName}</a></td>
                 <td className="p-2">{u.email}</td>
                 <td className="p-2 capitalize">{u.role}</td>
                 <td className="p-2">

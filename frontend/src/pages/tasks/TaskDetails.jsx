@@ -20,6 +20,7 @@ import FeedbackForm from "../../components/FeedbackForm";
 import FeedbackList from "../../components/FeedbackList";
 import EditTaskModal from "../../components/tasks/EditTaskModal";
 import PublicProfileModal from "../../components/profile/PublicProfileModal";
+import { Briefcase } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -168,6 +169,21 @@ export default function TaskDetails() {
   if (loading) return <p className="text-center p-8">Loading...</p>;
   if (!task) return <p className="text-center p-8">Task not found</p>;
 
+  // Helper to format roles
+const formatRole = (role) => {
+  if (!role) return "";
+  switch (role) {
+    case "taskOwner":
+      return "Task Owner";
+    case "solutionProvider":
+      return "Solution Provider";
+    case "admin":
+      return "Admin";
+    default:
+      return role;
+  }
+};
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#F8FAFC] to-[#EEF2F7] p-4 md:p-8">
       <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-6 md:p-10">
@@ -195,6 +211,27 @@ export default function TaskDetails() {
           </div>
         </div>
 
+        {role === "admin" && (
+          <div className="flex items-center space-x-4">
+                  <div className="relative w-16 h-16">
+                    <img
+                      src={task.owner.profileImage?.startsWith("http") ? task.owner.profileImage : `${API_URL}${task.owner.profileImage}`}
+                      alt={`${task.owner.firstName} ${task.owner.lastName}`}
+                      className="w-16 h-16 rounded-full object-cover border-2 border-[#1e3a8a] shadow"
+                    />
+                  </div>
+
+                  <div>
+                    <h1 className="text-2xl font-bold flex items-center gap-2">
+                      {task.owner.firstName} {task.owner.lastName}
+                    </h1>
+
+                    <p className="text-gray-600 flex items-center gap-1">
+                      <Briefcase className="w-4 h-4" /> {formatRole(task.owner.role)}
+                    </p>
+                  </div>
+          </div>
+        )}
         {/* Description */}
         <div className="border-t border-gray-100 pt-5 mb-6">
           <h2 className="text-xl font-semibold text-[#357FE9] flex items-center gap-2 mb-2">

@@ -45,6 +45,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <Route path="/inbox" element={<InboxPage />} />
       <Route path="/chat/:conversationId" element={<ChatPage />} />
       <Route path="/profile/:id" element={<PublicProfile />} />
+      <Route path="/review/:id" element={<PublicProfile />} />
+
 
     </Routes>
   </BrowserRouter>

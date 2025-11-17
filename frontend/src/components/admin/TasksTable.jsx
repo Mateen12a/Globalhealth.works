@@ -57,7 +57,7 @@ export default function TasksTable() {
             .filter((t) => filter === "all" || t.status === filter)
             .map((t) => (
               <tr key={t._id} className="border-b">
-                <td className="p-2">{t.title}</td>
+                <td className="p-2"><a href={`/tasks/${t._id}`} target="_blank" rel="noopener noreferrer">{t.title}</a></td>
                 <td className="p-2">{t.owner?.name}</td>
                 <td className="p-2">{t.status}</td>
                 <td className="p-2 flex gap-2">

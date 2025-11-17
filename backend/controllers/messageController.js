@@ -8,6 +8,7 @@ const Message = require("../models/Message");
 const Conversation = require("../models/Conversation");
 const User = require("../models/User");
 const createNotification = require("../utils/createNotification");
+const { sendMail, Templates } = require("../utils/mailer");
 
 // ---------- CONFIG ----------
 const MAX_FILES = 5;
@@ -213,6 +214,28 @@ exports.sendMessage = async (req, res) => {
       // non-fatal
       console.warn("createNotification failed", nerr);
     }
+    try {
+      const receiverUser = await User.findById(finalReceiver).lean();
+      const senderUser = await User.findById(sender).lean();
+
+      if (receiverUser?.email) {
+        const html = Templates.newMessageNotification(
+          receiverUser,
+          senderUser,
+          message.text,
+          convoId
+        );
+
+        await sendMail(
+          receiverUser.email,
+          `New message from ${senderUser.firstName}`,
+          html
+        );
+      }
+    } catch (emailErr) {
+      console.warn("Email send failed:", emailErr);
+    }
+
 
     res.status(201).json(message);
   } catch (err) {

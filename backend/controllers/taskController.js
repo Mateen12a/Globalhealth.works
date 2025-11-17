@@ -3,6 +3,7 @@ const createNotification = require("../utils/createNotification");
 const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
+const { sendMail, Templates } = require("../utils/mailer");
 
 // === Multer setup ===
 const storage = multer.diskStorage({
@@ -51,6 +52,22 @@ exports.createTask = async (req, res) => {
     });
 
     await newTask.save();
+
+    // Fetch owner data
+    const owner = await User.findById(req.user.id);
+
+    // 🔥 Send task creation confirmation email to the user
+    const userHtml = Templates.taskCreatedUserNotice(owner, newTask);
+    await sendMail(owner.email, "Your Task Has Been Created", userHtml);
+
+    // 🔥 Notify all admins
+    const admins = await User.find({ role: "admin" });
+    for (const admin of admins) {
+      const html = Templates.newTaskAdminAlert(newTask, owner);
+      await sendMail(admin.email, "New Task Submitted", html);
+    }
+
+
     res.status(201).json(newTask);
   } catch (err) {
     console.error("Task creation error:", err);
@@ -149,7 +166,7 @@ exports.getTasks = async (req, res) => {
 exports.getTask = async (req, res) => {
   try {
     const task = await Task.findById(req.params.id)
-      .populate("owner", "firstName lastName email")
+      .populate("owner", "firstName lastName email profileImage role")
       .populate("applicants", "firstName lastName email expertise");
     if (!task) return res.status(404).json({ msg: "Task not found" });
     res.json(task);
