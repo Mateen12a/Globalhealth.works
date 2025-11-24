@@ -80,12 +80,19 @@ export default function Navbar() {
               {userMenuOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-lg py-2 z-50">
                   <Link
-                    to={user.role?.toLowerCase().includes("solution") ? "/dashboard/sp" : "/dashboard/to"}
+                    to={
+                      user.role?.toLowerCase().includes("admin")
+                        ? "/dashboard/admin"
+                        : user.role?.toLowerCase().includes("solution")
+                        ? "/dashboard/sp"
+                        : "/dashboard/to"
+                    }
                     className="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition"
                     onClick={() => setUserMenuOpen(false)}
                   >
                     Go to Dashboard
                   </Link>
+
                   <button
                     onClick={logout}
                     className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 transition"
