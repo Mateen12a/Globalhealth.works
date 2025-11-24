@@ -3,9 +3,8 @@ const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
   host: "smtppro.zoho.com",
-  port: 587,
-  secure: false,
-  requireTLS: true,
+  port: 465,
+  secure: true,
   auth: {
     user: "admin@globalhealth.works",
     pass: "nkCpKAmMpvzL",
