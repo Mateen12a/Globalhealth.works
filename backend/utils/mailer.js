@@ -1,15 +1,20 @@
 // utils/mailer.js
-const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
 
-const transporter = nodemailer.createTransport({
-  host: "smtppro.zoho.com",
-  port: 465,
-  secure: true,
-  auth: {
-    user: "admin@globalhealth.works",
-    pass: "nkCpKAmMpvzL",
-  },
-});
+// const nodemailer = require("nodemailer");
+
+// const transporter = nodemailer.createTransport({
+//   host: "smtppro.zoho.com",
+//   port: 465,
+//   secure: true,
+//   auth: {
+//     user: "admin@globalhealth.works",
+//     pass: "nkCpKAmMpvzL",
+//   },
+// });
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
 
 
 // ✅ Base email layout template with GlobalHealth.Works branding
@@ -36,19 +41,26 @@ function emailLayout({ title, content }) {
   `;
 }
 
+// RESEND sendMail function
 async function sendMail(to, subject, htmlContent) {
   try {
-    const info = await transporter.sendMail({
-      from: `"GlobalHealth.Works" <admin@globalhealth.works>`,
+    const { data, error } = await resend.emails.send({
+      from: "GlobalHealth.Works <admin@globalhealth.works>",
       to,
       subject,
       html: htmlContent,
     });
-    console.log(`📧 Email sent to ${to} (${info.messageId})`);
+
+    if (error) {
+      console.error("Email send error:", error);
+    } else {
+      console.log("📧 Email sent:", data.id);
+    }
   } catch (err) {
     console.error("Email send error:", err);
   }
 }
+
 
 
 // ✅ Templates for reuse
