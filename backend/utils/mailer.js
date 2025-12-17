@@ -152,7 +152,7 @@ function emailLayout({ title, preheader = '', content, footerText = '' }) {
                     <table role="presentation" cellspacing="0" cellpadding="0" border="0">
                       <tr>
                         <td style="background-color:#ffffff;border-radius:12px;padding:12px 20px;">
-                          <span style="font-size:20px;font-weight:700;color:${COLORS.primary};font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">GlobalHealth.Works</span>
+                          <img src="https://globalhealth.works/new-logo.png" alt="GlobalHealth.Works" style="height:40px;width:auto;display:block;" />
                         </td>
                       </tr>
                     </table>
@@ -178,7 +178,7 @@ function emailLayout({ title, preheader = '', content, footerText = '' }) {
                   <td style="text-align:center;">
                     ${footerText ? `<p style="color:${COLORS.textLight};font-size:13px;margin-bottom:12px;">${footerText}</p>` : ''}
                     <p style="color:${COLORS.textLight};font-size:12px;margin:0;">
-                      &copy; ${new Date().getFullYear()} GlobalHealth.Works &middot; Building a stronger global health community
+                      &copy; ${new Date().getFullYear()} GlobalHealth.Works &middot; Where Global Health Problems Meet Global Health Solutions
                     </p>
                     <p style="margin-top:12px;">
                       <a href="https://globalhealth.works" style="color:${COLORS.primary};text-decoration:none;font-size:12px;margin:0 8px;">Website</a>
@@ -311,20 +311,32 @@ const Templates = {
       `,
     }),
 
-  welcomePending: (user) =>
-    emailLayout({
-      title: "Welcome to GlobalHealth.Works",
-      preheader: "Your registration is being reviewed",
-      content: `
+  welcomePending: (user) => {
+    const isSolutionProvider = user.role === "solutionProvider";
+    const roleTitle = isSolutionProvider ? "Solution Provider" : "Task Owner";
+    
+    const solutionProviderContent = `
         <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Dear ${user.firstName},</p>
-        <p style="color:${COLORS.textLight};margin-bottom:24px;">Thank you for joining the <strong style="color:${COLORS.textDark};">GlobalHealth.Works</strong> community!</p>
+        <p style="color:${COLORS.textLight};margin-bottom:24px;">Thank you for applying to join <strong style="color:${COLORS.textDark};">GlobalHealth.Works</strong> as a Solution Provider.</p>
+        <p style="color:${COLORS.textLight};margin-bottom:24px;">We are building the world's premier network of global health professionals, and we are excited to review your application.</p>
         
         <div class="info-box">
-          <strong>Account Under Review</strong>
-          <p style="margin:8px 0 0;font-size:14px;">Our admin team is reviewing your registration. You'll receive a confirmation email once approved.</p>
+          <strong>What happens next?</strong>
+          <p style="margin:8px 0 0;font-size:14px;">To ensure the quality of our marketplace, our team verifies the credentials of every provider. This process typically takes 24-48 hours.</p>
         </div>
         
-        <p style="color:${COLORS.textLight};margin-bottom:24px;">In the meantime, feel free to explore our platform and learn about how we connect global health professionals worldwide.</p>
+        <p style="color:${COLORS.textDark};font-weight:600;margin:24px 0 12px;">Once verified, you will unlock access to:</p>
+        <ul style="color:${COLORS.textLight};margin:0 0 24px;padding-left:20px;">
+          <li style="margin-bottom:8px;"><strong style="color:${COLORS.textDark};">High-Impact Tasks:</strong> Browse and apply for challenges posted by Governments, leading NGOs and health organizations.</li>
+          <li style="margin-bottom:8px;"><strong style="color:${COLORS.textDark};">Global Collaboration:</strong> Partner with other experts to deliver comprehensive solutions.</li>
+        </ul>
+        
+        <div class="warning-box">
+          <strong>While you wait:</strong>
+          <p style="margin:8px 0 0;font-size:14px;">We recommend preparing your portfolio or CV so you are ready to apply for tasks the moment your account is live.</p>
+        </div>
+        
+        <p style="color:${COLORS.textLight};margin:24px 0;">We're thrilled to have you join a growing network of researchers, practitioners, technologists, and innovators. Your skills and insights are what make this community powerful.</p>
         
         <div style="text-align:center;margin-top:32px;">
           <a href="https://globalhealth.works" class="btn btn-primary">
@@ -336,8 +348,43 @@ const Templates = {
           Warm regards,<br>
           <strong style="color:${COLORS.textDark};">The GlobalHealth.Works Team</strong>
         </p>
-      `,
-    }),
+      `;
+    
+    const taskOwnerContent = `
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Dear ${user.firstName},</p>
+        <p style="color:${COLORS.textLight};margin-bottom:24px;">Thank you for registering with <strong style="color:${COLORS.textDark};">GlobalHealth.Works</strong> as a Task Owner.</p>
+        <p style="color:${COLORS.textLight};margin-bottom:24px;">We connect organizations with global health professionals who can help solve your most pressing challenges.</p>
+        
+        <div class="info-box">
+          <strong>Account Under Review</strong>
+          <p style="margin:8px 0 0;font-size:14px;">Our team is reviewing your registration to verify your organization. This typically takes 24-48 hours.</p>
+        </div>
+        
+        <p style="color:${COLORS.textDark};font-weight:600;margin:24px 0 12px;">Once approved, you'll be able to:</p>
+        <ul style="color:${COLORS.textLight};margin:0 0 24px;padding-left:20px;">
+          <li style="margin-bottom:8px;"><strong style="color:${COLORS.textDark};">Post Tasks:</strong> Create detailed challenges and projects for global health experts to solve.</li>
+          <li style="margin-bottom:8px;"><strong style="color:${COLORS.textDark};">Review Proposals:</strong> Receive applications from qualified professionals worldwide.</li>
+          <li style="margin-bottom:8px;"><strong style="color:${COLORS.textDark};">Collaborate:</strong> Work directly with selected experts to achieve your goals.</li>
+        </ul>
+        
+        <div style="text-align:center;margin-top:32px;">
+          <a href="https://globalhealth.works" class="btn btn-primary">
+            Explore Platform
+          </a>
+        </div>
+        
+        <p style="color:${COLORS.textLight};margin-top:32px;font-size:14px;">
+          Warm regards,<br>
+          <strong style="color:${COLORS.textDark};">The GlobalHealth.Works Team</strong>
+        </p>
+      `;
+    
+    return emailLayout({
+      title: "Welcome to GlobalHealth.Works",
+      preheader: `Your ${roleTitle} registration is being reviewed`,
+      content: isSolutionProvider ? solutionProviderContent : taskOwnerContent,
+    });
+  },
 
   rejectionNotice: (user, reason) =>
     emailLayout({

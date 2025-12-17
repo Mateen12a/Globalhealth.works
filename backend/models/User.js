@@ -43,10 +43,11 @@ const userSchema = new mongoose.Schema(
     isVerified: { type: Boolean, default: false },
     
     // Admin type: superAdmin has additional privileges like changing user roles
+    // Only applicable for users with role === "admin"
     adminType: { 
       type: String, 
-      enum: ["superAdmin", "admin"], 
-      default: "admin" 
+      enum: ["superAdmin", "admin", null], 
+      default: null 
     },
 
     // Approval fields

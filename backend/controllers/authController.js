@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const fs = require("fs");
 const path = require("path");
 const { sendMail, Templates } = require("../utils/mailer");
+const createNotification = require("../utils/createNotification");
 
 // Register
 exports.register = async (req, res) => {
@@ -83,7 +84,7 @@ exports.register = async (req, res) => {
     );
 
     // Get all active admins
-const admins = await User.find({ role: "admin", isActive: true }).select("email");
+const admins = await User.find({ role: "admin", isActive: true }).select("email _id firstName lastName");
 
 // Build admin recipient list (ensure fallbacks)
 const adminEmails = [
@@ -92,13 +93,30 @@ const adminEmails = [
   "ajidagbamateen12@gmail.com",
 ];
 
-// Send alert to all admins
+// Send alert email to all admins
 await Promise.all(
   adminEmails.map((email) =>
     sendMail(
       email,
       "New User Registration Pending Approval",
       Templates.newUserAdminAlert(user)
+    )
+  )
+);
+
+// Create in-app notifications for all admins
+const roleDisplay = role === "solutionProvider" ? "Solution Provider" : "Task Owner";
+await Promise.all(
+  admins.map((admin) =>
+    createNotification(
+      admin._id,
+      "system",
+      `New ${roleDisplay} registration: ${user.firstName} ${user.lastName} (${user.email}) requires your approval.`,
+      `/admin/users/${user._id}`,
+      {
+        title: "New User Registration",
+        sendEmail: false,
+      }
     )
   )
 );
