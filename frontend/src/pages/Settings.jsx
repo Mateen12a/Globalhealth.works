@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 import { useTheme } from "../context/ThemeContext";
@@ -8,7 +8,8 @@ import {
   UploadCloud, RotateCcw, Edit3, Lock, FileText, Trash2,
   Sun, Moon, Monitor, Save, Camera, Shield, Bell, Palette,
   User, Key, Mail, Eye, EyeOff, AlertTriangle, CheckCircle,
-  Smartphone, Globe, LogOut
+  Smartphone, Globe, LogOut, Info, Scale, MessageSquare,
+  ExternalLink, ChevronRight
 } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -270,12 +271,15 @@ export default function Settings() {
 
   const getImageUrl = (img) => (img?.startsWith("http") ? img : img ? `${API_URL}${img}` : "");
 
+  const isAdmin = role?.toLowerCase().includes("admin");
+  
   const tabs = [
     { id: "profile", label: "Profile", icon: Edit3 },
     { id: "security", label: "Security", icon: Shield },
     { id: "notifications", label: "Notifications", icon: Bell },
     { id: "appearance", label: "Appearance", icon: Palette },
     { id: "account", label: "Account", icon: User },
+    ...(!isAdmin ? [{ id: "platform", label: "Platform", icon: Info }] : []),
   ];
 
   return (
@@ -540,6 +544,93 @@ export default function Settings() {
                   Delete Account
                 </button>
               </div>
+            </div>
+          </motion.div>
+        )}
+
+        {activeTab === "platform" && !isAdmin && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+            <div className="card p-6">
+              <h2 className="text-xl font-semibold text-[var(--color-text)] mb-6 flex items-center gap-2">
+                <Info className="w-5 h-5 text-[var(--color-primary)]" />
+                Learn About the Platform
+              </h2>
+              
+              <div className="space-y-3">
+                <Link
+                  to="/about"
+                  className="flex items-center justify-between p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-primary)]/50 hover:bg-[var(--color-primary)]/5 transition-all group"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-light)] flex items-center justify-center text-white">
+                      <Globe size={20} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-[var(--color-text)]">About Us</p>
+                      <p className="text-sm text-[var(--color-text-muted)]">Learn about our mission and values</p>
+                    </div>
+                  </div>
+                  <ChevronRight size={20} className="text-[var(--color-text-muted)] group-hover:text-[var(--color-primary)] transition-colors" />
+                </Link>
+
+                <Link
+                  to="/privacy"
+                  className="flex items-center justify-between p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-primary)]/50 hover:bg-[var(--color-primary)]/5 transition-all group"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white">
+                      <Shield size={20} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-[var(--color-text)]">Privacy Policy</p>
+                      <p className="text-sm text-[var(--color-text-muted)]">How we protect your data and privacy</p>
+                    </div>
+                  </div>
+                  <ChevronRight size={20} className="text-[var(--color-text-muted)] group-hover:text-[var(--color-primary)] transition-colors" />
+                </Link>
+
+                <Link
+                  to="/terms"
+                  className="flex items-center justify-between p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-primary)]/50 hover:bg-[var(--color-primary)]/5 transition-all group"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white">
+                      <Scale size={20} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-[var(--color-text)]">Terms of Service</p>
+                      <p className="text-sm text-[var(--color-text-muted)]">Our terms and conditions</p>
+                    </div>
+                  </div>
+                  <ChevronRight size={20} className="text-[var(--color-text-muted)] group-hover:text-[var(--color-primary)] transition-colors" />
+                </Link>
+
+                <Link
+                  to="/contact"
+                  className="flex items-center justify-between p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)] hover:border-[var(--color-primary)]/50 hover:bg-[var(--color-primary)]/5 transition-all group"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--color-accent)] to-orange-500 flex items-center justify-center text-white">
+                      <MessageSquare size={20} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-[var(--color-text)]">Contact Us</p>
+                      <p className="text-sm text-[var(--color-text-muted)]">Get in touch with our team</p>
+                    </div>
+                  </div>
+                  <ChevronRight size={20} className="text-[var(--color-text-muted)] group-hover:text-[var(--color-primary)] transition-colors" />
+                </Link>
+              </div>
+            </div>
+
+            <div className="card p-6">
+              <h2 className="text-xl font-semibold text-[var(--color-text)] mb-4 flex items-center gap-2">
+                <ExternalLink className="w-5 h-5 text-[var(--color-primary)]" />
+                Quick Links
+              </h2>
+              <p className="text-[var(--color-text-secondary)] text-sm">
+                Access important information about GlobalHealth.Works, our policies, and how to reach us. These pages provide details about our mission, data protection practices, service terms, and support options.
+              </p>
             </div>
           </motion.div>
         )}

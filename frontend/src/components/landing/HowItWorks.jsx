@@ -43,7 +43,7 @@ const steps = [
 
 export default function HowItWorks() {
   return (
-    <section className="py-24 md:py-32 bg-gradient-to-b from-[var(--color-bg)] to-[var(--color-bg-secondary)] relative overflow-hidden">
+    <section id="how-it-works" className="py-24 md:py-32 bg-gradient-to-b from-[var(--color-bg)] to-[var(--color-bg-secondary)] relative overflow-hidden">
       {/* Background decorative elements */}
       <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-[var(--color-primary-light)]/5 to-transparent rounded-full blur-3xl" />
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-br from-[var(--color-accent)]/5 to-transparent rounded-full blur-3xl" />

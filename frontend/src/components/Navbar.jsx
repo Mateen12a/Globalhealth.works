@@ -11,6 +11,8 @@ import {
   Settings,
   LayoutDashboard,
   Bell,
+  Info,
+  HelpCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "../context/ThemeContext";
@@ -66,6 +68,24 @@ export default function Navbar() {
     return "/dashboard/to";
   };
 
+  const scrollToHowItWorks = (e) => {
+    e.preventDefault();
+    setMenuOpen(false);
+    if (isLandingPage) {
+      const element = document.getElementById('how-it-works');
+      if (element) {
+        const navHeight = 80;
+        const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
+        window.scrollTo({
+          top: elementPosition - navHeight,
+          behavior: 'smooth'
+        });
+      }
+    } else {
+      navigate('/#how-it-works');
+    }
+  };
+
   const profileImage = user?.profileImage
     ? `${API_URL}${user.profileImage}`
     : null;
@@ -77,14 +97,14 @@ export default function Navbar() {
       transition={{ duration: 0.5, ease: "easeOut" }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
   isLandingPage
-    ? "bg-white border-b border-gray-100" // Locked white background for Landing Page
+    ? "bg-white border-b border-gray-100"
     : scrolled
-      ? "bg-white/95 dark:bg-slate-900/5 backdrop-blur-md shadow-lg border-b border-gray-200/50 dark:border-slate-700/50" // Scroll effect for other pages
-      : "bg-white  border-b border-gray-100" // Top of page style for other pages
+      ? "bg-white/95 dark:bg-slate-900/5 backdrop-blur-md shadow-lg border-b border-gray-200/50 dark:border-slate-700/50"
+      : "bg-white  border-b border-gray-100"
 }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 md:h-20">
-          <Link to="/" className="flex items-center gap-3 group">
+          <Link to={user ? getDashboardLink() : "/"} className="flex items-center gap-3 group">
             <motion.div
               whileHover={{ scale: 1.02 }}
               transition={{ duration: 0.2 }}
@@ -102,7 +122,7 @@ export default function Navbar() {
                 className={`h-10 md:h-12 w-auto object-contain ${needsLightContent && theme === "light" ? "" : ""}`}
               />
               <span
-                className={`font-bold text-lg md:text-xl tracking-tight hidden sm:block ${
+                className={`font-bold text-sm sm:text-lg md:text-xl tracking-tight ${
                   needsLightContent && theme === "light"
                     ? "text-[var(--color-primary)]"
                     : "text-[var(--color-primary)]"
@@ -113,18 +133,38 @@ export default function Navbar() {
             </motion.div>
           </Link>
 
-          <div className="hidden md:flex items-center gap-4">
-            <motion.button
-              onClick={toggleTheme}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              className={`p-2.5 rounded-xl transition-colors ${
-                theme === "dark"
-                  ? "bg-slate-800 hover:bg-slate-700 text-gray-200"
-                  : "bg-[var(--color-primary)]/10 hover:bg-[var(--color-primary)]/20 text-[var(--color-primary)]"
-              }`}
-              aria-label="Toggle theme"
-            >
+          <div className="hidden md:flex items-center gap-6">
+            {!user && (
+              <div className="flex items-center gap-1">
+                <Link
+                  to="/about"
+                  className="flex items-center gap-2 px-4 py-2 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] font-medium transition-colors rounded-lg hover:bg-[var(--color-primary)]/5"
+                >
+                  <Info size={18} />
+                  About
+                </Link>
+                <button
+                  onClick={scrollToHowItWorks}
+                  className="flex items-center gap-2 px-4 py-2 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] font-medium transition-colors rounded-lg hover:bg-[var(--color-primary)]/5"
+                >
+                  <HelpCircle size={18} />
+                  How It Works
+                </button>
+              </div>
+            )}
+
+            <div className="relative group">
+              <motion.button
+                onClick={toggleTheme}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
+                className={`p-2.5 rounded-xl transition-colors ${
+                  theme === "dark"
+                    ? "bg-slate-800 hover:bg-slate-700 text-gray-200"
+                    : "bg-[var(--color-primary)]/10 hover:bg-[var(--color-primary)]/20 text-[var(--color-primary)]"
+                }`}
+                aria-label="Toggle theme"
+              >
               <AnimatePresence mode="wait">
                 {theme === "light" ? (
                   <motion.div
@@ -154,7 +194,11 @@ export default function Navbar() {
                   </motion.div>
                 )}
               </AnimatePresence>
-            </motion.button>
+              </motion.button>
+              <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
+                {theme === "light" ? "Switch to Dark Mode" : "Switch to Light Mode"}
+              </div>
+            </div>
 
             {!user ? (
               <div className="flex items-center gap-3">
@@ -277,21 +321,24 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-2 md:hidden">
-            <motion.button
-              onClick={toggleTheme}
-              whileTap={{ scale: 0.95 }}
-              className={`p-2 rounded-lg ${
-                theme === "dark"
-                  ? "bg-slate-800 text-gray-200"
-                  : "bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
-              }`}
-            >
-              {theme === "light" ? (
-                <Moon size={20} className="text-[var(--color-primary)]" />
-              ) : (
-                <Sun size={20} className="text-[var(--color-accent-light)]" />
-              )}
-            </motion.button>
+            <div className="relative group">
+              <motion.button
+                onClick={toggleTheme}
+                whileTap={{ scale: 0.95 }}
+                className={`p-2 rounded-lg ${
+                  theme === "dark"
+                    ? "bg-slate-800 text-gray-200"
+                    : "bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
+                }`}
+                title={theme === "light" ? "Switch to Dark Mode" : "Switch to Light Mode"}
+              >
+                {theme === "light" ? (
+                  <Moon size={20} className="text-[var(--color-primary)]" />
+                ) : (
+                  <Sun size={20} className="text-[var(--color-accent-light)]" />
+                )}
+              </motion.button>
+            </div>
 
             <button
               onClick={() => setMenuOpen(!menuOpen)}
@@ -305,46 +352,86 @@ export default function Navbar() {
             </button>
           </div>
         </div>
+      </div>
 
-        <AnimatePresence>
-          {menuOpen && (
+      <AnimatePresence>
+        {menuOpen && (
+          <>
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="md:hidden overflow-hidden"
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden"
+              onClick={() => setMenuOpen(false)}
+            />
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-white dark:bg-slate-900 shadow-2xl z-50 md:hidden overflow-y-auto"
             >
-              <div className="py-4 space-y-2 border-t border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 rounded-b-2xl shadow-lg">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-8">
+                  <span className="font-bold text-lg text-[var(--color-primary)]">Menu</span>
+                  <button
+                    onClick={() => setMenuOpen(false)}
+                    className="p-2 rounded-lg hover:bg-[var(--color-bg-secondary)] transition-colors"
+                  >
+                    <X size={24} className="text-[var(--color-text-secondary)]" />
+                  </button>
+                </div>
+
                 {!user ? (
-                  <div className="flex flex-col gap-3 px-4">
-                    <Link
-                      to="/login"
-                      className="flex items-center justify-center gap-2 px-4 py-3 font-semibold rounded-xl border-2 border-[var(--color-primary)] text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 transition-colors"
-                      onClick={() => setMenuOpen(false)}
-                    >
-                      <User size={18} />
-                      Log in
-                    </Link>
-                    <Link
-                      to="/signup"
-                      className="flex items-center justify-center gap-2 px-4 py-3 font-semibold rounded-xl bg-gradient-to-r from-[var(--color-accent)] to-[#d45428] text-white hover:shadow-lg transition-all"
-                      onClick={() => setMenuOpen(false)}
-                    >
-                      Get Started
-                    </Link>
+                  <div className="space-y-4">
+                    <div className="space-y-1 mb-6">
+                      <Link
+                        to="/about"
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-[var(--color-text)] hover:bg-[var(--color-primary)]/10 transition-colors"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        <Info size={20} className="text-[var(--color-primary)]" />
+                        About
+                      </Link>
+                      <button
+                        onClick={scrollToHowItWorks}
+                        className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[var(--color-text)] hover:bg-[var(--color-primary)]/10 transition-colors text-left"
+                      >
+                        <HelpCircle size={20} className="text-[var(--color-primary)]" />
+                        How It Works
+                      </button>
+                    </div>
+
+                    <div className="border-t border-[var(--color-border)] pt-4 space-y-3">
+                      <Link
+                        to="/login"
+                        className="flex items-center justify-center gap-2 px-4 py-3 font-semibold rounded-xl border-2 border-[var(--color-primary)] text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 transition-colors"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        <User size={18} />
+                        Log in
+                      </Link>
+                      <Link
+                        to="/signup"
+                        className="flex items-center justify-center gap-2 px-4 py-3 font-semibold rounded-xl bg-gradient-to-r from-[var(--color-accent)] to-[#d45428] text-white hover:shadow-lg transition-all"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        Get Started
+                      </Link>
+                    </div>
                   </div>
                 ) : (
                   <>
-                    <div className="px-4 py-3 flex items-center gap-3 bg-[var(--color-primary)]/5 rounded-xl mx-4 mb-2">
+                    <div className="px-4 py-4 flex items-center gap-3 bg-[var(--color-primary)]/5 rounded-xl mb-6">
                       {profileImage ? (
                         <img
                           src={profileImage}
                           alt=""
-                          className="w-12 h-12 rounded-xl object-cover ring-2 ring-[var(--color-primary)]/30"
+                          className="w-14 h-14 rounded-xl object-cover ring-2 ring-[var(--color-primary)]/30"
                         />
                       ) : (
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[var(--color-primary-light)] to-[var(--color-primary)] flex items-center justify-center text-white font-semibold text-lg">
+                        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[var(--color-primary-light)] to-[var(--color-primary)] flex items-center justify-center text-white font-semibold text-xl">
                           {user.firstName?.[0]}
                           {user.lastName?.[0]}
                         </div>
@@ -359,13 +446,13 @@ export default function Navbar() {
                       </div>
                     </div>
 
-                    <div className="px-4 space-y-1">
+                    <div className="space-y-1">
                       <Link
                         to={getDashboardLink()}
                         className="flex items-center gap-3 px-4 py-3 rounded-xl text-[var(--color-text)] hover:bg-[var(--color-primary)]/10 transition-colors"
                         onClick={() => setMenuOpen(false)}
                       >
-                        <LayoutDashboard size={18} className="text-[var(--color-primary)]" /> Dashboard
+                        <LayoutDashboard size={20} className="text-[var(--color-primary)]" /> Dashboard
                       </Link>
 
                       <Link
@@ -373,7 +460,7 @@ export default function Navbar() {
                         className="flex items-center gap-3 px-4 py-3 rounded-xl text-[var(--color-text)] hover:bg-[var(--color-primary)]/10 transition-colors"
                         onClick={() => setMenuOpen(false)}
                       >
-                        <User size={18} className="text-[var(--color-primary)]" /> Profile
+                        <User size={20} className="text-[var(--color-primary)]" /> Profile
                       </Link>
 
                       <Link
@@ -381,7 +468,7 @@ export default function Navbar() {
                         className="flex items-center gap-3 px-4 py-3 rounded-xl text-[var(--color-text)] hover:bg-[var(--color-primary)]/10 transition-colors"
                         onClick={() => setMenuOpen(false)}
                       >
-                        <Settings size={18} className="text-[var(--color-primary)]" /> Settings
+                        <Settings size={20} className="text-[var(--color-primary)]" /> Settings
                       </Link>
 
                       <Link
@@ -389,11 +476,11 @@ export default function Navbar() {
                         className="flex items-center gap-3 px-4 py-3 rounded-xl text-[var(--color-text)] hover:bg-[var(--color-primary)]/10 transition-colors"
                         onClick={() => setMenuOpen(false)}
                       >
-                        <Bell size={18} className="text-[var(--color-primary)]" /> Notifications
+                        <Bell size={20} className="text-[var(--color-primary)]" /> Notifications
                       </Link>
                     </div>
 
-                    <div className="px-4 pt-2 border-t border-gray-200 dark:border-slate-700 mt-2">
+                    <div className="border-t border-[var(--color-border)] mt-6 pt-4">
                       <button
                         onClick={() => {
                           logout();
@@ -401,16 +488,16 @@ export default function Navbar() {
                         }}
                         className="flex items-center gap-3 w-full px-4 py-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors"
                       >
-                        <LogOut size={18} /> Log Out
+                        <LogOut size={20} /> Log Out
                       </button>
                     </div>
                   </>
                 )}
               </div>
             </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+          </>
+        )}
+      </AnimatePresence>
     </motion.nav>
   );
 }
