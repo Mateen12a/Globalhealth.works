@@ -1,10 +1,11 @@
 // src/pages/messages/ChatPage.jsx
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
-import { Paperclip, Send, CheckCheck, ChevronLeft, X } from "lucide-react"; 
+import { Paperclip, Send, CheckCheck, ChevronLeft, X, File, Image as ImageIcon } from "lucide-react"; 
 import dayjs from "dayjs";
-import { io } from "socket.io-client";
+import { socket as sharedSocket } from "../../utils/socket";
 import { jwtDecode } from "jwt-decode";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -34,6 +35,7 @@ export default function ChatPage({ currentUser: propUser }) {
   const [attachments, setAttachments] = useState([]);
   const [typing, setTyping] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
+  const [isSending, setIsSending] = useState(false);
 
   const scrollRef = useRef();
   const socketRef = useRef();
@@ -43,7 +45,6 @@ export default function ChatPage({ currentUser: propUser }) {
     setTimeout(() => scrollRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }), 50);
   }, []);
 
-  // Fetch current user
   useEffect(() => {
     if (propUser) return setCurrentUser(propUser);
     const userId = getCurrentUserId();
@@ -55,7 +56,6 @@ export default function ChatPage({ currentUser: propUser }) {
     }
   }, [propUser, token]);
 
-  // Fetch conversation & messages
   const fetchConversation = useCallback(async () => {
     try {
       const { data } = await axios.get(`${API_URL}/api/conversations/${conversationId}`, {
@@ -79,13 +79,14 @@ export default function ChatPage({ currentUser: propUser }) {
     if (currentUser) { fetchConversation(); fetchMessages(); }
   }, [currentUser, fetchConversation, fetchMessages]);
 
-  // Socket logic
   useEffect(() => {
     if (!currentUser?._id || !conversationId) return;
 
-    const socket = io("http://localhost:5000");
-    socketRef.current = socket;
-    socket.emit("join", currentUser._id);
+    if (!sharedSocket.connected) {
+      sharedSocket.connect();
+    }
+    socketRef.current = sharedSocket;
+    sharedSocket.emit("join", currentUser._id);
 
     const handleNewMessage = (msg) => {
       if (msg.conversationId === conversationId) {
@@ -115,28 +116,28 @@ export default function ChatPage({ currentUser: propUser }) {
       }
     };
 
-    socket.on("message:new", handleNewMessage);
-    socket.on("typing", handleTyping);
-    socket.on("stopTyping", handleStopTyping);
-    socket.on("messagesSeen", handleMessagesSeen);
-    socket.on("message:edited", handleMessageEdited);
+    sharedSocket.on("message:new", handleNewMessage);
+    sharedSocket.on("typing", handleTyping);
+    sharedSocket.on("stopTyping", handleStopTyping);
+    sharedSocket.on("messagesSeen", handleMessagesSeen);
+    sharedSocket.on("message:edited", handleMessageEdited);
 
     axios.patch(`${API_URL}/api/conversations/${conversationId}/read`, {}, { headers: { Authorization: `Bearer ${token}` } }).catch(console.error);
 
     return () => {
-      socket.emit("leave", currentUser._id);
-      socket.off("message:new", handleNewMessage);
-      socket.off("typing", handleTyping);
-      socket.off("stopTyping", handleStopTyping);
-      socket.off("messagesSeen", handleMessagesSeen);
-      socket.off("message:edited", handleMessageEdited);
-      socket.disconnect();
+      sharedSocket.emit("leave", currentUser._id);
+      sharedSocket.off("message:new", handleNewMessage);
+      sharedSocket.off("typing", handleTyping);
+      sharedSocket.off("stopTyping", handleStopTyping);
+      sharedSocket.off("messagesSeen", handleMessagesSeen);
+      sharedSocket.off("message:edited", handleMessageEdited);
     };
   }, [conversationId, currentUser?._id, scrollToBottom, token]);
 
   const sendMessage = async () => {
-    if (!messageText && attachments.length === 0) return;
+    if ((!messageText && attachments.length === 0) || isSending) return;
     const otherUser = conversation?.participants?.find(p => p._id !== currentUser._id);
+    setIsSending(true);
     try {
       const formData = new FormData();
       formData.append("conversationId", conversationId);
@@ -148,6 +149,7 @@ export default function ChatPage({ currentUser: propUser }) {
       });
       setMessageText(""); setAttachments([]); scrollToBottom();
     } catch (err) { console.error(err); }
+    finally { setIsSending(false); }
   };
 
   const handleAttach = (e) => {
@@ -163,109 +165,221 @@ export default function ChatPage({ currentUser: propUser }) {
     e.target.value = null;
   };
 
-  if (!currentUser) return <p className="text-center p-8">Loading chat...</p>;
+  if (!currentUser) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full min-h-screen bg-[var(--color-bg)]">
+        <div className="w-10 h-10 border-4 border-[var(--color-primary)] border-t-transparent rounded-full animate-spin" />
+        <p className="mt-4 text-[var(--color-text-muted)]">Loading chat...</p>
+      </div>
+    );
+  }
 
   const otherUser = conversation?.participants?.find(p => String(p._id) !== String(currentUser._id));
   const chatTitle = otherUser ? otherUser.firstName || otherUser.name || "Conversation" : "Conversation";
-  const chatProfile = otherUser?.profileImage ? `${API_URL}${otherUser.profileImage}` : "/default.jpg";
+  const chatProfile = otherUser?.profileImage || "/default.jpg";
 
   return (
-    <div className="flex flex-col h-full bg-gray-50">
-      {/* Header */}
-      <div className="flex items-center p-4 border-b sticky top-0 bg-white z-10 shadow-sm">
-        <button onClick={() => navigate(-1)} className="mr-3 text-gray-600 hover:text-blue-600 p-1">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="flex flex-col h-full min-h-screen bg-[var(--color-bg)]"
+    >
+      <div className="flex items-center gap-3 p-4 border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface)] z-10 shadow-sm">
+        <button 
+          onClick={() => navigate(-1)} 
+          className="p-2 rounded-full hover:bg-[var(--color-bg)] text-[var(--color-text)] transition-colors"
+        >
           <ChevronLeft className="w-6 h-6"/>
         </button>
-        <img src={chatProfile} alt="Profile" className="w-10 h-10 rounded-full mr-3 object-cover"/>
-        <div className="flex flex-col">
-          <h2 className="font-semibold text-lg text-gray-800">{chatTitle}</h2>
-          {typing && <div className="flex space-x-1">
-            <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></span>
-            <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-150"></span>
-            <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce delay-300"></span>
-          </div>}
+        <img 
+          src={chatProfile} 
+          alt="Profile" 
+          className="w-11 h-11 rounded-full object-cover ring-2 ring-[var(--color-border)]"
+        />
+        <div className="flex flex-col flex-1">
+          <h2 className="font-semibold text-lg text-[var(--color-text)]">{chatTitle}</h2>
+          <AnimatePresence>
+            {typing && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="flex items-center gap-1"
+              >
+                <span className="text-xs text-[var(--color-text-muted)]">typing</span>
+                <div className="flex gap-0.5">
+                  <span className="w-1.5 h-1.5 bg-[var(--color-primary)] rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="w-1.5 h-1.5 bg-[var(--color-primary)] rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <span className="w-1.5 h-1.5 bg-[var(--color-primary)] rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
-      {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {messages.map((msg, index) => {
-          const senderId = msg.sender?._id || msg.sender;
-          const isMe = String(senderId) === String(currentUser._id);
-          const isLastMessage = index === messages.length - 1;
-          const isSeen = isMe && (msg.status === 'seen' || msg.read);
-          return (
-            <div key={msg._id || index} ref={isLastMessage ? scrollRef : null} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[70%] p-3 rounded-2xl shadow cursor-pointer 
-                ${isMe 
-                  ? "bg-gradient-to-r from-blue-600 to-blue-200 text-black" 
-                  : "bg-gradient-to-r from-gray-100 to-gray-50 text-gray-900"}`}>
-                {msg.text && <p className="text-sm break-words">{msg.text}</p>}
-                {msg.attachments?.map((att, idx) => (
-                  <div key={idx} className="mt-2">
-                    {att.type === "image" && (
-                      <img 
-                        src={`${API_URL}${att.url}`} 
-                        alt={att.fileName} 
-                        className="w-40 h-40 object-cover rounded hover:scale-105 transition cursor-pointer"
-                        onClick={() => setPreviewImage(`${API_URL}${att.url}`)}
-                      />
-                    )}
-                    {att.type === "file" && (
-                      <a href={`${API_URL}${att.url}`} target="_blank" rel="noreferrer" className="text-blue-600 underline text-sm">{att.fileName}</a>
+        <AnimatePresence>
+          {messages.map((msg, index) => {
+            const senderId = msg.sender?._id || msg.sender;
+            const isMe = String(senderId) === String(currentUser._id);
+            const isLastMessage = index === messages.length - 1;
+            const isSeen = isMe && (msg.status === 'seen' || msg.read);
+            
+            return (
+              <motion.div 
+                key={msg._id || index}
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                ref={isLastMessage ? scrollRef : null}
+                className={`flex ${isMe ? "justify-end" : "justify-start"}`}
+              >
+                <div 
+                  className={`max-w-[75%] p-3.5 rounded-2xl shadow-sm ${
+                    isMe 
+                      ? "bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-light)] text-white rounded-br-md" 
+                      : "bg-[var(--color-surface)] text-[var(--color-text)] border border-[var(--color-border)] rounded-bl-md"
+                  }`}
+                >
+                  {msg.text && <p className="text-sm break-words leading-relaxed">{msg.text}</p>}
+                  
+                  {msg.attachments?.map((att, idx) => (
+                    <div key={idx} className="mt-2">
+                      {att.type === "image" ? (
+                        <motion.img 
+                          whileHover={{ scale: 1.02 }}
+                          src={`${API_URL}${att.url}`} 
+                          alt={att.fileName} 
+                          className="max-w-[200px] rounded-lg cursor-pointer shadow-sm"
+                          onClick={() => setPreviewImage(`${API_URL}${att.url}`)}
+                        />
+                      ) : (
+                        <a 
+                          href={`${API_URL}${att.url}`} 
+                          target="_blank" 
+                          rel="noreferrer" 
+                          className={`flex items-center gap-2 text-sm underline ${isMe ? "text-white/90" : "text-[var(--color-primary)]"}`}
+                        >
+                          <File className="w-4 h-4" />
+                          {att.fileName}
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                  
+                  <div className={`flex items-center justify-end gap-1.5 text-xs mt-2 ${isMe ? "text-white/70" : "text-[var(--color-text-muted)]"}`}>
+                    <span>{dayjs(msg.createdAt).format("HH:mm")}</span>
+                    {isMe && (
+                      <CheckCheck className={`w-4 h-4 ${isSeen ? "text-blue-300" : isMe ? "text-white/50" : "text-[var(--color-text-muted)]"}`} />
                     )}
                   </div>
-                ))}
-                <div className="flex items-center justify-end text-xs text-gray-500 mt-1 space-x-1">
-                  <span>{dayjs(msg.createdAt).format("HH:mm")}</span>
-                  {isMe && <span className={isSeen ? "text-blue-500" : "text-gray-400"}><CheckCheck size={14} /></span>}
-                  {isMe && msg.status === 'sending' && <span className="text-yellow-500">...</span>}
                 </div>
-              </div>
-            </div>
-          );
-        })}
-        <div ref={scrollRef} style={{ height: '0px' }}></div>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+        <div ref={scrollRef} style={{ height: '1px' }} />
       </div>
 
-      {/* Image Preview Modal */}
-      {previewImage && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <button className="absolute top-5 right-5 text-white" onClick={() => setPreviewImage(null)}><X size={24}/></button>
-          <img src={previewImage} alt="Preview" className="max-h-[90%] max-w-[90%] object-contain rounded shadow-lg"/>
-        </div>
-      )}
+      <AnimatePresence>
+        {previewImage && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => setPreviewImage(null)}
+          >
+            <button 
+              className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+              onClick={() => setPreviewImage(null)}
+            >
+              <X size={24}/>
+            </button>
+            <motion.img 
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              src={previewImage} 
+              alt="Preview" 
+              className="max-h-[90vh] max-w-[90vw] object-contain rounded-lg shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Attachments Preview */}
-      {attachments.length > 0 && (
-        <div className="p-2 border-t bg-gray-100 flex flex-wrap gap-2">
-          {attachments.map((file, index) => (
-            <div key={index} className="relative bg-white p-1 rounded border text-xs flex items-center justify-between space-x-1">
-              <span>{file.name}</span>
-              <button className="text-red-500 font-bold ml-2" onClick={() => setAttachments(attachments.filter((_, i) => i !== index))}>X</button>
-            </div>
-          ))}
-        </div>
-      )}
+      <AnimatePresence>
+        {attachments.length > 0 && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="px-4 py-2 bg-[var(--color-surface)] border-t border-[var(--color-border)] flex flex-wrap gap-2"
+          >
+            {attachments.map((file, index) => (
+              <motion.div 
+                key={index}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-bg)] rounded-lg border border-[var(--color-border)] text-sm"
+              >
+                {file.type.startsWith('image/') ? (
+                  <ImageIcon className="w-4 h-4 text-[var(--color-primary)]" />
+                ) : (
+                  <File className="w-4 h-4 text-[var(--color-primary)]" />
+                )}
+                <span className="text-[var(--color-text)] max-w-[150px] truncate">{file.name}</span>
+                <button 
+                  className="text-red-500 hover:text-red-600 transition-colors"
+                  onClick={() => setAttachments(attachments.filter((_, i) => i !== index))}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Input */}
-      <div className="flex items-center p-3 border-t bg-white shadow-inner">
-        <label className="p-2 cursor-pointer text-gray-500 hover:text-blue-500 relative group">
-          <Paperclip className="w-6 h-6"/>
-          <span className="absolute bottom-full mb-1 left-1/2 transform -translate-x-1/2 bg-gray-700 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition">
-            Supported files: {SUPPORTED_FILES}
+      <div className="flex items-center gap-2 p-4 border-t border-[var(--color-border)] bg-[var(--color-surface)]">
+        <label className="p-2.5 rounded-full cursor-pointer text-[var(--color-text-muted)] hover:text-[var(--color-primary)] hover:bg-[var(--color-bg)] transition-all relative group">
+          <Paperclip className="w-5 h-5"/>
+          <span className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-[var(--color-text)] text-[var(--color-bg)] text-xs px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+            {SUPPORTED_FILES}
           </span>
-          <input type="file" multiple className="hidden" onChange={handleAttach}
-            accept="image/*, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, text/plain"/>
+          <input 
+            type="file" 
+            multiple 
+            className="hidden" 
+            onChange={handleAttach}
+            accept="image/*, application/pdf, application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, text/plain"
+          />
         </label>
-        <input type="text" placeholder="Type a message"
-          className="flex-1 border rounded-full px-4 py-2 mx-2 focus:outline-none focus:ring-2 focus:ring-blue-300 transition"
-          value={messageText} onChange={(e) => setMessageText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage()}/>
-        <button onClick={sendMessage} disabled={!messageText && attachments.length === 0}
-          className="p-3 bg-blue-700 rounded-full text-white hover:bg-blue-900 disabled:opacity-50 transition duration-150">
-          <Send size={20}/>
-        </button>
+        
+        <input 
+          type="text" 
+          placeholder="Type a message..."
+          className="flex-1 px-4 py-2.5 rounded-full bg-[var(--color-bg)] border border-[var(--color-border)] text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition-all"
+          value={messageText} 
+          onChange={(e) => setMessageText(e.target.value)} 
+          onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
+        />
+        
+        <motion.button 
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={sendMessage} 
+          disabled={(!messageText && attachments.length === 0) || isSending}
+          className="p-3 rounded-full bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-light)] text-white shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        >
+          {isSending ? (
+            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <Send size={20}/>
+          )}
+        </motion.button>
       </div>
-    </div>
+    </motion.div>
   );
 }

@@ -1,4 +1,5 @@
 const Task = require("../models/Task");
+const User = require("../models/User");
 const createNotification = require("../utils/createNotification");
 const multer = require("multer");
 const fs = require("fs");
@@ -56,17 +57,24 @@ exports.createTask = async (req, res) => {
     // Fetch owner data
     const owner = await User.findById(req.user.id);
 
-    // 🔥 Send task creation confirmation email to the user
+    // Send task creation confirmation email to the user
     const userHtml = Templates.taskCreatedUserNotice(owner, newTask);
     await sendMail(owner.email, "Your Task Has Been Created", userHtml);
 
-    // 🔥 Notify all admins
+    // Notify all admins (email + in-app)
     const admins = await User.find({ role: "admin" });
     for (const admin of admins) {
       const html = Templates.newTaskAdminAlert(newTask, owner);
       await sendMail(admin.email, "New Task Submitted", html);
+      
+      await createNotification(
+        admin._id,
+        "task",
+        `New task "${newTask.title}" posted by ${owner.firstName} ${owner.lastName}`,
+        `/dashboard/admin/tasks`,
+        { title: "New Task Posted", sendEmail: false }
+      );
     }
-
 
     res.status(201).json(newTask);
   } catch (err) {
@@ -291,7 +299,7 @@ exports.updateStatus = async (req, res) => {
   }
 };
 
-// ✅ Get my applications
+// Get my applications
 exports.getMyApplications = async (req, res) => {
   try {
     const tasks = await Task.find({ applicants: req.user.id })
@@ -299,6 +307,53 @@ exports.getMyApplications = async (req, res) => {
       .sort({ createdAt: -1 });
     res.json(tasks);
   } catch (err) {
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
+// Report a task
+exports.reportTask = async (req, res) => {
+  try {
+    const { reason, details } = req.body;
+    
+    if (!reason) {
+      return res.status(400).json({ msg: "Report reason is required" });
+    }
+    
+    const task = await Task.findById(req.params.id);
+    if (!task) return res.status(404).json({ msg: "Task not found" });
+    
+    // Check if user already reported
+    const alreadyReported = task.reports.some(
+      r => r.reportedBy.toString() === req.user.id
+    );
+    if (alreadyReported) {
+      return res.status(400).json({ msg: "You have already reported this task" });
+    }
+    
+    task.reports.push({
+      reportedBy: req.user.id,
+      reason,
+      details: details || ""
+    });
+    task.isReported = true;
+    await task.save();
+    
+    // Notify admins
+    const admins = await User.find({ role: "admin" });
+    for (const admin of admins) {
+      await createNotification(
+        admin._id,
+        "system",
+        `Task "${task.title}" has been reported for: ${reason}`,
+        `/dashboard/admin/tasks`,
+        { title: "Task Reported", sendEmail: true }
+      );
+    }
+    
+    res.json({ msg: "Task reported successfully" });
+  } catch (err) {
+    console.error("Report task error:", err);
     res.status(500).json({ msg: "Server error" });
   }
 };

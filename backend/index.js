@@ -125,8 +125,9 @@ mongoose
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.error("MongoDB error:", err));
 
-// Health check route
+// Health check routes
 app.get("/", (req, res) => res.send("GlobalHealth.Works API + Socket.IO running 🚀"));
+app.get("/api/health", (req, res) => res.json({ status: "ok", timestamp: new Date().toISOString() }));
 
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log(`Server + Socket.IO running on port ${PORT}`));
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, "0.0.0.0", () => console.log(`Server + Socket.IO running on port ${PORT}`));

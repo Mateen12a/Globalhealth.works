@@ -211,6 +211,12 @@ exports.login = async (req, res) => {
       { expiresIn: "1d" }
     );
 
+    // Update last login
+    user.lastLogin = new Date();
+    await user.save();
+
+    const isFirstLogin = user.isFirstLogin === true;
+
     res.json({
       msg: "Login successful",
       token,
@@ -221,10 +227,20 @@ exports.login = async (req, res) => {
         lastName: user.lastName,
         name: `${user.title ? user.title + " " : ""}${user.firstName} ${user.lastName}`,
         role: user.role,
+        adminType: user.adminType || null,
         email: user.email,
         profileImage: user.profileImage,
+        isFirstLogin,
+        onboardingCompleted: user.onboardingCompleted || false,
+        onboardingSkipped: user.onboardingSkipped || false,
       },
     });
+
+    // Reset isFirstLogin AFTER responding (so client gets the true value)
+    if (isFirstLogin) {
+      user.isFirstLogin = false;
+      await user.save();
+    }
   } catch (err) {
     console.error("Login error:", err);
     res.status(500).json({ msg: "Server error" });
@@ -280,7 +296,7 @@ exports.updateMe = async (req, res) => {
       "firstName",
       "lastName",
       "country",
-      "countryCode", // ✅ Added
+      "countryCode",
       "gender",
       "genderSelfDescribe",
       "bio",
@@ -293,7 +309,9 @@ exports.updateMe = async (req, res) => {
       "expertise",
       "focusAreas",
       "profileImage",
-      "cvFile", // ✅ Added
+      "cvFile",
+      "onboardingCompleted",
+      "onboardingSkipped",
     ];
 
     const filtered = {};
@@ -385,6 +403,12 @@ exports.getPublicProfile = async (req, res) => {
     }
 
     const isAdmin = requester && requester.role === "admin";
+    const isSuperAdmin = requester && requester.adminType === "superAdmin";
+
+    // Restrict admins from viewing their own profile (except super admins)
+    if (isAdmin && !isSuperAdmin && requester.id === id) {
+      return res.status(403).json({ msg: "Admins cannot view their own profile. Contact a super admin if needed." });
+    }
 
     // If not admin, only allow when approved and not suspended
     if (!isAdmin) {
@@ -404,19 +428,28 @@ exports.getPublicProfile = async (req, res) => {
       lastName: user.lastName,
       name: `${user.title ? user.title + " " : ""}${user.firstName} ${user.lastName}`,
       role: user.role,
+      adminType: user.adminType || null,
       country: user.country,
+      countryCode: user.countryCode,
       profileImage: user.profileImage,
       bio: user.bio,
       expertise: user.expertise || [],
       focusAreas: user.focusAreas || [],
+      affiliation: user.affiliation || [],
       links: user.links || [],
       recentTasks: user.recentTasks || [],
       isApproved: user.isApproved,
       status: user.status || "active",
       rejectionReason: user.rejectionReason || null,
       approvedBy: user.approvedBy || null,
-      // do NOT include email unless isAdmin
+      createdAt: user.createdAt,
+      gender: isAdmin ? user.gender : undefined,
+      phone: isAdmin ? user.phone : undefined,
       email: isAdmin ? user.email : undefined,
+      organisationName: user.organisationName,
+      organisationType: user.organisationType,
+      professionalLink: user.professionalLink,
+      cvFile: isAdmin ? user.cvFile : undefined,
     };
 
     res.json(publicProfile);

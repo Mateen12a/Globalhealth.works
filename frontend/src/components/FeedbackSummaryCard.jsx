@@ -1,28 +1,53 @@
-// src/components/FeedbackSummaryCard.jsx
+import { Star, TrendingUp, Users } from "lucide-react";
+
 export default function FeedbackSummaryCard({ avgRating, totalReviews }) {
+  const ratingPercentage = (parseFloat(avgRating) / 5) * 100;
+  
   return (
-    <div className="bg-white shadow-md rounded-lg p-6 border border-gray-100">
-      <h3 className="text-lg font-semibold text-[#1E376E] mb-3">
-        Overall Rating
-      </h3>
-      <div className="flex items-center space-x-3">
-        <span className="text-3xl font-bold text-[#1E376E]">{avgRating}</span>
-        <div className="flex">
-          {[1, 2, 3, 4, 5].map((star) => (
-            <span
-              key={star}
-              className={`text-2xl ${
-                star <= Math.round(avgRating)
-                  ? "text-yellow-400"
-                  : "text-gray-300"
-              }`}
-            >
-              ★
-            </span>
-          ))}
+    <div className="card p-6">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+          <TrendingUp className="w-5 h-5 text-amber-600 dark:text-amber-400" />
         </div>
-        <span className="text-gray-500 text-sm">
-          ({totalReviews} {totalReviews === 1 ? "review" : "reviews"})
+        <h3 className="text-lg font-semibold text-[var(--color-text)]">
+          Overall Rating
+        </h3>
+      </div>
+      
+      <div className="flex items-center gap-6">
+        <div className="text-center">
+          <span className="text-4xl font-bold text-[var(--color-text)]">{avgRating}</span>
+          <span className="text-lg text-[var(--color-text-muted)]">/5</span>
+        </div>
+        
+        <div className="flex-1">
+          <div className="flex items-center gap-1 mb-2">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <Star
+                key={star}
+                size={24}
+                className={`${
+                  star <= Math.round(parseFloat(avgRating))
+                    ? "fill-amber-400 text-amber-400"
+                    : "text-gray-300 dark:text-gray-600"
+                }`}
+              />
+            ))}
+          </div>
+          
+          <div className="w-full h-2 bg-[var(--color-bg-tertiary)] rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-amber-400 to-amber-500 rounded-full transition-all duration-500"
+              style={{ width: `${ratingPercentage}%` }}
+            />
+          </div>
+        </div>
+      </div>
+      
+      <div className="mt-4 pt-4 border-t border-[var(--color-border)] flex items-center gap-2 text-[var(--color-text-secondary)]">
+        <Users className="w-4 h-4" />
+        <span className="text-sm">
+          Based on <strong className="text-[var(--color-text)]">{totalReviews}</strong> {totalReviews === 1 ? "review" : "reviews"}
         </span>
       </div>
     </div>

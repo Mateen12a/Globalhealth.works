@@ -1,11 +1,15 @@
 // src/pages/messages/InboxPage.jsx
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { socket } from "../../utils/socket";
 import { jwtDecode } from "jwt-decode";
 import dayjs from "dayjs";
-import { ChevronLeft } from "lucide-react";
+import relativeTime from "dayjs/plugin/relativeTime";
+import { ChevronLeft, MessageCircle, Inbox, Search } from "lucide-react";
+
+dayjs.extend(relativeTime);
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -25,6 +29,7 @@ export default function InboxPage() {
   const [conversations, setConversations] = useState([]);
   const [totalUnreadCount, setTotalUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [search, setSearch] = useState("");
   const navigate = useNavigate();
   
   const currentUserId = getCurrentUserId();
@@ -70,78 +75,136 @@ export default function InboxPage() {
     };
   }, [fetchInbox, currentUserId]);
 
-  if (isLoading) return (
-    <div className="flex items-center justify-center h-full p-8 text-gray-500">Loading conversations...</div>
-  );
+  const filteredConversations = conversations.filter((conv) => {
+    if (!search) return true;
+    const other = conv.otherUser || {};
+    const displayName = other.name || `${other.firstName || ""} ${other.lastName || ""}`.trim();
+    return displayName.toLowerCase().includes(search.toLowerCase());
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full min-h-screen bg-[var(--color-bg)]">
+        <div className="w-10 h-10 border-4 border-[var(--color-primary)] border-t-transparent rounded-full animate-spin" />
+        <p className="mt-4 text-[var(--color-text-muted)]">Loading conversations...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col h-full min-h-screen bg-gray-50">
-      
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 bg-white shadow sticky top-0 z-20">
-        <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-gray-100 transition">
-          <ChevronLeft className="w-6 h-6 text-gray-700"/>
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="flex flex-col h-full min-h-screen bg-[var(--color-bg)]"
+    >
+      <div className="flex items-center justify-between p-4 bg-[var(--color-surface)] shadow-sm sticky top-0 z-20 border-b border-[var(--color-border)]">
+        <button 
+          onClick={() => navigate(-1)} 
+          className="p-2 rounded-full hover:bg-[var(--color-bg)] transition-colors"
+        >
+          <ChevronLeft className="w-6 h-6 text-[var(--color-text)]"/>
         </button>
-        <h2 className="text-xl font-semibold text-gray-800">Inbox</h2>
-        {totalUnreadCount > 0 && (
-          <span className="text-xs bg-blue-500 text-white px-3 py-1 rounded-full font-medium">
+        <h2 className="text-xl font-semibold text-[var(--color-text)]">Messages</h2>
+        {totalUnreadCount > 0 ? (
+          <span className="text-xs bg-[var(--color-primary)] text-white px-3 py-1 rounded-full font-medium">
             {totalUnreadCount} unread
           </span>
+        ) : (
+          <div className="w-16" />
         )}
       </div>
 
-      {/* Conversation List */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-3">
-        {conversations.length === 0 && (
-          <div className="text-center text-gray-500 mt-10">No conversations yet. Start a new chat!</div>
-        )}
+      <div className="p-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-text-muted)]" />
+          <input
+            type="text"
+            placeholder="Search conversations..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-11 pr-4 py-3 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] placeholder-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition-all"
+          />
+        </div>
+      </div>
 
-        {conversations.map((conv) => {
-          const other = conv.otherUser || {};
-          const lastMsg = conv.lastMessage || {};
-          const isUnread = conv.unreadCount > 0;
-          const displayName = other.name || `${other.firstName || ""} ${other.lastName || ""}`.trim() || "Unknown User";
-
-          return (
-            <div
-              key={conv.conversationId}
-              onClick={() => navigate(`/chat/${conv.conversationId}`)}
-              className={`flex items-center justify-between p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition cursor-pointer ${
-                isUnread ? "ring-1 ring-blue-300" : ""
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <img
-                  src={other.profileImage ? `${API_URL}${other.profileImage}` : "/default.jpg"}
-                  alt={displayName}
-                  className="w-14 h-14 rounded-full object-cover bg-gray-200"
-                />
-                <div className="truncate">
-                  <p className={`font-medium text-gray-800 truncate ${isUnread ? "font-bold" : ""}`}>
-                    {displayName}
-                  </p>
-                  <p className={`text-sm truncate max-w-[220px] ${isUnread ? "text-gray-900 font-semibold" : "text-gray-500"}`}>
-                    {lastMsg.text || (lastMsg.attachments?.length > 0 ? "📎 Attachment" : "No messages yet")}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex flex-col items-end space-y-1">
-                {lastMsg.createdAt && (
-                  <span className="text-xs text-gray-400">
-                    {dayjs(lastMsg.createdAt).format("HH:mm")}
-                  </span>
-                )}
-                {isUnread && (
-                  <span className="text-xs bg-blue-500 text-white w-6 h-6 flex items-center justify-center rounded-full font-bold">
-                    {conv.unreadCount}
-                  </span>
-                )}
-              </div>
+      <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-3">
+        {filteredConversations.length === 0 ? (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center justify-center py-16"
+          >
+            <div className="w-20 h-20 rounded-full bg-[var(--color-surface)] flex items-center justify-center mb-4">
+              <Inbox className="w-10 h-10 text-[var(--color-text-muted)]" />
             </div>
-          );
-        })}
+            <p className="text-[var(--color-text-muted)] text-center">
+              {search ? "No conversations match your search" : "No conversations yet"}
+            </p>
+            {!search && (
+              <p className="text-[var(--color-text-muted)] text-sm mt-1">
+                Start a new chat to connect with others!
+              </p>
+            )}
+          </motion.div>
+        ) : (
+          <AnimatePresence mode="popLayout">
+            {filteredConversations.map((conv, index) => {
+              const other = conv.otherUser || {};
+              const lastMsg = conv.lastMessage || {};
+              const isUnread = conv.unreadCount > 0;
+              const displayName = other.name || `${other.firstName || ""} ${other.lastName || ""}`.trim() || "Unknown User";
+
+              return (
+                <motion.div
+                  key={conv.conversationId}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ delay: index * 0.03 }}
+                  onClick={() => navigate(`/chat/${conv.conversationId}`)}
+                  className={`card p-4 cursor-pointer hover:shadow-lg transition-all group ${
+                    isUnread ? "ring-2 ring-[var(--color-primary)] ring-opacity-50" : ""
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      <img
+                        src={other.profileImage || "/default.jpg"}
+                        alt={displayName}
+                        className="w-14 h-14 rounded-full object-cover bg-[var(--color-surface)] ring-2 ring-[var(--color-border)] group-hover:ring-[var(--color-primary)] transition-all"
+                      />
+                      {isUnread && (
+                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-[var(--color-primary)] text-white text-xs font-bold rounded-full flex items-center justify-center">
+                          {conv.unreadCount}
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className={`font-semibold text-[var(--color-text)] truncate ${isUnread ? "font-bold" : ""}`}>
+                          {displayName}
+                        </p>
+                        {lastMsg.createdAt && (
+                          <span className="text-xs text-[var(--color-text-muted)] flex-shrink-0 ml-2">
+                            {dayjs(lastMsg.createdAt).fromNow()}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <MessageCircle className="w-4 h-4 text-[var(--color-text-muted)] flex-shrink-0" />
+                        <p className={`text-sm truncate ${isUnread ? "text-[var(--color-text)] font-medium" : "text-[var(--color-text-muted)]"}`}>
+                          {lastMsg.text || (lastMsg.attachments?.length > 0 ? "Sent an attachment" : "No messages yet")}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        )}
       </div>
-    </div>
+    </motion.div>
   );
 }

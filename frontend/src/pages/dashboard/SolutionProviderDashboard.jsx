@@ -1,16 +1,28 @@
-// src/pages/dashboard/SolutionProviderDashboard.jsx
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Search, ExternalLink, Clock, CheckCircle, Briefcase, AlertCircle, ArrowRight } from "lucide-react";
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
 import DashboardStats from "../../components/dashboard/DashboardStats";
+import WelcomeOnboarding from "../../components/WelcomeOnboarding";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function SolutionProviderDashboard() {
   const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   useEffect(() => {
+    // Check if onboarding should be shown
+    const shouldShowOnboarding = localStorage.getItem("showOnboarding");
+    if (shouldShowOnboarding === "true") {
+      setShowOnboarding(true);
+      localStorage.removeItem("showOnboarding");
+    }
+
     const fetchTasks = async () => {
       try {
         const res = await fetch(`${API_URL}/api/tasks`, {
@@ -20,10 +32,16 @@ export default function SolutionProviderDashboard() {
         if (res.ok) setTasks(data);
       } catch (err) {
         console.error("Error fetching tasks:", err);
+      } finally {
+        setLoading(false);
       }
     };
     fetchTasks();
   }, [token]);
+
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
+  };
 
   const available = tasks.filter((t) => t.status === "published");
   const completed = tasks.filter((t) => t.status === "completed");
@@ -32,80 +50,205 @@ export default function SolutionProviderDashboard() {
   );
 
   const stats = [
-    { label: "Available Tasks", value: available.length, color: "text-[#357FE9]", type: "total" },
-    { label: "In Progress", value: inProgress.length, color: "text-[#F7B526]", type: "inProgress" },
-    { label: "Completed", value: completed.length, color: "text-[#34A853]", type: "completed" },
-    { label: "Applied", value: 0, color: "text-[#E96435]", type: "active" }, // future enhancement
+    { label: "Available Tasks", value: available.length, type: "total" },
+    { label: "In Progress", value: inProgress.length, type: "inProgress" },
+    { label: "Completed", value: completed.length, type: "completed" },
+    { label: "Applied", value: 0, type: "active" },
   ];
 
   const recentCompleted = completed.slice(0, 3);
 
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case "completed":
+        return <CheckCircle className="w-4 h-4 text-emerald-500" />;
+      case "in progress":
+      case "ongoing":
+        return <Clock className="w-4 h-4 text-amber-500" />;
+      case "published":
+        return <Briefcase className="w-4 h-4 text-[var(--color-primary-light)]" />;
+      default:
+        return <AlertCircle className="w-4 h-4 text-[var(--color-text-muted)]" />;
+    }
+  };
+
+  const container = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 },
+    },
+  };
+
+  const item = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 },
+  };
+
   return (
     <DashboardLayout role="Solution Provider" title="Dashboard">
-      {/* Stats */}
+      {showOnboarding && (
+        <WelcomeOnboarding user={user} onComplete={handleOnboardingComplete} />
+      )}
       <DashboardStats stats={stats} />
 
       <div className="space-y-8">
-        <h2 className="text-2xl font-semibold text-[#1E376E]">Available Tasks</h2>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h2 className="text-2xl font-bold text-[var(--color-text)]">
+              Available Tasks
+            </h2>
+            <p className="text-[var(--color-text-secondary)] text-sm mt-1">
+              Browse and apply to tasks that match your expertise
+            </p>
+          </div>
+          <Link to="/browse-tasks">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="btn-primary flex items-center gap-2 px-5 py-2.5"
+            >
+              <Search className="w-5 h-5" />
+              Browse All Tasks
+            </motion.button>
+          </Link>
+        </div>
 
-        {available.length === 0 ? (
-          <p className="text-gray-600">No tasks available right now.</p>
-        ) : (
+        {loading ? (
           <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {available.map((task) => (
-              <div
-                key={task._id}
-                className="bg-white border rounded-xl shadow-sm hover:shadow-md transition p-5"
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-lg font-semibold text-[#357FE9]">
-                      {task.title}
-                    </h3>
-                    <p className="text-sm text-gray-600 line-clamp-2">
-                      {task.summary}
-                    </p>
-                  </div>
-                  <Link
-                    to={`/tasks/${task._id}`}
-                    className="text-[#1E376E] text-sm font-medium hover:underline"
-                  >
-                    View & Apply
-                  </Link>
-                </div>
-                <div className="mt-3 flex gap-2">
-                  <span className="px-3 py-1 rounded-full text-xs bg-gray-100 text-gray-700">
-                    {task.status}
-                  </span>
-                  <span className="px-3 py-1 rounded-full text-xs bg-[#F7B526] text-white">
-                    {task.fundingStatus}
-                  </span>
-                </div>
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="card p-5 animate-pulse">
+                <div className="h-6 bg-[var(--color-bg-tertiary)] rounded w-3/4 mb-3" />
+                <div className="h-4 bg-[var(--color-bg-tertiary)] rounded w-full mb-2" />
+                <div className="h-4 bg-[var(--color-bg-tertiary)] rounded w-2/3" />
               </div>
             ))}
           </div>
+        ) : available.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="card p-12 text-center"
+          >
+            <div className="w-16 h-16 rounded-2xl bg-[var(--color-bg-tertiary)] flex items-center justify-center mx-auto mb-4">
+              <Briefcase className="w-8 h-8 text-[var(--color-text-muted)]" />
+            </div>
+            <h3 className="text-lg font-semibold text-[var(--color-text)] mb-2">
+              No available tasks right now
+            </h3>
+            <p className="text-[var(--color-text-secondary)] mb-6 max-w-sm mx-auto">
+              Check back soon for new opportunities, or browse all tasks to see upcoming projects.
+            </p>
+            <Link to="/browse-tasks">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="btn-primary px-6 py-2.5"
+              >
+                Browse All Tasks
+              </motion.button>
+            </Link>
+          </motion.div>
+        ) : (
+          <motion.div
+            variants={container}
+            initial="hidden"
+            animate="visible"
+            className="grid md:grid-cols-2 xl:grid-cols-3 gap-6"
+          >
+            {available.slice(0, 6).map((task) => (
+              <motion.div
+                key={task._id}
+                variants={item}
+                whileHover={{ y: -4 }}
+                className="card p-5 group"
+              >
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg font-semibold text-[var(--color-text)] truncate group-hover:text-[var(--color-primary-light)] transition-colors">
+                      {task.title}
+                    </h3>
+                  </div>
+                </div>
+                <p className="text-sm text-[var(--color-text-secondary)] line-clamp-2 mb-4">
+                  {task.summary}
+                </p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                      {getStatusIcon(task.status)}
+                      {task.status}
+                    </span>
+                    {task.fundingStatus && (
+                      <span className="px-3 py-1 rounded-full text-xs font-medium bg-[var(--color-accent-light)]/20 text-[var(--color-accent)]">
+                        {task.fundingStatus}
+                      </span>
+                    )}
+                  </div>
+                  <Link
+                    to={`/tasks/${task._id}`}
+                    className="flex items-center gap-1 text-sm font-medium text-[var(--color-primary-light)] hover:underline"
+                  >
+                    View
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
         )}
 
-        <div className="mt-10">
-          <h3 className="text-xl font-semibold text-[#1E376E] mb-4">
-            Recently Completed Tasks
-          </h3>
-          {recentCompleted.length === 0 ? (
-            <p className="text-gray-500">No recent completions yet.</p>
-          ) : (
-            <ul className="grid md:grid-cols-2 gap-4">
+        {available.length > 6 && (
+          <div className="text-center">
+            <Link to="/browse-tasks">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="inline-flex items-center gap-2 text-[var(--color-primary-light)] font-semibold hover:underline"
+              >
+                View all {available.length} available tasks
+                <ArrowRight className="w-4 h-4" />
+              </motion.button>
+            </Link>
+          </div>
+        )}
+
+        {recentCompleted.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mt-10"
+          >
+            <h3 className="text-xl font-bold text-[var(--color-text)] mb-4 flex items-center gap-2">
+              <CheckCircle className="w-5 h-5 text-emerald-500" />
+              Recently Completed Tasks
+            </h3>
+            <div className="grid md:grid-cols-2 gap-4">
               {recentCompleted.map((t) => (
-                <li
+                <Link
                   key={t._id}
-                  className="bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition"
+                  to={`/tasks/${t._id}`}
+                  className="card p-4 hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors group"
                 >
-                  <h4 className="font-semibold text-[#357FE9]">{t.title}</h4>
-                  <p className="text-sm text-gray-600">{t.summary}</p>
-                </li>
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
+                      <CheckCircle className="w-5 h-5 text-emerald-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold text-[var(--color-text)] truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                        {t.title}
+                      </h4>
+                      <p className="text-sm text-[var(--color-text-secondary)] line-clamp-1">
+                        {t.summary}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
               ))}
-            </ul>
-          )}
-        </div>
+            </div>
+          </motion.div>
+        )}
       </div>
     </DashboardLayout>
   );

@@ -8,9 +8,10 @@ const {
   getTask,
   applyToTask,
   updateTask,
-  updateStatus,   // ✅ corrected
+  updateStatus,
   getMyApplications,
-  uploadTaskAttachments
+  uploadTaskAttachments,
+  reportTask
 } = require("../controllers/taskController");
 
 // Task Owner: create
@@ -27,6 +28,9 @@ router.get("/:id", authMiddleware, getTask);
 
 // Solution Provider: apply
 router.post("/:id/apply", authMiddleware, applyToTask);
+
+// Report a task
+router.post("/:id/report", authMiddleware, reportTask);
 
 // Task Owner: update task
 router.put("/:id", authMiddleware, uploadTaskAttachments, updateTask );

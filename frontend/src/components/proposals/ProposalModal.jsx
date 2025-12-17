@@ -1,5 +1,5 @@
-// src/components/proposals/ProposalModal.jsx
 import { useState } from "react";
+import { motion } from "framer-motion";
 import {
   FileText,
   DollarSign,
@@ -7,6 +7,10 @@ import {
   Paperclip,
   X,
   Send,
+  Upload,
+  Trash2,
+  CheckCircle,
+  AlertCircle,
 } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -18,14 +22,46 @@ export default function ProposalModal({ taskId, onClose, onSubmitted }) {
   const [duration, setDuration] = useState("");
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [dragActive, setDragActive] = useState(false);
 
   const handleFiles = (e) => {
-    setFiles(Array.from(e.target.files));
+    const newFiles = Array.from(e.target.files);
+    setFiles(prev => [...prev, ...newFiles]);
+  };
+
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const newFiles = Array.from(e.dataTransfer.files);
+      setFiles(prev => [...prev, ...newFiles]);
+    }
+  };
+
+  const removeFile = (index) => {
+    setFiles(files.filter((_, i) => i !== index));
   };
 
   const submit = async (e) => {
     e.preventDefault();
-    if (!message) return alert("Please add a cover message");
+    setError("");
+    
+    if (!message.trim()) {
+      setError("Please add a cover message");
+      return;
+    }
 
     setLoading(true);
     try {
@@ -44,146 +80,210 @@ export default function ProposalModal({ taskId, onClose, onSubmitted }) {
 
       const data = await res.json();
       if (res.ok) {
-        alert("Proposal submitted successfully!");
         onSubmitted?.(data.proposal);
         onClose?.();
       } else {
-        alert(data.msg || "Could not submit proposal");
+        setError(data.msg || "Could not submit proposal");
       }
     } catch (err) {
       console.error("Proposal submit error:", err);
-      alert("Something went wrong");
+      setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const Label = ({ text, required }) => (
-    <label className="block font-semibold text-gray-800 mb-1">
-      {text} {required && <span className="text-red-500">*</span>}
-    </label>
-  );
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  };
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4 animate-fadeIn">
-      <form
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 px-4"
+      onClick={onClose}
+    >
+      <motion.form
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        onClick={(e) => e.stopPropagation()}
         onSubmit={submit}
-        className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl p-6 md:p-8 overflow-y-auto max-h-[90vh]"
+        className="bg-[var(--color-surface)] w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden border border-[var(--color-border)]"
       >
-        {/* Header */}
-        <div className="flex justify-between items-center border-b pb-3 mb-5">
-          <h2 className="text-2xl font-bold text-[#1E376E] flex items-center gap-2">
-            <FileText className="w-6 h-6 text-[#357FE9]" /> Submit Proposal
+        <div className="flex justify-between items-center p-6 border-b border-[var(--color-border)] bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-light)]">
+          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+            <FileText className="w-6 h-6" /> Submit Proposal
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="text-gray-400 hover:text-red-500 transition"
+            className="p-2 rounded-xl bg-white/20 hover:bg-white/30 text-white transition-colors"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Form Fields */}
-        <div className="space-y-5">
-          {/* Cover Message */}
-          <div>
-            <Label text="Cover Message" required />
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Explain your understanding of the task, your approach, and what you’ll deliver."
-              className="w-full border p-4 rounded-lg shadow-sm focus:ring-2 focus:ring-[#357FE9] outline-none resize-none"
-              rows={6}
-              required
-            />
-          </div>
+        <div className="p-6 max-h-[70vh] overflow-y-auto">
+          {error && (
+            <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-center gap-3 text-red-600 dark:text-red-400">
+              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              {error}
+            </div>
+          )}
 
-          {/* Budget & Duration */}
-          <div className="grid md:grid-cols-2 gap-4">
-            {/* <div>
-              <Label text="Proposed Budget (USD)" />
-              <div className="relative">
-                <DollarSign className="absolute left-3 top-3.5 text-gray-400 w-4 h-4" />
-                <input
-                  type="number"
-                  min="0"
-                  value={budget}
-                  onChange={(e) => setBudget(e.target.value)}
-                  placeholder="Enter your proposed budget"
-                  className="w-full border pl-9 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#357FE9] outline-none"
-                />
-              </div>
-            </div> */}
+          <div className="space-y-5">
             <div>
-              <Label text="Proposed Duration" />
-              <div className="relative">
-                <Clock className="absolute left-3 top-3.5 text-gray-400 w-4 h-4" />
-                <input
-                  value={duration}
-                  onChange={(e) => setDuration(e.target.value)}
-                  placeholder="e.g., 4 weeks, 2 months"
-                  className="w-full border pl-9 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#357FE9] outline-none"
-                />
+              <label className="block font-semibold text-[var(--color-text)] mb-2">
+                Cover Message <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Explain your understanding of the task, your approach, and what you'll deliver..."
+                className="w-full border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text)] p-4 rounded-xl focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none resize-none transition-all"
+                rows={6}
+                required
+              />
+              <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                {message.length}/2000 characters
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="block font-semibold text-[var(--color-text)] mb-2">
+                  Proposed Duration
+                </label>
+                <div className="relative">
+                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] w-5 h-5" />
+                  <input
+                    value={duration}
+                    onChange={(e) => setDuration(e.target.value)}
+                    placeholder="e.g., 4 weeks, 2 months"
+                    className="w-full border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text)] pl-11 p-3 rounded-xl focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none transition-all"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-[var(--color-text)] mb-2">
+                  Proposed Budget (USD)
+                </label>
+                <div className="relative">
+                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] w-5 h-5" />
+                  <input
+                    type="number"
+                    min="0"
+                    value={budget}
+                    onChange={(e) => setBudget(e.target.value)}
+                    placeholder="Enter amount"
+                    className="w-full border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text)] pl-11 p-3 rounded-xl focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none transition-all"
+                  />
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Attachments */}
-          <div>
-            <Label text="Attachments (optional)" />
-            <div className="relative border-2 border-dashed rounded-xl p-5 text-center hover:border-[#357FE9] transition">
-              <Paperclip className="w-6 h-6 text-[#357FE9] mx-auto mb-2" />
-              <p className="text-sm text-gray-600 mb-2">
-                Drag & drop files here, or click to browse
-              </p>
-              <input
-                type="file"
-                multiple
-                onChange={handleFiles}
-                className="absolute inset-0 opacity-0 cursor-pointer"
-              />
-            </div>
-            {files.length > 0 && (
-              <ul className="mt-3 text-sm text-gray-700 bg-gray-50 rounded-lg p-3 border">
-                {files.map((file, idx) => (
-                  <li key={idx} className="flex justify-between items-center">
-                    <span className="truncate">{file.name}</span>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setFiles(files.filter((_, i) => i !== idx))
-                      }
-                      className="text-red-500 hover:text-red-700 text-xs font-semibold"
+            <div>
+              <label className="block font-semibold text-[var(--color-text)] mb-2">
+                Attachments (optional)
+              </label>
+              <div
+                onDragEnter={handleDrag}
+                onDragLeave={handleDrag}
+                onDragOver={handleDrag}
+                onDrop={handleDrop}
+                className={`relative border-2 border-dashed rounded-xl p-6 text-center transition-all ${
+                  dragActive
+                    ? "border-[var(--color-primary)] bg-[var(--color-primary)]/5"
+                    : "border-[var(--color-border)] hover:border-[var(--color-primary)]/50"
+                }`}
+              >
+                <Upload className="w-8 h-8 text-[var(--color-primary)] mx-auto mb-3" />
+                <p className="text-[var(--color-text)] font-medium mb-1">
+                  Drag & drop files here
+                </p>
+                <p className="text-sm text-[var(--color-text-muted)] mb-3">
+                  or click to browse
+                </p>
+                <input
+                  type="file"
+                  multiple
+                  onChange={handleFiles}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+              </div>
+
+              {files.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  {files.map((file, idx) => (
+                    <motion.div
+                      key={idx}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className="flex items-center justify-between p-3 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)]"
                     >
-                      Remove
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          {/* Buttons */}
-          <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-5 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-semibold transition w-full sm:w-auto"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-5 py-2.5 w-full sm:w-auto bg-gradient-to-r from-[#E96435] to-[#FF7A50] text-white font-semibold rounded-lg shadow hover:opacity-90 transition disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              <Send className="w-4 h-4" />
-              {loading ? "Submitting..." : "Submit Proposal"}
-            </button>
+                      <div className="flex items-center gap-3">
+                        <Paperclip className="w-4 h-4 text-[var(--color-text-muted)]" />
+                        <div>
+                          <p className="text-sm font-medium text-[var(--color-text)] truncate max-w-[200px]">
+                            {file.name}
+                          </p>
+                          <p className="text-xs text-[var(--color-text-muted)]">
+                            {formatFileSize(file.size)}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeFile(idx)}
+                        className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </form>
-    </div>
+
+        <div className="flex flex-col sm:flex-row justify-end gap-3 p-6 border-t border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-5 py-2.5 rounded-xl border border-[var(--color-border)] text-[var(--color-text)] hover:bg-[var(--color-bg-tertiary)] font-medium transition-colors"
+          >
+            Cancel
+          </button>
+          <motion.button
+            type="submit"
+            disabled={loading}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="px-5 py-2.5 bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-light)] text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {loading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Submitting...
+              </>
+            ) : (
+              <>
+                <Send className="w-4 h-4" />
+                Submit Proposal
+              </>
+            )}
+          </motion.button>
+        </div>
+      </motion.form>
+    </motion.div>
   );
 }

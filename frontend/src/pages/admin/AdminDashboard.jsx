@@ -1,68 +1,315 @@
-// src/pages/admin/AdminDashboard.jsx
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { 
+  Users, 
+  ClipboardList, 
+  MessageSquare, 
+  TrendingUp, 
+  UserPlus, 
+  Mail, 
+  Clock, 
+  CheckCircle, 
+  AlertTriangle,
+  FileText,
+  Activity,
+  Briefcase,
+  UserCheck
+} from "lucide-react";
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
 import AdminUsers from "./AdminUsers";
 import TasksTable from "../../components/admin/TasksTable";
 import FeedbackTable from "../../components/admin/FeedbackTable";
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("users");
-  const [stats, setStats] = useState({ users: 0, tasks: 0, feedback: 0 });
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const token = localStorage.getItem("token");
+  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const isSuperAdmin = currentUser.adminType === "superAdmin";
 
   useEffect(() => {
-    fetch(`${API_URL}/api/admin/stats`, {
+    setLoading(true);
+    fetch(`${API_URL}/api/admin/enhanced-stats`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
-      .then((data) => setStats(data))
-      .catch((err) => console.error("Stats fetch error:", err));
+      .then((data) => {
+        setStats(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Stats fetch error:", err);
+        fetch(`${API_URL}/api/admin/stats`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            setStats({ 
+              users: { total: data.users }, 
+              tasks: { total: data.tasks }, 
+              feedback: { total: data.feedback } 
+            });
+            setLoading(false);
+          })
+          .catch(() => setLoading(false));
+      });
   }, [token]);
+
+  const tabs = [
+    { id: "users", label: "Users", icon: Users },
+    { id: "tasks", label: "Tasks", icon: ClipboardList },
+    { id: "feedback", label: "Feedback", icon: MessageSquare },
+  ];
+
+  const container = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.08 },
+    },
+  };
+
+  const item = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 },
+  };
 
   return (
     <DashboardLayout role="admin" title="Admin Dashboard">
-      <div className="flex flex-col">
-        {/* Stats cards */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white shadow rounded-lg p-6 text-center">
-            <h2 className="text-3xl font-bold text-[#1E376E]">{stats.users}</h2>
-            <p className="text-gray-600 mt-2">Total Users</p>
-          </div>
-          <div className="bg-white shadow rounded-lg p-6 text-center">
-            <h2 className="text-3xl font-bold text-[#357FE9]">{stats.tasks}</h2>
-            <p className="text-gray-600 mt-2">Total Tasks</p>
-          </div>
-          <div className="bg-white shadow rounded-lg p-6 text-center">
-            <h2 className="text-3xl font-bold text-[#F59E0B]">{stats.feedback}</h2>
-            <p className="text-gray-600 mt-2">Total Feedback</p>
-          </div>
-        </div>
+      <div className="flex flex-col gap-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-wrap gap-3 items-center"
+        >
+          <Link
+            to="/admin/onboarding"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--color-primary-light)] text-white font-medium hover:opacity-90 transition-opacity"
+          >
+            <UserPlus size={18} />
+            Manage Admins
+          </Link>
+          <Link
+            to="/admin/messaging"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] font-medium hover:bg-[var(--color-bg-secondary)] transition-colors"
+          >
+            <Mail size={18} />
+            Admin Messaging
+          </Link>
+          {isSuperAdmin && (
+            <span className="ml-auto inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 text-sm font-medium">
+              <UserCheck size={14} />
+              Super Admin
+            </span>
+          )}
+        </motion.div>
 
-        {/* Tabs */}
-        <div className="flex gap-4 mb-6 border-b">
-          {["users", "tasks", "feedback"].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 font-medium ${
-                activeTab === tab
-                  ? "border-b-2 border-[#1E376E] text-[#1E376E]"
-                  : "text-gray-500 hover:text-[#1E376E]"
-              }`}
-            >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
-            </button>
-          ))}
-        </div>
+        <motion.div
+          variants={container}
+          initial="hidden"
+          animate="visible"
+          className="grid grid-cols-2 md:grid-cols-4 gap-4"
+        >
+          <motion.div variants={item} className="card p-5 relative overflow-hidden group">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[var(--color-text-secondary)] text-xs font-medium uppercase tracking-wider">Total Users</p>
+                <h2 className="text-2xl font-bold text-[var(--color-text)] mt-1">
+                  {loading ? "..." : stats?.users?.total || 0}
+                </h2>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-light)] flex items-center justify-center">
+                <Users className="w-5 h-5 text-white" />
+              </div>
+            </div>
+            {!loading && stats?.users && (
+              <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full">
+                  {stats.users.taskOwners || 0} TO
+                </span>
+                <span className="px-2 py-0.5 bg-[var(--color-accent)]/10 text-[var(--color-accent)] rounded-full">
+                  {stats.users.solutionProviders || 0} SP
+                </span>
+              </div>
+            )}
+          </motion.div>
 
-        {/* Panel */}
-        <div className="bg-white rounded-xl shadow-md p-6">
-          {activeTab === "users" && <AdminUsers />}
-          {activeTab === "tasks" && <TasksTable />}
-          {activeTab === "feedback" && <FeedbackTable />}
-        </div>
+          <motion.div variants={item} className="card p-5 relative overflow-hidden group">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[var(--color-text-secondary)] text-xs font-medium uppercase tracking-wider">Total Tasks</p>
+                <h2 className="text-2xl font-bold text-[var(--color-text)] mt-1">
+                  {loading ? "..." : stats?.tasks?.total || 0}
+                </h2>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-400 flex items-center justify-center">
+                <ClipboardList className="w-5 h-5 text-white" />
+              </div>
+            </div>
+            {!loading && stats?.tasks && (
+              <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-full">
+                  {stats.tasks.published || 0} Active
+                </span>
+                <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full">
+                  {stats.tasks.inProgress || 0} In Progress
+                </span>
+              </div>
+            )}
+          </motion.div>
+
+          <motion.div variants={item} className="card p-5 relative overflow-hidden group">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[var(--color-text-secondary)] text-xs font-medium uppercase tracking-wider">Pending Approval</p>
+                <h2 className="text-2xl font-bold text-[var(--color-text)] mt-1">
+                  {loading ? "..." : stats?.users?.pendingApproval || 0}
+                </h2>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-400 flex items-center justify-center">
+                <Clock className="w-5 h-5 text-white" />
+              </div>
+            </div>
+            {!loading && stats?.users?.pendingApproval > 0 && (
+              <p className="mt-3 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                Requires attention
+              </p>
+            )}
+          </motion.div>
+
+          <motion.div variants={item} className="card p-5 relative overflow-hidden group">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[var(--color-text-secondary)] text-xs font-medium uppercase tracking-wider">Proposals</p>
+                <h2 className="text-2xl font-bold text-[var(--color-text)] mt-1">
+                  {loading ? "..." : stats?.proposals?.total || 0}
+                </h2>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-purple-400 flex items-center justify-center">
+                <FileText className="w-5 h-5 text-white" />
+              </div>
+            </div>
+            {!loading && stats?.proposals && (
+              <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-full">
+                  {stats.proposals.pending || 0} Pending
+                </span>
+              </div>
+            )}
+          </motion.div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="grid md:grid-cols-3 gap-4"
+        >
+          <div className="card p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <h3 className="font-semibold text-[var(--color-text)]">Weekly Activity</h3>
+            </div>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-[var(--color-text-secondary)]">New Users</span>
+                <span className="font-medium text-[var(--color-text)]">{stats?.users?.newThisWeek || 0}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[var(--color-text-secondary)]">New Tasks</span>
+                <span className="font-medium text-[var(--color-text)]">{stats?.tasks?.newThisWeek || 0}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[var(--color-text-secondary)]">Active Users (30d)</span>
+                <span className="font-medium text-[var(--color-text)]">{stats?.users?.active || 0}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="card p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                <Activity className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              </div>
+              <h3 className="font-semibold text-[var(--color-text)]">User Breakdown</h3>
+            </div>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-[var(--color-text-secondary)]">Task Owners</span>
+                <span className="font-medium text-[var(--color-text)]">{stats?.users?.taskOwners || 0}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[var(--color-text-secondary)]">Solution Providers</span>
+                <span className="font-medium text-[var(--color-text)]">{stats?.users?.solutionProviders || 0}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[var(--color-text-secondary)]">Admins</span>
+                <span className="font-medium text-[var(--color-text)]">{stats?.users?.admins || 0}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="card p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-8 h-8 rounded-lg bg-[var(--color-accent)]/10 flex items-center justify-center">
+                <Briefcase className="w-4 h-4 text-[var(--color-accent)]" />
+              </div>
+              <h3 className="font-semibold text-[var(--color-text)]">Task Status</h3>
+            </div>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-[var(--color-text-secondary)]">Published</span>
+                <span className="font-medium text-[var(--color-text)]">{stats?.tasks?.published || 0}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[var(--color-text-secondary)]">Completed</span>
+                <span className="font-medium text-emerald-600 dark:text-emerald-400">{stats?.tasks?.completed || 0}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[var(--color-text-secondary)]">Draft</span>
+                <span className="font-medium text-[var(--color-text)]">{stats?.tasks?.draft || 0}</span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="card overflow-hidden"
+        >
+          <div className="flex gap-1 p-2 border-b border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
+            {tabs.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                onClick={() => setActiveTab(id)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  activeTab === id
+                    ? "bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm"
+                    : "text-[var(--color-text-secondary)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface)]/50"
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <div className="p-6">
+            {activeTab === "users" && <AdminUsers embedded={true} />}
+            {activeTab === "tasks" && <TasksTable />}
+            {activeTab === "feedback" && <FeedbackTable />}
+          </div>
+        </motion.div>
       </div>
     </DashboardLayout>
   );

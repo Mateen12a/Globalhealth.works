@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { Star, MessageCircle, ThumbsUp, AlertTriangle, User, Calendar } from "lucide-react";
 import FeedbackSummaryCard from "./FeedbackSummaryCard";
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function FeedbackList({ userId }) {
@@ -36,70 +39,105 @@ export default function FeedbackList({ userId }) {
       });
   }, [userId, token]);
 
-  if (loading) return <p className="text-gray-500">Loading feedback...</p>;
-  if (feedbacks.length === 0)
-    return <p className="text-gray-500">No feedback yet</p>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="w-8 h-8 border-3 border-[var(--color-primary)]/30 border-t-[var(--color-primary)] rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (feedbacks.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <div className="w-16 h-16 rounded-full bg-[var(--color-bg-secondary)] flex items-center justify-center mx-auto mb-4">
+          <MessageCircle className="w-8 h-8 text-[var(--color-text-muted)]" />
+        </div>
+        <p className="text-[var(--color-text-secondary)]">No feedback received yet</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {/* Summary Card */}
       {feedbacks.length > 0 && (
         <FeedbackSummaryCard avgRating={avgRating} totalReviews={feedbacks.length} />
       )}
 
-      {/* Individual Feedback */}
-      {feedbacks.map((f) => (
-        <div
-          key={f._id}
-          className="bg-white shadow-md rounded-lg p-5 border border-gray-100"
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-semibold text-[#1E376E]">
-                {f.fromUser?.name || "Anonymous"}
-              </p>
-              <p className="text-xs text-gray-500">
-                {f.taskId?.title || "General Feedback"}
-              </p>
+      <div className="space-y-4">
+        {feedbacks.map((f, index) => (
+          <motion.div
+            key={f._id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.1 }}
+            className="card p-5"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-light)] flex items-center justify-center text-white font-semibold text-sm">
+                  {f.fromUser?.name?.[0] || f.fromUser?.firstName?.[0] || "U"}
+                </div>
+                <div>
+                  <p className="font-semibold text-[var(--color-text)]">
+                    {f.fromUser?.name || f.fromUser?.firstName || "Anonymous"}
+                  </p>
+                  <p className="text-xs text-[var(--color-text-muted)] flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    {new Date(f.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    size={18}
+                    className={`${
+                      star <= f.rating
+                        ? "fill-amber-400 text-amber-400"
+                        : "text-gray-300 dark:text-gray-600"
+                    }`}
+                  />
+                ))}
+              </div>
             </div>
-            <div className="flex items-center space-x-1">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <span
-                  key={star}
-                  className={`text-lg ${
-                    star <= f.rating ? "text-yellow-400" : "text-gray-300"
-                  }`}
-                >
-                  ★
-                </span>
-              ))}
+
+            {f.taskId?.title && (
+              <p className="text-xs text-[var(--color-text-muted)] mt-2 px-3 py-1 bg-[var(--color-bg-secondary)] rounded-lg inline-block">
+                Task: {f.taskId.title}
+              </p>
+            )}
+
+            {f.testimonial && (
+              <blockquote className="mt-4 pl-4 border-l-3 border-[var(--color-primary)] italic text-[var(--color-text)]">
+                "{f.testimonial}"
+              </blockquote>
+            )}
+
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+              {f.strengths && (
+                <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-200 dark:border-emerald-800">
+                  <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1 mb-1">
+                    <ThumbsUp className="w-3 h-3" /> Strengths
+                  </p>
+                  <p className="text-sm text-emerald-700 dark:text-emerald-300">{f.strengths}</p>
+                </div>
+              )}
+
+              {f.improvementAreas && (
+                <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800">
+                  <p className="text-xs font-medium text-amber-600 dark:text-amber-400 flex items-center gap-1 mb-1">
+                    <AlertTriangle className="w-3 h-3" /> Areas for Improvement
+                  </p>
+                  <p className="text-sm text-amber-700 dark:text-amber-300">{f.improvementAreas}</p>
+                </div>
+              )}
             </div>
-          </div>
-
-          {/* Content */}
-          {f.testimonial && (
-            <p className="mt-3 text-gray-700 italic">“{f.testimonial}”</p>
-          )}
-
-          {f.strengths && (
-            <p className="mt-2 text-sm text-green-600">
-              <strong>Strengths:</strong> {f.strengths}
-            </p>
-          )}
-
-          {f.improvementAreas && (
-            <p className="mt-1 text-sm text-orange-600">
-              <strong>Improvements:</strong> {f.improvementAreas}
-            </p>
-          )}
-
-          {/* Date */}
-          <p className="mt-2 text-xs text-gray-400">
-            {new Date(f.createdAt).toLocaleDateString()}
-          </p>
-        </div>
-      ))}
+          </motion.div>
+        ))}
+      </div>
     </div>
   );
 }

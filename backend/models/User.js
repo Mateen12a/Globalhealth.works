@@ -41,10 +41,35 @@ const userSchema = new mongoose.Schema(
     // Admin / system-specific
     isActive: { type: Boolean, default: true },
     isVerified: { type: Boolean, default: false },
+    
+    // Admin type: superAdmin has additional privileges like changing user roles
+    adminType: { 
+      type: String, 
+      enum: ["superAdmin", "admin"], 
+      default: "admin" 
+    },
 
-    // ✅ New approval fields
+    // Approval fields
     isApproved: { type: Boolean, default: false },
     approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+    
+    // Rejection reason
+    rejectionReason: { type: String },
+
+    // Notification preferences
+    notificationPreferences: {
+      emailNotifications: { type: Boolean, default: true },
+      inAppNotifications: { type: Boolean, default: true },
+      proposalUpdates: { type: Boolean, default: true },
+      taskUpdates: { type: Boolean, default: true },
+      messageNotifications: { type: Boolean, default: true },
+      systemUpdates: { type: Boolean, default: true },
+    },
+
+    // Onboarding status
+    onboardingCompleted: { type: Boolean, default: false },
+    onboardingSkipped: { type: Boolean, default: false },
+    isFirstLogin: { type: Boolean, default: true },
   },
   { timestamps: true }
 );
