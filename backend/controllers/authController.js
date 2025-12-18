@@ -86,11 +86,13 @@ exports.register = async (req, res) => {
     // Get all active admins
 const admins = await User.find({ role: "admin", isActive: true }).select("email _id firstName lastName");
 
-// Build admin recipient list (ensure fallbacks)
+// Build admin recipient list (ensure fallbacks from env)
+const fallbackAdminEmails = process.env.ADMIN_NOTIFICATION_EMAILS 
+  ? process.env.ADMIN_NOTIFICATION_EMAILS.split(',').map(e => e.trim())
+  : [];
 const adminEmails = [
   ...admins.map((a) => a.email),
-  "admin@globalhealth.works",
-  "ajidagbamateen12@gmail.com",
+  ...fallbackAdminEmails,
 ];
 
 // Send alert email to all admins
@@ -218,8 +220,69 @@ exports.login = async (req, res) => {
     if (!isMatch) return res.status(400).json({ msg: "Invalid credentials" });
 
     if (!user.isApproved) {
+      // Track pending approval login attempts and send reminder emails (max 2)
+      const now = new Date();
+      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      
+      // Initialize pendingApprovalAttempts if not present
+      if (!user.pendingApprovalAttempts) {
+        user.pendingApprovalAttempts = { count: 0, emailsSent: 0, lastAttempt: null };
+      }
+
+      // Reset counter if last attempt was more than 24 hours ago
+      if (user.pendingApprovalAttempts.lastAttempt && 
+          new Date(user.pendingApprovalAttempts.lastAttempt) < twentyFourHoursAgo) {
+        user.pendingApprovalAttempts.count = 0;
+        user.pendingApprovalAttempts.emailsSent = 0;
+      }
+
+      // Increment attempt count and update last attempt time
+      user.pendingApprovalAttempts.count += 1;
+      user.pendingApprovalAttempts.lastAttempt = now;
+
+      // Send reminder emails if we haven't sent 2 yet within 24 hours
+      if (user.pendingApprovalAttempts.emailsSent < 2) {
+        const attemptNumber = user.pendingApprovalAttempts.emailsSent + 1;
+        
+        try {
+          // Send reminder to user
+          await sendMail(
+            user.email,
+            "Account Approval Reminder",
+            Templates.pendingApprovalReminderUser(user, attemptNumber)
+          );
+
+          // Send reminder to all admins
+          const admins = await User.find({ role: "admin", isActive: true }).select("email");
+          const fallbackAdminEmails = process.env.ADMIN_NOTIFICATION_EMAILS 
+            ? process.env.ADMIN_NOTIFICATION_EMAILS.split(',').map(e => e.trim())
+            : [];
+          const adminEmails = [
+            ...admins.map((a) => a.email),
+            ...fallbackAdminEmails,
+          ];
+          
+          await Promise.all(
+            adminEmails.map((adminEmail) =>
+              sendMail(
+                adminEmail,
+                `User Awaiting Approval: ${user.firstName} ${user.lastName}`,
+                Templates.pendingApprovalReminderAdmin(user, attemptNumber)
+              )
+            )
+          );
+
+          user.pendingApprovalAttempts.emailsSent += 1;
+          console.log(`Sent pending approval reminder #${attemptNumber} for user ${user.email}`);
+        } catch (emailErr) {
+          console.warn("Failed to send pending approval reminder:", emailErr);
+        }
+      }
+
+      await user.save();
+
       return res.status(403).json({
-        msg: "Your account is awaiting admin approval. You’ll be notified once approved.",
+        msg: "Your account is awaiting admin approval. You'll be notified once approved.",
       });
     }
 

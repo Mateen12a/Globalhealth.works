@@ -1115,6 +1115,97 @@ const Templates = {
         </p>
       `,
     }),
+
+  pendingApprovalReminderUser: (user, attemptNumber) =>
+    emailLayout({
+      title: "Account Approval Reminder",
+      preheader: "Your account is still pending approval",
+      content: `
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Dear ${user.firstName},</p>
+        
+        <div class="info-box">
+          <strong>Your account is still being reviewed</strong>
+        </div>
+        
+        <p style="color:${COLORS.textLight};margin-bottom:24px;">We noticed you tried to log in, but your account is still pending admin approval. Our team is working to review your registration as quickly as possible.</p>
+        
+        <table class="data-table">
+          <tr>
+            <td><strong>Account Type</strong></td>
+            <td>${user.role === "solutionProvider" ? "Solution Provider" : "Task Owner"}</td>
+          </tr>
+          <tr>
+            <td><strong>Registered</strong></td>
+            <td>${new Date(user.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</td>
+          </tr>
+        </table>
+        
+        <p style="color:${COLORS.textLight};margin:24px 0;">The approval process typically takes 24-48 hours. You will receive an email notification as soon as your account is approved.</p>
+        
+        <div class="warning-box">
+          <strong>Need urgent access?</strong>
+          <p style="margin:8px 0 0;font-size:14px;">Contact us at info@globalhealth.works and we'll prioritise your review.</p>
+        </div>
+        
+        <p style="color:${COLORS.textLight};margin-top:32px;font-size:14px;">
+          Thank you for your patience,<br>
+          <strong style="color:${COLORS.textDark};">The GlobalHealth.Works Team</strong>
+        </p>
+      `,
+    }),
+
+  pendingApprovalReminderAdmin: (user, attemptNumber) =>
+    emailLayout({
+      title: "User Awaiting Approval - Login Attempt",
+      preheader: `${user.firstName} ${user.lastName} is trying to access their account`,
+      content: `
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Hello Admin,</p>
+        
+        <div class="warning-box">
+          <strong>User Login Attempt - Pending Approval</strong>
+          <p style="margin:8px 0 0;font-size:14px;">A user who is awaiting approval has attempted to log in (Attempt #${attemptNumber}).</p>
+        </div>
+        
+        <p style="color:${COLORS.textLight};margin-bottom:24px;">Please review and approve/reject this user's registration at your earliest convenience.</p>
+        
+        <table class="data-table">
+          <tr>
+            <td><strong>Name</strong></td>
+            <td style="font-weight:500;">${user.firstName} ${user.lastName}</td>
+          </tr>
+          <tr>
+            <td><strong>Email</strong></td>
+            <td>${user.email}</td>
+          </tr>
+          <tr>
+            <td><strong>Role</strong></td>
+            <td>${user.role === "solutionProvider" ? "Solution Provider" : "Task Owner"}</td>
+          </tr>
+          <tr>
+            <td><strong>Organisation</strong></td>
+            <td>${user.organisationName || "Not specified"}</td>
+          </tr>
+          <tr>
+            <td><strong>Country</strong></td>
+            <td>${user.country || "Not specified"}</td>
+          </tr>
+          <tr>
+            <td><strong>Registered</strong></td>
+            <td>${new Date(user.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</td>
+          </tr>
+        </table>
+        
+        <div style="text-align:center;margin-top:32px;">
+          <a href="https://globalhealth.works/dashboard/admin" class="btn btn-accent">
+            Review User Now
+          </a>
+        </div>
+        
+        <p style="color:${COLORS.textLight};margin-top:24px;font-size:13px;">
+          <em>This is reminder ${attemptNumber} of 2. The user will not receive further reminders after this.</em>
+        </p>
+      `,
+    }),
 };
 
 module.exports = { sendMail, Templates, emailLayout };

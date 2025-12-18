@@ -93,6 +93,13 @@ const userSchema = new mongoose.Schema(
       issuedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
       issuedAt: { type: Date, default: Date.now }
     }],
+
+    // Pending approval login attempt tracking (for retry email notifications)
+    pendingApprovalAttempts: {
+      count: { type: Number, default: 0 },
+      lastAttempt: { type: Date },
+      emailsSent: { type: Number, default: 0 }
+    },
   },
   { timestamps: true }
 );
