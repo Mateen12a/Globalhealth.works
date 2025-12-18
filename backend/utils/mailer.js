@@ -751,6 +751,228 @@ const Templates = {
         </div>
       `,
     }),
+
+  userSuspensionNotice: (user, reason) =>
+    emailLayout({
+      title: "Account Suspended",
+      preheader: "Your GlobalHealth.Works account has been suspended",
+      content: `
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Dear ${user.firstName},</p>
+        
+        <div class="error-box">
+          <strong>Your account has been suspended.</strong>
+        </div>
+        
+        <p style="color:${COLORS.textLight};margin-bottom:24px;">We regret to inform you that your GlobalHealth.Works account has been suspended by an administrator.</p>
+        
+        ${reason ? `
+        <div class="warning-box">
+          <strong>Reason:</strong>
+          <p style="margin:8px 0 0;">${reason}</p>
+        </div>
+        ` : ''}
+        
+        <p style="color:${COLORS.textLight};margin-bottom:24px;">If you believe this was a mistake, please contact our support team for assistance.</p>
+        
+        <p style="color:${COLORS.textLight};font-size:14px;">
+          Best regards,<br>
+          <strong style="color:${COLORS.textDark};">The GlobalHealth.Works Team</strong>
+        </p>
+      `,
+    }),
+
+  userActivationNotice: (user) =>
+    emailLayout({
+      title: "Account Reactivated",
+      preheader: "Your GlobalHealth.Works account has been reactivated",
+      content: `
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Dear ${user.firstName},</p>
+        
+        <div class="success-box">
+          <strong>Great news!</strong> Your account has been reactivated.
+        </div>
+        
+        <p style="color:${COLORS.textLight};margin-bottom:24px;">You now have full access to GlobalHealth.Works again. You can log in and continue using all features.</p>
+        
+        <div style="text-align:center;margin-top:32px;">
+          <a href="https://globalhealth.works/login" class="btn btn-accent">
+            Log In to Your Account
+          </a>
+        </div>
+        
+        <p style="color:${COLORS.textLight};margin-top:32px;font-size:14px;">
+          Welcome back,<br>
+          <strong style="color:${COLORS.textDark};">The GlobalHealth.Works Team</strong>
+        </p>
+      `,
+    }),
+
+  userApprovedAdminNotice: (approvedUser, approvingAdmin) =>
+    emailLayout({
+      title: "User Approved",
+      preheader: `${approvedUser.firstName} ${approvedUser.lastName} has been approved`,
+      content: `
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Hello Admin,</p>
+        
+        <div class="success-box">
+          <strong>A user has been approved and is now active on the platform.</strong>
+        </div>
+        
+        <table class="data-table">
+          <tr>
+            <td><strong>User</strong></td>
+            <td>${approvedUser.firstName} ${approvedUser.lastName}</td>
+          </tr>
+          <tr>
+            <td><strong>Email</strong></td>
+            <td>${approvedUser.email}</td>
+          </tr>
+          <tr>
+            <td><strong>Role</strong></td>
+            <td>${approvedUser.role}</td>
+          </tr>
+          <tr>
+            <td><strong>Approved By</strong></td>
+            <td>${approvingAdmin.firstName} ${approvingAdmin.lastName}</td>
+          </tr>
+        </table>
+        
+        <p style="color:${COLORS.textLight};font-size:14px;margin-top:24px;">This is an automated notification for your records.</p>
+      `,
+    }),
+
+  superAdminApprovalNotice: (approvedUser, approvingAdmin) =>
+    emailLayout({
+      title: "User Approved by Admin",
+      preheader: `${approvingAdmin.firstName} ${approvingAdmin.lastName} approved ${approvedUser.firstName} ${approvedUser.lastName}`,
+      content: `
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Hello Super Admin,</p>
+        
+        <div class="info-box">
+          <strong>Admin Action:</strong> A user has been approved by an administrator.
+        </div>
+        
+        <table class="data-table">
+          <tr>
+            <td><strong>User Approved</strong></td>
+            <td>${approvedUser.firstName} ${approvedUser.lastName} (${approvedUser.email})</td>
+          </tr>
+          <tr>
+            <td><strong>Role</strong></td>
+            <td>${approvedUser.role}</td>
+          </tr>
+          <tr>
+            <td><strong>Approved By</strong></td>
+            <td>${approvingAdmin.firstName} ${approvingAdmin.lastName} (${approvingAdmin.email})</td>
+          </tr>
+          <tr>
+            <td><strong>Date</strong></td>
+            <td>${new Date().toLocaleString()}</td>
+          </tr>
+        </table>
+        
+        <div style="text-align:center;margin-top:32px;">
+          <a href="https://globalhealth.works/admin/users" class="btn btn-primary">
+            View Users
+          </a>
+        </div>
+      `,
+    }),
+
+  superAdminRejectionNotice: (rejectedUser, rejectingAdmin, reason) =>
+    emailLayout({
+      title: "User Rejected by Admin",
+      preheader: `${rejectingAdmin.firstName} ${rejectingAdmin.lastName} rejected ${rejectedUser.firstName} ${rejectedUser.lastName}`,
+      content: `
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Hello Super Admin,</p>
+        
+        <div class="warning-box">
+          <strong>Admin Action:</strong> A user registration has been rejected.
+        </div>
+        
+        <table class="data-table">
+          <tr>
+            <td><strong>User Rejected</strong></td>
+            <td>${rejectedUser.firstName} ${rejectedUser.lastName} (${rejectedUser.email})</td>
+          </tr>
+          <tr>
+            <td><strong>Role</strong></td>
+            <td>${rejectedUser.role}</td>
+          </tr>
+          <tr>
+            <td><strong>Rejected By</strong></td>
+            <td>${rejectingAdmin.firstName} ${rejectingAdmin.lastName} (${rejectingAdmin.email})</td>
+          </tr>
+        </table>
+        
+        <div class="error-box">
+          <strong>Reason:</strong>
+          <p style="margin:8px 0 0;">${reason}</p>
+        </div>
+      `,
+    }),
+
+  superAdminSuspensionNotice: (suspendedUser, suspendingAdmin, reason) =>
+    emailLayout({
+      title: "User Suspended by Admin",
+      preheader: `${suspendingAdmin.firstName} ${suspendingAdmin.lastName} suspended ${suspendedUser.firstName} ${suspendedUser.lastName}`,
+      content: `
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Hello Super Admin,</p>
+        
+        <div class="error-box">
+          <strong>Admin Action:</strong> A user account has been suspended.
+        </div>
+        
+        <table class="data-table">
+          <tr>
+            <td><strong>User Suspended</strong></td>
+            <td>${suspendedUser.firstName} ${suspendedUser.lastName} (${suspendedUser.email})</td>
+          </tr>
+          <tr>
+            <td><strong>Role</strong></td>
+            <td>${suspendedUser.role}</td>
+          </tr>
+          <tr>
+            <td><strong>Suspended By</strong></td>
+            <td>${suspendingAdmin.firstName} ${suspendingAdmin.lastName} (${suspendingAdmin.email})</td>
+          </tr>
+        </table>
+        
+        ${reason ? `
+        <div class="warning-box">
+          <strong>Reason:</strong>
+          <p style="margin:8px 0 0;">${reason}</p>
+        </div>
+        ` : ''}
+      `,
+    }),
+
+  adminMessageNotification: (receiver, sender, message) =>
+    emailLayout({
+      title: "New Admin Message",
+      preheader: `${sender.firstName} ${sender.lastName} sent you a message`,
+      content: `
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Dear ${receiver.firstName},</p>
+        <p style="color:${COLORS.textLight};margin-bottom:24px;">You have a new message from <strong style="color:${COLORS.textDark};">${sender.firstName} ${sender.lastName}</strong> in the admin messaging system.</p>
+        
+        <div class="info-box">
+          <p style="margin:0;font-style:italic;color:${COLORS.textDark};">
+            "${message ? message.substring(0, 200) + (message.length > 200 ? '...' : '') : 'Sent an attachment'}"
+          </p>
+        </div>
+        
+        <div style="text-align:center;margin-top:32px;">
+          <a href="https://globalhealth.works/admin/messaging" class="btn btn-primary">
+            Open Admin Messages
+          </a>
+        </div>
+        
+        <p style="color:${COLORS.textLight};margin-top:32px;font-size:14px;">
+          Warm regards,<br>
+          <strong style="color:${COLORS.textDark};">The GlobalHealth.Works Team</strong>
+        </p>
+      `,
+    }),
 };
 
 module.exports = { sendMail, Templates, emailLayout };

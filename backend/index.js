@@ -54,6 +54,10 @@ app.use("/api/conversations", conversationRoutes);
 // Serve uploaded files
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
+// Serve frontend static files in production
+const frontendDist = path.join(__dirname, "../frontend/dist");
+app.use(express.static(frontendDist));
+
 // ==================== SOCKET.IO EVENTS ====================
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
@@ -125,9 +129,22 @@ mongoose
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.error("MongoDB error:", err));
 
-// Health check routes
-app.get("/", (req, res) => res.send("GlobalHealth.Works API + Socket.IO running 🚀"));
+// Health check route
 app.get("/api/health", (req, res) => res.json({ status: "ok", timestamp: new Date().toISOString() }));
+
+// Serve frontend for all non-API routes (SPA support)
+const fs = require("fs");
+app.use((req, res, next) => {
+  if (req.path.startsWith("/api") || req.path.startsWith("/uploads") || req.path.startsWith("/socket.io")) {
+    return next();
+  }
+  const indexPath = path.join(frontendDist, "index.html");
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.send("GlobalHealth.Works API + Socket.IO running");
+  }
+});
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, "0.0.0.0", () => console.log(`Server + Socket.IO running on port ${PORT}`));

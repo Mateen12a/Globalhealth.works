@@ -54,8 +54,13 @@ const userSchema = new mongoose.Schema(
     isApproved: { type: Boolean, default: false },
     approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
     
-    // Rejection reason
+    // Rejection fields
     rejectionReason: { type: String },
+    rejectedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+
+    // Suspension fields
+    suspendedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+    suspensionReason: { type: String },
 
     // Notification preferences
     notificationPreferences: {

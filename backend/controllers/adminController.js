@@ -5,6 +5,32 @@ const Feedback = require("../models/Feedback")
 const { sendMail, Templates } = require("../utils/mailer");
 const createNotification = require("../utils/createNotification");
 
+function buildAdminContext(reqUser, dbAdmin) {
+  if (dbAdmin && dbAdmin.firstName) {
+    return {
+      _id: dbAdmin._id,
+      firstName: dbAdmin.firstName,
+      lastName: dbAdmin.lastName || '',
+      email: dbAdmin.email,
+      adminType: dbAdmin.adminType || 'admin',
+      name: `${dbAdmin.firstName} ${dbAdmin.lastName || ''}`.trim(),
+      role: dbAdmin.role || 'admin'
+    };
+  }
+  const firstName = reqUser.firstName || 'System';
+  const lastName = reqUser.lastName || 'Administrator';
+  const adminType = reqUser.adminType || 'admin';
+  return {
+    _id: reqUser.id,
+    firstName: firstName,
+    lastName: lastName,
+    email: reqUser.email || 'admin@globalhealth.works',
+    adminType: adminType,
+    name: `${firstName} ${lastName}`.trim(),
+    role: 'admin'
+  };
+}
+
 // === USERS ===
 
 // Get all users
@@ -29,13 +55,21 @@ exports.approveUser = async (req, res) => {
 
     if (user.isApproved) return res.status(400).json({ msg: "User already approved" });
 
+    const dbAdmin = await User.findById(adminId);
+    const approvingAdmin = buildAdminContext(req.user, dbAdmin);
+
     user.isApproved = true;
     user.approvedBy = adminId;
+    user.status = "active";
     await user.save();
 
+    // 1. Send email to the approved user
     await sendMail(user.email, "Your Account Has Been Approved", Templates.userApprovalNotice(user));
-    await sendMail(req.user.email, "User Account Approved", Templates.approvalConfirmedAdminNotice(req.user, user));
+    
+    // 2. Send confirmation email to the approving admin
+    await sendMail(approvingAdmin.email, "User Account Approved", Templates.approvalConfirmedAdminNotice(approvingAdmin, user));
 
+    // 3. Create in-app notification for the approved user
     await createNotification(
       user._id,
       "system",
@@ -43,6 +77,34 @@ exports.approveUser = async (req, res) => {
       "/dashboard",
       { title: "Account Approved", sendEmail: false }
     );
+
+    // 4. Get all admins for in-app notifications
+    const allAdmins = await User.find({ role: "admin", isActive: true, _id: { $ne: adminId } });
+    const superAdmins = allAdmins.filter(a => a.adminType === "superAdmin");
+    const regularAdmins = allAdmins.filter(a => a.adminType !== "superAdmin");
+
+    // 5. Send email to super admins only (when a non-superAdmin admin approves)
+    if (approvingAdmin.adminType !== "superAdmin") {
+      for (const superAdmin of superAdmins) {
+        await sendMail(
+          superAdmin.email,
+          "User Approved by Admin",
+          Templates.superAdminApprovalNotice(user, approvingAdmin)
+        );
+      }
+    }
+
+    // 6. Create in-app notifications for all other admins
+    const roleDisplay = user.role === "solutionProvider" ? "Solution Provider" : "Task Owner";
+    for (const admin of allAdmins) {
+      await createNotification(
+        admin._id,
+        "admin",
+        `${user.firstName} ${user.lastName} (${roleDisplay}) has been approved by ${approvingAdmin.firstName} ${approvingAdmin.lastName}.`,
+        `/admin/users/${user._id}`,
+        { title: "User Approved", sendEmail: false }
+      );
+    }
 
     console.log(`User ${user.email} approved by admin ${adminId}`);
 
@@ -53,22 +115,99 @@ exports.approveUser = async (req, res) => {
   }
 };
 
-// Suspend/Delete user
+// Suspend/Activate user
 exports.updateUserStatus = async (req, res) => {
   const { id, action } = req.params;
+  const { reason } = req.body;
+  const adminId = req.user.id;
+
   try {
     const user = await User.findById(id);
     if (!user) return res.status(404).json({ msg: "User not found" });
 
+    const dbActionAdmin = await User.findById(adminId);
+    const actionAdmin = buildAdminContext(req.user, dbActionAdmin);
+
     if (action === "suspend") {
+      const suspendReason = reason || "No reason provided";
       user.status = "suspended";
+      user.suspendedBy = adminId;
+      user.suspensionReason = suspendReason;
       await user.save();
+
+      // 1. Send email to suspended user
+      await sendMail(user.email, "Your Account Has Been Suspended", Templates.userSuspensionNotice(user, suspendReason));
+
+      // 2. Create in-app notification for the user
+      await createNotification(
+        user._id,
+        "system",
+        `Your account has been suspended. Reason: ${suspendReason}. Contact support if you believe this is a mistake.`,
+        null,
+        { title: "Account Suspended", sendEmail: false }
+      );
+
+      // 3. Notify super admins via email (if suspended by non-superAdmin)
+      if (actionAdmin.adminType !== "superAdmin") {
+        const superAdmins = await User.find({ role: "admin", adminType: "superAdmin", isActive: true });
+        for (const superAdmin of superAdmins) {
+          await sendMail(
+            superAdmin.email,
+            "User Suspended by Admin",
+            Templates.superAdminSuspensionNotice(user, actionAdmin, suspendReason)
+          );
+        }
+      }
+
+      // 4. In-app notifications for all other admins
+      const otherAdmins = await User.find({ role: "admin", isActive: true, _id: { $ne: adminId } });
+      const roleDisplay = user.role === "solutionProvider" ? "Solution Provider" : user.role === "taskOwner" ? "Task Owner" : "User";
+      for (const admin of otherAdmins) {
+        await createNotification(
+          admin._id,
+          "admin",
+          `${user.firstName} ${user.lastName} (${roleDisplay}) has been suspended by ${actionAdmin.firstName} ${actionAdmin.lastName}. Reason: ${suspendReason}`,
+          `/admin/users/${user._id}`,
+          { title: "User Suspended", sendEmail: false }
+        );
+      }
+
+      console.log(`User ${user.email} suspended by admin ${adminId}`);
       return res.json({ msg: "User suspended", user });
     }
 
     if (action === "activate") {
       user.status = "active";
+      user.suspendedBy = null;
+      user.suspensionReason = null;
       await user.save();
+
+      // 1. Send email to reactivated user
+      await sendMail(user.email, "Your Account Has Been Reactivated", Templates.userActivationNotice(user));
+
+      // 2. Create in-app notification for the user
+      await createNotification(
+        user._id,
+        "system",
+        "Your account has been reactivated! You can now access all features of GlobalHealth.Works.",
+        "/dashboard",
+        { title: "Account Reactivated", sendEmail: false }
+      );
+
+      // 3. In-app notifications for all other admins
+      const otherAdmins = await User.find({ role: "admin", isActive: true, _id: { $ne: adminId } });
+      const roleDisplay = user.role === "solutionProvider" ? "Solution Provider" : user.role === "taskOwner" ? "Task Owner" : "User";
+      for (const admin of otherAdmins) {
+        await createNotification(
+          admin._id,
+          "admin",
+          `${user.firstName} ${user.lastName} (${roleDisplay}) has been reactivated by ${actionAdmin.firstName} ${actionAdmin.lastName}.`,
+          `/admin/users/${user._id}`,
+          { title: "User Reactivated", sendEmail: false }
+        );
+      }
+
+      console.log(`User ${user.email} activated by admin ${adminId}`);
       return res.json({ msg: "User activated", user });
     }
 
@@ -108,23 +247,53 @@ exports.rejectUser = async (req, res) => {
     const user = await User.findById(id);
     if (!user) return res.status(404).json({ msg: "User not found" });
 
+    const dbRejectingAdmin = await User.findById(adminId);
+    const rejectingAdmin = buildAdminContext(req.user, dbRejectingAdmin);
+
     // Save reason to user
     user.rejectionReason = reason;
     user.isApproved = false;
+    user.rejectedBy = adminId;
     await user.save();
 
-    // Send emails
+    // 1. Send email to the rejected user
     await sendMail(
       user.email,
       "Your Account Could Not Be Approved",
       Templates.rejectionNotice(user, reason)
     );
 
+    // 2. Send confirmation to the rejecting admin
     await sendMail(
-      req.user.email,
+      rejectingAdmin.email,
       "User Account Rejected",
-      Templates.rejectionConfirmedAdminNotice(req.user, user, reason)
+      Templates.rejectionConfirmedAdminNotice(rejectingAdmin, user, reason)
     );
+
+    // 3. Send email to super admins (if rejected by non-superAdmin)
+    if (rejectingAdmin.adminType !== "superAdmin") {
+      const superAdmins = await User.find({ role: "admin", adminType: "superAdmin", isActive: true });
+      for (const superAdmin of superAdmins) {
+        await sendMail(
+          superAdmin.email,
+          "User Rejected by Admin",
+          Templates.superAdminRejectionNotice(user, rejectingAdmin, reason)
+        );
+      }
+    }
+
+    // 4. In-app notifications for all other admins
+    const otherAdmins = await User.find({ role: "admin", isActive: true, _id: { $ne: adminId } });
+    const roleDisplay = user.role === "solutionProvider" ? "Solution Provider" : "Task Owner";
+    for (const admin of otherAdmins) {
+      await createNotification(
+        admin._id,
+        "admin",
+        `${user.firstName} ${user.lastName} (${roleDisplay}) has been rejected by ${rejectingAdmin.firstName} ${rejectingAdmin.lastName}. Reason: ${reason}`,
+        `/admin/users/${user._id}`,
+        { title: "User Rejected", sendEmail: false }
+      );
+    }
 
     console.log(`User ${user.email} rejected by admin ${adminId}. Reason: ${reason}`);
 
@@ -372,13 +541,35 @@ exports.sendAdminMessage = async (req, res) => {
     await message.populate("sender", "firstName lastName email profileImage");
 
     const lastMessageContent = content || (attachments.length > 0 ? `Sent ${attachments.length} file(s)` : "");
-    await AdminConversation.findByIdAndUpdate(id, {
+    const conversation = await AdminConversation.findByIdAndUpdate(id, {
       lastMessage: {
         content: lastMessageContent,
         sender: req.user.id,
         createdAt: new Date()
       }
-    });
+    }, { new: true }).populate("participants", "firstName lastName email");
+
+    // Send notifications to the other participant(s)
+    const sender = await User.findById(req.user.id).select("firstName lastName email");
+    for (const participant of conversation.participants) {
+      if (String(participant._id) !== String(req.user.id)) {
+        // In-app notification
+        await createNotification(
+          participant._id,
+          "admin",
+          `${sender.firstName} ${sender.lastName} sent you a message in admin chat.`,
+          `/admin/messaging`,
+          { title: "New Admin Message", sendEmail: false }
+        );
+
+        // Email notification
+        await sendMail(
+          participant.email,
+          `New message from ${sender.firstName} ${sender.lastName}`,
+          Templates.adminMessageNotification(participant, sender, content)
+        );
+      }
+    }
 
     res.status(201).json(message);
   } catch (err) {

@@ -223,11 +223,20 @@ exports.login = async (req, res) => {
       });
     }
 
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
-    );
+    if (user.status === "suspended") {
+      return res.status(403).json({
+        msg: "Your account has been suspended. Please contact support for assistance.",
+      });
+    }
+    const tokenPayload = {
+      id: user._id,
+      role: user.role,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      adminType: user.adminType || null
+    };
+    const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, { expiresIn: "1d" });
 
     // Update last login
     user.lastLogin = new Date();

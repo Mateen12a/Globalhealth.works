@@ -21,6 +21,7 @@ async function createNotification(userId, type, message, link = null, options = 
       'message': 'messageNotifications',
       'task': 'taskUpdates',
       'system': 'systemUpdates',
+      'admin': 'systemUpdates',
     };
     
     const prefKey = typePreferenceMap[type] || 'systemUpdates';

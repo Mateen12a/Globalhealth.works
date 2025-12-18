@@ -5,6 +5,7 @@ const User = require("../models/User");
 const path = require("path");
 const fs = require("fs");
 const { sendMail, Templates } = require("../utils/mailer");
+const createNotification = require("../utils/createNotification");
 
 // Create a proposal (multipart/form-data if attachments)
 exports.createProposal = async (req, res) => {
@@ -64,6 +65,24 @@ exports.createProposal = async (req, res) => {
         const htmlApplicant = Templates.proposalSubmissionConfirmation(applicant, task, proposal);
         await sendMail(applicant.email, `Your proposal for "${task.title}" was submitted`, htmlApplicant);
       }
+
+      // In-app notification for task owner
+      await createNotification(
+        taskOwner._id,
+        "proposal",
+        `${applicant.firstName} ${applicant.lastName} submitted a proposal for your task "${task.title}"`,
+        `/tasks/${task._id}`,
+        { title: "New Proposal Received", sendEmail: false }
+      );
+
+      // In-app notification for applicant
+      await createNotification(
+        fromUserId,
+        "proposal",
+        `Your proposal for "${task.title}" has been submitted successfully.`,
+        `/my-proposals`,
+        { title: "Proposal Submitted", sendEmail: false }
+      );
     } catch (emailErr) {
       console.warn("Proposal email failed:", emailErr);
     }
@@ -134,18 +153,56 @@ exports.updateProposalStatus = async (req, res) => {
     proposal.status = action === "accept" ? "accepted" : "rejected";
     await proposal.save();
 
+    // Get the applicant user
+    const applicant = await User.findById(proposal.fromUser);
+    const taskId = proposal.task._id || proposal.task;
+    const taskData = await Task.findById(taskId);
+    if (!taskData) return res.status(404).json({ msg: "Task not found" });
+
     // If accepted -> optionally assign the task to this SP
     if (proposal.status === "accepted") {
-      const task = await Task.findById(proposal.task._id);
-      task.assignedTo = task.assignedTo || [];
-      if (!task.assignedTo.includes(proposal.fromUser)) {
-        task.assignedTo.push(proposal.fromUser);
+      taskData.assignedTo = taskData.assignedTo || [];
+      if (!taskData.assignedTo.includes(proposal.fromUser)) {
+        taskData.assignedTo.push(proposal.fromUser);
       }
-      task.status = "in-progress";
-      await task.save();
+      taskData.status = "in-progress";
+      await taskData.save();
+
+      // Send email and in-app notification to applicant
+      if (applicant) {
+        await sendMail(
+          applicant.email,
+          `Your proposal for "${taskData.title}" has been accepted!`,
+          Templates.proposalAccepted(applicant, taskData)
+        );
+
+        await createNotification(
+          applicant._id,
+          "proposal",
+          `Congratulations! Your proposal for "${taskData.title}" has been accepted.`,
+          `/tasks/${taskData._id}`,
+          { title: "Proposal Accepted", sendEmail: false }
+        );
+      }
+    } else {
+      // Rejected - send email and in-app notification
+      if (applicant) {
+        await sendMail(
+          applicant.email,
+          `Update on your proposal for "${taskData.title}"`,
+          Templates.proposalRejected(applicant, taskData)
+        );
+
+        await createNotification(
+          applicant._id,
+          "proposal",
+          `Your proposal for "${taskData.title}" was not selected. Keep applying to other tasks!`,
+          `/browse-tasks`,
+          { title: "Proposal Update", sendEmail: false }
+        );
+      }
     }
 
-    // TODO: send notification to applicant
     res.json({ msg: `Proposal ${proposal.status}`, proposal });
   } catch (err) {
     console.error("updateProposalStatus error:", err);
