@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Mail, Linkedin, MapPin, Phone, ArrowRight } from "lucide-react";
 import ghwLogo from "../../assets/ghw-logo.png";
+import { useTheme } from "../../context/ThemeContext";
 
 const footerLinks = {
   Platform: [
