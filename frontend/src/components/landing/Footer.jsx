@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Mail, Linkedin, MapPin, Phone, ArrowRight } from "lucide-react";
 import ghwLogo from "../../assets/ghw-logo.png";
+import { useTheme } from "../../context/ThemeContext";
 
 const footerLinks = {
   Platform: [
@@ -20,6 +21,7 @@ const footerLinks = {
 };
 
 export default function Footer() {
+  const { theme } = useTheme();
   return (
     <footer className="bg-gradient-to-b from-[var(--color-bg-secondary)] to-[var(--color-bg)] relative overflow-hidden">
       <div className="absolute inset-0 opacity-5">
@@ -30,7 +32,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20 relative">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-8 mb-16">
           <div className="lg:col-span-5">
-            <Link to="/" className="inline-flex items-center gap-3 mb-6 bg-[#f9fafb] rounded-xl px-3 py-1.5">
+            <Link to="/" className={`inline-flex items-center gap-3 mb-6 rounded-xl px-3 py-1.5 ${theme === 'dark' ? 'bg-[#f9fafb]' : ''}`}>
               <img src={ghwLogo} alt="Global Health Works" className="h-14 w-auto" />
               <span className="font-bold text-xl text-[var(--color-primary)]">Global Health Works</span>
             </Link>

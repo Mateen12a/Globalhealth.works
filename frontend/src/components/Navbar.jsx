@@ -370,7 +370,7 @@ export default function Navbar() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-white dark:bg-slate-900 shadow-2xl z-50 md:hidden overflow-y-auto"
+              className="fixed top-0 right-0 h-screen pt-20 w-80 max-w-[85vw] bg-white dark:bg-slate-900 shadow-2xl z-50 md:hidden overflow-y-auto"
             >
               <div className="p-6">
                 <div className="flex items-center justify-between mb-8">

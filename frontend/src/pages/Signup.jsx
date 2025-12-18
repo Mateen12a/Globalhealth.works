@@ -147,8 +147,8 @@ export default function Signup() {
             transition={{ duration: 0.5 }}
             className="relative z-10 w-full max-w-lg"
           >
-            <div className="lg:hidden mb-8">
-              <Link to="/" className="inline-block mx-auto flex justify-center">
+            <div className="lg:hidden mb-8 flex justify-center">
+              <Link to="/" className="inline-block">
                 <div className="bg-white rounded-xl p-3 shadow-lg inline-block">
                   <img src={newLogo} alt="Global Health Works" className="h-14 w-auto" />
                 </div>
