@@ -374,7 +374,7 @@ export default function Navbar() {
             >
               <div className="p-6">
                 <div className="flex items-center justify-between mb-8">
-                  <span className="font-bold text-lg text-[var(--color-primary)]">Menu</span>
+                  <span className="font-bold text-lg text-white">Menu</span>
                   <button
                     onClick={() => setMenuOpen(false)}
                     className="p-2 rounded-lg hover:bg-[var(--color-bg-secondary)] transition-colors"
@@ -388,17 +388,17 @@ export default function Navbar() {
                     <div className="space-y-1 mb-6">
                       <Link
                         to="/about"
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-[var(--color-text)] hover:bg-[var(--color-primary)]/10 transition-colors"
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:bg-[var(--color-primary)]/10 transition-colors"
                         onClick={() => setMenuOpen(false)}
                       >
-                        <Info size={20} className="text-[var(--color-primary)]" />
+                        <Info size={20} className="text-white" />
                         About
                       </Link>
                       <button
                         onClick={scrollToHowItWorks}
-                        className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[var(--color-text)] hover:bg-[var(--color-primary)]/10 transition-colors text-left"
+                        className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-white hover:bg-[var(--color-primary)]/10 transition-colors text-left"
                       >
-                        <HelpCircle size={20} className="text-[var(--color-primary)]" />
+                        <HelpCircle size={20} className="text-white" />
                         How It Works
                       </button>
                     </div>
@@ -406,7 +406,7 @@ export default function Navbar() {
                     <div className="border-t border-[var(--color-border)] pt-4 space-y-3">
                       <Link
                         to="/login"
-                        className="flex items-center justify-center gap-2 px-4 py-3 font-semibold rounded-xl border-2 border-[var(--color-primary)] text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 transition-colors"
+                        className="flex items-center justify-center gap-2 px-4 py-3 font-semibold rounded-xl border-2 border-white text-white hover:bg-[var(--color-primary)]/10 transition-colors"
                         onClick={() => setMenuOpen(false)}
                       >
                         <User size={18} />
