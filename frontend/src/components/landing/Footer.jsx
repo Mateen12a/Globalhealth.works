@@ -30,7 +30,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20 relative">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-8 mb-16">
           <div className="lg:col-span-5">
-            <Link to="/" className="inline-flex items-center gap-3 mb-6 bg-white/95 rounded-xl px-3 py-1.5">
+            <Link to="/" className="inline-flex items-center gap-3 mb-6 bg-white rounded-xl px-3 py-1.5">
               <img src={ghwLogo} alt="Global Health Works" className="h-14 w-auto" />
               <span className="font-bold text-xl text-[var(--color-primary)]">Global Health Works</span>
             </Link>
