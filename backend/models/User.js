@@ -76,6 +76,23 @@ const userSchema = new mongoose.Schema(
     onboardingCompleted: { type: Boolean, default: false },
     onboardingSkipped: { type: Boolean, default: false },
     isFirstLogin: { type: Boolean, default: true },
+
+    // Device tracking for login notifications
+    knownDevices: [{
+      deviceId: String,
+      browser: String,
+      device: String,
+      ip: String,
+      lastUsed: Date,
+      addedAt: { type: Date, default: Date.now }
+    }],
+
+    // Warnings
+    warnings: [{
+      reason: String,
+      issuedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      issuedAt: { type: Date, default: Date.now }
+    }],
   },
   { timestamps: true }
 );

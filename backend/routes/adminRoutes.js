@@ -34,6 +34,11 @@ const {
   getAllFeedback
 } = require("../controllers/feedbackController");
 
+const {
+  getAllProposals,
+  deleteProposal
+} = require("../controllers/proposalController");
+
 const router = express.Router();
 
 const adminMsgUploadDir = path.join(__dirname, "..", "uploads", "admin-messages");
@@ -100,6 +105,10 @@ router.patch("/feedback/:id/review-report", authMiddleware, requireRole("admin")
 // Feedback management
 router.get("/feedback", authMiddleware, requireRole("admin"), getAllFeedback);
 router.delete("/feedback/:id", authMiddleware, requireRole("admin"), deleteFeedback);
+
+// Proposal management
+router.get("/proposals", authMiddleware, requireRole("admin"), getAllProposals);
+router.delete("/proposals/:id", authMiddleware, requireRole("admin"), deleteProposal);
 
 // Stats
 router.get("/stats", authMiddleware, getStats);

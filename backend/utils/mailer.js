@@ -973,6 +973,148 @@ const Templates = {
         </p>
       `,
     }),
+
+  newDeviceLogin: (user, deviceInfo) =>
+    emailLayout({
+      title: "New Login Detected",
+      preheader: "A new login was detected on your account",
+      content: `
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Dear ${user.firstName},</p>
+        
+        <div class="warning-box">
+          <strong>New login to your account</strong>
+          <p style="margin:8px 0 0;font-size:14px;">We detected a new login to your GlobalHealth.Works account.</p>
+        </div>
+        
+        <table class="data-table">
+          <tr>
+            <td><strong>Time</strong></td>
+            <td>${new Date().toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short' })}</td>
+          </tr>
+          <tr>
+            <td><strong>Browser</strong></td>
+            <td>${deviceInfo.browser || 'Unknown'}</td>
+          </tr>
+          <tr>
+            <td><strong>Device</strong></td>
+            <td>${deviceInfo.device || 'Unknown'}</td>
+          </tr>
+          <tr>
+            <td><strong>IP Address</strong></td>
+            <td>${deviceInfo.ip || 'Unknown'}</td>
+          </tr>
+        </table>
+        
+        <p style="color:${COLORS.textLight};margin:24px 0;">If this was you, no action is needed. If you didn't log in recently, please secure your account immediately.</p>
+        
+        <div style="text-align:center;margin-top:32px;">
+          <a href="https://globalhealth.works/settings" class="btn btn-accent">
+            Review Account Security
+          </a>
+        </div>
+        
+        <p style="color:${COLORS.textLight};margin-top:32px;font-size:14px;">
+          Stay safe,<br>
+          <strong style="color:${COLORS.textDark};">The GlobalHealth.Works Team</strong>
+        </p>
+      `,
+    }),
+
+  reportSubmitted: (admin, reporter, reportedItem, reason, itemType) =>
+    emailLayout({
+      title: "New Report Submitted",
+      preheader: `A ${itemType} has been reported for review`,
+      content: `
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Hello Admin,</p>
+        <p style="color:${COLORS.textLight};margin-bottom:24px;">A new report has been submitted and requires your attention.</p>
+        
+        <div class="error-box">
+          <strong>Reported ${itemType}</strong>
+        </div>
+        
+        <table class="data-table">
+          <tr>
+            <td><strong>Reported By</strong></td>
+            <td>${reporter.firstName} ${reporter.lastName} (${reporter.email})</td>
+          </tr>
+          <tr>
+            <td><strong>Item Type</strong></td>
+            <td>${itemType}</td>
+          </tr>
+          <tr>
+            <td><strong>Reason</strong></td>
+            <td>${reason}</td>
+          </tr>
+        </table>
+        
+        <div style="text-align:center;margin-top:32px;">
+          <a href="https://globalhealth.works/dashboard/admin" class="btn btn-primary">
+            Review Report
+          </a>
+        </div>
+      `,
+    }),
+
+  reportActionTaken: (user, action, itemType, message) =>
+    emailLayout({
+      title: "Update on Your Report",
+      preheader: `Action has been taken on your ${itemType} report`,
+      content: `
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Dear ${user.firstName},</p>
+        <p style="color:${COLORS.textLight};margin-bottom:24px;">We have reviewed your report and taken action.</p>
+        
+        <div class="${action === 'resolved' ? 'success-box' : 'info-box'}">
+          <strong>Action: ${action.charAt(0).toUpperCase() + action.slice(1)}</strong>
+        </div>
+        
+        ${message ? `
+        <div style="background:${COLORS.bgLight};border-radius:12px;padding:20px;margin:24px 0;">
+          <p style="color:${COLORS.textLight};font-size:12px;text-transform:uppercase;margin:0 0 8px;">Admin Response</p>
+          <p style="color:${COLORS.textDark};margin:0;">${message}</p>
+        </div>
+        ` : ''}
+        
+        <p style="color:${COLORS.textLight};margin-bottom:24px;">Thank you for helping keep GlobalHealth.Works a safe and professional community.</p>
+        
+        <p style="color:${COLORS.textLight};margin-top:32px;font-size:14px;">
+          Best regards,<br>
+          <strong style="color:${COLORS.textDark};">The GlobalHealth.Works Team</strong>
+        </p>
+      `,
+    }),
+
+  userWarning: (user, reason, adminName) =>
+    emailLayout({
+      title: "Account Warning",
+      preheader: "You have received a warning on your account",
+      content: `
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Dear ${user.firstName},</p>
+        
+        <div class="warning-box">
+          <strong>Your account has received a warning</strong>
+        </div>
+        
+        <p style="color:${COLORS.textLight};margin-bottom:24px;">An administrator has issued a warning regarding your account activity.</p>
+        
+        <div style="background:${COLORS.bgLight};border-radius:12px;padding:20px;margin:24px 0;">
+          <p style="color:${COLORS.textLight};font-size:12px;text-transform:uppercase;margin:0 0 8px;">Reason</p>
+          <p style="color:${COLORS.textDark};margin:0;">${reason}</p>
+        </div>
+        
+        <p style="color:${COLORS.textLight};margin-bottom:24px;">Please review our community guidelines and ensure future activity complies with our terms of service. Continued violations may result in account suspension.</p>
+        
+        <div style="text-align:center;margin-top:32px;">
+          <a href="https://globalhealth.works/terms" class="btn btn-primary">
+            Review Terms of Service
+          </a>
+        </div>
+        
+        <p style="color:${COLORS.textLight};margin-top:32px;font-size:14px;">
+          Best regards,<br>
+          <strong style="color:${COLORS.textDark};">The GlobalHealth.Works Team</strong>
+        </p>
+      `,
+    }),
 };
 
 module.exports = { sendMail, Templates, emailLayout };

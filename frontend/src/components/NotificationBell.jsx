@@ -55,13 +55,15 @@ export default function NotificationBell() {
 
   const markAsRead = async (id) => {
     try {
-      await fetch(`${API_URL}/api/notifications/${id}/read`, {
+      const res = await fetch(`${API_URL}/api/notifications/${id}/read`, {
         method: "PATCH",
         headers: { Authorization: `Bearer ${token}` },
       });
-      setNotifications((prev) =>
-        prev.map((n) => (n._id === id ? { ...n, read: true } : n))
-      );
+      if (res.ok) {
+        setNotifications((prev) =>
+          prev.map((n) => (n._id === id ? { ...n, read: true } : n))
+        );
+      }
     } catch (err) {
       console.error("Mark as read error:", err);
     }
@@ -79,12 +81,24 @@ export default function NotificationBell() {
     }
   };
 
-  const handleNotificationClick = (notification) => {
-    markAsRead(notification._id);
-    if (notification.link) {
-      navigate(notification.link);
+  const handleNotificationClick = async (notification) => {
+    try {
+      await markAsRead(notification._id);
+    } catch (err) {
+      console.error("Error marking notification as read:", err);
     }
     setOpen(false);
+    
+    if (notification.link) {
+      const currentPath = window.location.pathname;
+      if (currentPath === notification.link) {
+        window.location.reload();
+      } else {
+        setTimeout(() => {
+          navigate(notification.link, { replace: false });
+        }, 100);
+      }
+    }
   };
 
   const getNotificationIcon = (type) => {
@@ -96,6 +110,8 @@ export default function NotificationBell() {
         return <FileText size={16} className="text-green-500" />;
       case "system":
         return <AlertCircle size={16} className="text-orange-500" />;
+      case "admin":
+        return <AlertCircle size={16} className="text-purple-500" />;
       default:
         return <Bell size={16} className="text-gray-500" />;
     }

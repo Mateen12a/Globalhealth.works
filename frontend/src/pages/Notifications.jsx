@@ -141,6 +141,8 @@ export default function Notifications() {
         return <Briefcase className="w-5 h-5 text-purple-500" />;
       case "system":
         return <AlertCircle className="w-5 h-5 text-orange-500" />;
+      case "admin":
+        return <AlertCircle className="w-5 h-5 text-purple-500" />;
       default:
         return <Bell className="w-5 h-5 text-gray-500" />;
     }
@@ -168,6 +170,7 @@ export default function Notifications() {
     { value: "application", label: "Applications" },
     { value: "task", label: "Tasks" },
     { value: "system", label: "System" },
+    { value: "admin", label: "Admin" },
   ];
 
   return (
@@ -281,9 +284,18 @@ export default function Notifications() {
                     
                     <div
                       className="flex-1 min-w-0 cursor-pointer"
-                      onClick={() => {
-                        if (!n.read) markAsRead(n._id);
-                        if (n.link) navigate(n.link);
+                      onClick={async () => {
+                        if (!n.read) {
+                          await markAsRead(n._id);
+                        }
+                        if (n.link) {
+                          const currentPath = window.location.pathname;
+                          if (currentPath === n.link) {
+                            window.location.reload();
+                          } else {
+                            navigate(n.link, { replace: false });
+                          }
+                        }
                       }}
                     >
                       {n.title && (

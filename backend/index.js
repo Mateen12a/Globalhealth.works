@@ -16,6 +16,7 @@ const notificationRoutes = require("./routes/notificationRoutes");
 const matchRoutes = require("./routes/matchRoutes");
 const messageRoutes = require("./routes/messageRoutes");
 const conversationRoutes = require("./routes/conversationRoutes");
+const reportRoutes = require("./routes/reportRoutes");
 
 const { setSocket } = require("./controllers/messageController");
 const messageController = require("./controllers/messageController");
@@ -50,6 +51,7 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/match", matchRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/conversations", conversationRoutes);
+app.use("/api/reports", reportRoutes);
 
 // Serve uploaded files
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));

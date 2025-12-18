@@ -24,6 +24,7 @@ import BrowseTasks from "./pages/tasks/BrowseTasks";
 import MyApplications from "./pages/sp/MyApplications";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminTasks from "./pages/admin/AdminTasks";
+import AdminProposals from "./pages/admin/AdminProposals";
 import InboxPage from "./pages/messages/InboxPage";
 import ChatPage from "./pages/messages/ChatPage";
 import PublicProfile from "./pages/PublicProfile";
@@ -90,6 +91,12 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="/admin/tasks" element={
           <RoleGuard allowedRoles={["admin"]}>
             <AdminTasks />
+          </RoleGuard>
+        } />
+        
+        <Route path="/admin/proposals" element={
+          <RoleGuard allowedRoles={["admin"]}>
+            <AdminProposals />
           </RoleGuard>
         } />
         

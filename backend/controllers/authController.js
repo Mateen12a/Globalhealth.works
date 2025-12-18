@@ -209,7 +209,7 @@ exports.uploadCVPublic = async (req, res) => {
 // Login
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, deviceInfo } = req.body;
 
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ msg: "Invalid credentials" });
@@ -228,6 +228,55 @@ exports.login = async (req, res) => {
         msg: "Your account has been suspended. Please contact support for assistance.",
       });
     }
+
+    // Device tracking for new device login notification
+    const userAgent = req.headers['user-agent'] || '';
+    const clientIp = req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'Unknown';
+    const currentDevice = {
+      browser: extractBrowser(userAgent),
+      device: extractDevice(userAgent),
+      ip: clientIp.split(',')[0].trim(),
+      deviceId: deviceInfo?.deviceId || generateDeviceId(userAgent, clientIp)
+    };
+
+    // Check if this is a new device
+    const isNewDevice = !user.knownDevices?.some(d => d.deviceId === currentDevice.deviceId);
+
+    if (isNewDevice && user.knownDevices?.length > 0) {
+      try {
+        await sendMail(
+          user.email,
+          "New Login Detected",
+          Templates.newDeviceLogin(user, currentDevice)
+        );
+        await createNotification(
+          user._id,
+          "system",
+          `New login detected from ${currentDevice.browser} on ${currentDevice.device}. If this wasn't you, please secure your account.`,
+          "/settings",
+          { title: "New Login Alert", sendEmail: false }
+        );
+      } catch (emailErr) {
+        console.warn("New device email failed:", emailErr);
+      }
+    }
+
+    // Add or update device in known devices
+    if (isNewDevice) {
+      if (!user.knownDevices) user.knownDevices = [];
+      user.knownDevices.push({
+        ...currentDevice,
+        lastUsed: new Date(),
+        addedAt: new Date()
+      });
+    } else if (user.knownDevices) {
+      const deviceIndex = user.knownDevices.findIndex(d => d.deviceId === currentDevice.deviceId);
+      if (deviceIndex >= 0) {
+        user.knownDevices[deviceIndex].lastUsed = new Date();
+        user.knownDevices[deviceIndex].ip = currentDevice.ip;
+      }
+    }
+
     const tokenPayload = {
       id: user._id,
       role: user.role,
@@ -273,6 +322,31 @@ exports.login = async (req, res) => {
     res.status(500).json({ msg: "Server error" });
   }
 };
+
+// Helper functions for device detection
+function extractBrowser(userAgent) {
+  if (userAgent.includes('Firefox')) return 'Firefox';
+  if (userAgent.includes('Edg')) return 'Microsoft Edge';
+  if (userAgent.includes('Chrome')) return 'Chrome';
+  if (userAgent.includes('Safari')) return 'Safari';
+  if (userAgent.includes('Opera')) return 'Opera';
+  return 'Unknown Browser';
+}
+
+function extractDevice(userAgent) {
+  if (userAgent.includes('iPhone')) return 'iPhone';
+  if (userAgent.includes('iPad')) return 'iPad';
+  if (userAgent.includes('Android')) return 'Android Device';
+  if (userAgent.includes('Windows')) return 'Windows PC';
+  if (userAgent.includes('Mac')) return 'Mac';
+  if (userAgent.includes('Linux')) return 'Linux';
+  return 'Unknown Device';
+}
+
+function generateDeviceId(userAgent, ip) {
+  const crypto = require('crypto');
+  return crypto.createHash('md5').update(userAgent + ip).digest('hex').substring(0, 16);
+}
 
 // Middleware
 exports.authMiddleware = (req, res, next) => {

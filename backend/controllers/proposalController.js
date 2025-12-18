@@ -242,3 +242,68 @@ exports.getProposal = async (req, res) => {
     res.status(500).json({ msg: "Server error" });
   }
 };
+
+// Admin: Get all proposals
+exports.getAllProposals = async (req, res) => {
+  try {
+    const { status, page = 1, limit = 50 } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
+    const query = {};
+    if (status && status !== 'all') {
+      query.status = status;
+    }
+    
+    const [proposals, total] = await Promise.all([
+      Proposal.find(query)
+        .populate("fromUser", "firstName lastName email profileImage role")
+        .populate("toUser", "firstName lastName email profileImage")
+        .populate("task", "title summary status")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit)),
+      Proposal.countDocuments(query)
+    ]);
+    
+    const statusCounts = await Proposal.aggregate([
+      { $group: { _id: "$status", count: { $sum: 1 } } }
+    ]);
+    
+    const counts = {
+      pending: 0,
+      accepted: 0,
+      rejected: 0,
+      withdrawn: 0,
+      total: 0
+    };
+    
+    statusCounts.forEach(s => {
+      counts[s._id] = s.count;
+      counts.total += s.count;
+    });
+    
+    res.json({
+      proposals,
+      total,
+      page: parseInt(page),
+      totalPages: Math.ceil(total / parseInt(limit)),
+      counts
+    });
+  } catch (err) {
+    console.error("getAllProposals error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
+// Admin: Delete proposal
+exports.deleteProposal = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const proposal = await Proposal.findByIdAndDelete(id);
+    if (!proposal) return res.status(404).json({ msg: "Proposal not found" });
+    res.json({ msg: "Proposal deleted" });
+  } catch (err) {
+    console.error("deleteProposal error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+};

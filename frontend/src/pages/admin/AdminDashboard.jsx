@@ -113,96 +113,104 @@ export default function AdminDashboard() {
           variants={container}
           initial="hidden"
           animate="visible"
-          className="grid grid-cols-2 md:grid-cols-4 gap-4"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
         >
-          <motion.div variants={item} className="card p-5 relative overflow-hidden group">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[var(--color-text-secondary)] text-xs font-medium uppercase tracking-wider">Total Users</p>
-                <h2 className="text-2xl font-bold text-[var(--color-text)] mt-1">
-                  {loading ? "..." : stats?.users?.total || 0}
-                </h2>
+          <Link to="/admin/users" className="block">
+            <motion.div variants={item} className="card p-4 sm:p-5 relative overflow-hidden group hover:shadow-lg transition-shadow cursor-pointer">
+              <div className="flex items-center justify-between">
+                <div className="min-w-0 flex-1">
+                  <p className="text-[var(--color-text-secondary)] text-xs font-medium uppercase tracking-wider truncate">Total Users</p>
+                  <h2 className="text-xl sm:text-2xl font-bold text-[var(--color-text)] mt-1">
+                    {loading ? "..." : stats?.users?.total || 0}
+                  </h2>
+                </div>
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-light)] flex items-center justify-center flex-shrink-0 ml-2">
+                  <Users className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                </div>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-light)] flex items-center justify-center">
-                <Users className="w-5 h-5 text-white" />
-              </div>
-            </div>
-            {!loading && stats?.users && (
-              <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full">
-                  {stats.users.taskOwners || 0} TO
-                </span>
-                <span className="px-2 py-0.5 bg-[var(--color-accent)]/10 text-[var(--color-accent)] rounded-full">
-                  {stats.users.solutionProviders || 0} SP
-                </span>
-              </div>
-            )}
-          </motion.div>
+              {!loading && stats?.users && (
+                <div className="mt-2 sm:mt-3 flex flex-wrap gap-1 sm:gap-2 text-xs">
+                  <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full">
+                    {stats.users.taskOwners || 0} TO
+                  </span>
+                  <span className="px-2 py-0.5 bg-[var(--color-accent)]/10 text-[var(--color-accent)] rounded-full">
+                    {stats.users.solutionProviders || 0} SP
+                  </span>
+                </div>
+              )}
+            </motion.div>
+          </Link>
 
-          <motion.div variants={item} className="card p-5 relative overflow-hidden group">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[var(--color-text-secondary)] text-xs font-medium uppercase tracking-wider">Total Tasks</p>
-                <h2 className="text-2xl font-bold text-[var(--color-text)] mt-1">
-                  {loading ? "..." : stats?.tasks?.total || 0}
-                </h2>
+          <Link to="/admin/tasks" className="block">
+            <motion.div variants={item} className="card p-4 sm:p-5 relative overflow-hidden group hover:shadow-lg transition-shadow cursor-pointer">
+              <div className="flex items-center justify-between">
+                <div className="min-w-0 flex-1">
+                  <p className="text-[var(--color-text-secondary)] text-xs font-medium uppercase tracking-wider truncate">Total Tasks</p>
+                  <h2 className="text-xl sm:text-2xl font-bold text-[var(--color-text)] mt-1">
+                    {loading ? "..." : stats?.tasks?.total || 0}
+                  </h2>
+                </div>
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-400 flex items-center justify-center flex-shrink-0 ml-2">
+                  <ClipboardList className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                </div>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-400 flex items-center justify-center">
-                <ClipboardList className="w-5 h-5 text-white" />
-              </div>
-            </div>
-            {!loading && stats?.tasks && (
-              <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-full">
-                  {stats.tasks.published || 0} Active
-                </span>
-                <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full">
-                  {stats.tasks.inProgress || 0} In Progress
-                </span>
-              </div>
-            )}
-          </motion.div>
+              {!loading && stats?.tasks && (
+                <div className="mt-2 sm:mt-3 flex flex-wrap gap-1 sm:gap-2 text-xs">
+                  <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-full">
+                    {stats.tasks.published || 0} Active
+                  </span>
+                  <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full">
+                    {stats.tasks.inProgress || 0} In Progress
+                  </span>
+                </div>
+              )}
+            </motion.div>
+          </Link>
 
-          <motion.div variants={item} className="card p-5 relative overflow-hidden group">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[var(--color-text-secondary)] text-xs font-medium uppercase tracking-wider">Pending Approval</p>
-                <h2 className="text-2xl font-bold text-[var(--color-text)] mt-1">
-                  {loading ? "..." : stats?.users?.pendingApproval || 0}
-                </h2>
+          <Link to="/admin/users?filter=pending" className="block">
+            <motion.div variants={item} className="card p-4 sm:p-5 relative overflow-hidden group hover:shadow-lg transition-shadow cursor-pointer">
+              <div className="flex items-center justify-between">
+                <div className="min-w-0 flex-1">
+                  <p className="text-[var(--color-text-secondary)] text-xs font-medium uppercase tracking-wider truncate">Pending Approval</p>
+                  <h2 className="text-xl sm:text-2xl font-bold text-[var(--color-text)] mt-1">
+                    {loading ? "..." : stats?.users?.pendingApproval || 0}
+                  </h2>
+                </div>
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-400 flex items-center justify-center flex-shrink-0 ml-2">
+                  <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                </div>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-400 flex items-center justify-center">
-                <Clock className="w-5 h-5 text-white" />
-              </div>
-            </div>
-            {!loading && stats?.users?.pendingApproval > 0 && (
-              <p className="mt-3 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                <AlertTriangle className="w-3 h-3" />
-                Requires attention
-              </p>
-            )}
-          </motion.div>
+              {!loading && stats?.users?.pendingApproval > 0 && (
+                <p className="mt-2 sm:mt-3 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" />
+                  Requires attention
+                </p>
+              )}
+            </motion.div>
+          </Link>
 
-          <motion.div variants={item} className="card p-5 relative overflow-hidden group">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[var(--color-text-secondary)] text-xs font-medium uppercase tracking-wider">Proposals</p>
-                <h2 className="text-2xl font-bold text-[var(--color-text)] mt-1">
-                  {loading ? "..." : stats?.proposals?.total || 0}
-                </h2>
+          <Link to="/admin/proposals" className="block">
+            <motion.div variants={item} className="card p-4 sm:p-5 relative overflow-hidden group hover:shadow-lg transition-shadow cursor-pointer">
+              <div className="flex items-center justify-between">
+                <div className="min-w-0 flex-1">
+                  <p className="text-[var(--color-text-secondary)] text-xs font-medium uppercase tracking-wider truncate">Proposals</p>
+                  <h2 className="text-xl sm:text-2xl font-bold text-[var(--color-text)] mt-1">
+                    {loading ? "..." : stats?.proposals?.total || 0}
+                  </h2>
+                </div>
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-purple-500 to-purple-400 flex items-center justify-center flex-shrink-0 ml-2">
+                  <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                </div>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-purple-400 flex items-center justify-center">
-                <FileText className="w-5 h-5 text-white" />
-              </div>
-            </div>
-            {!loading && stats?.proposals && (
-              <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-full">
-                  {stats.proposals.pending || 0} Pending
-                </span>
-              </div>
-            )}
-          </motion.div>
+              {!loading && stats?.proposals && (
+                <div className="mt-2 sm:mt-3 flex flex-wrap gap-1 sm:gap-2 text-xs">
+                  <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-full">
+                    {stats.proposals.pending || 0} Pending
+                  </span>
+                </div>
+              )}
+            </motion.div>
+          </Link>
         </motion.div>
 
         <motion.div

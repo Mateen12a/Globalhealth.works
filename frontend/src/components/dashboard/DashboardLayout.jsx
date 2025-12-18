@@ -96,6 +96,7 @@ export default function DashboardLayout({ children, role: propRole, title }) {
           { to: "/dashboard/admin", label: "Overview", icon: Grid },
           { to: "/admin/users", label: "Manage Users", icon: Users },
           { to: "/admin/tasks", label: "Manage Tasks", icon: Clipboard },
+          { to: "/admin/proposals", label: "Proposals", icon: FolderOpen },
           { to: "/inbox", label: "Messages", icon: MessageSquare },
           { to: "/settings", label: "Settings", icon: Settings },
         ]
