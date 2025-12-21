@@ -152,7 +152,7 @@ function emailLayout({ title, preheader = '', content, footerText = '' }) {
                     <table role="presentation" cellspacing="0" cellpadding="0" border="0">
                       <tr>
                         <td style="background-color:#ffffff;border-radius:12px;padding:12px 20px;">
-                          <img src="https://globalhealth.works/ghwwhitebglogo.png" alt="GlobalHealth.Works" style="height:40px;width:auto;display:block;" />
+                          <img src="https://globalhealth.works/new-logo.png" alt="GlobalHealth.Works" style="height:40px;width:auto;display:block;" />
                         </td>
                       </tr>
                     </table>
