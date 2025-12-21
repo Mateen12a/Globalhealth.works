@@ -182,10 +182,6 @@ function emailLayout({ title, preheader = '', content, footerText = '' }) {
                     </p>
                     <p style="margin-top:12px;">
                       <a href="https://globalhealth.works" style="color:${COLORS.primary};text-decoration:none;font-size:12px;margin:0 8px;">Website</a>
-                      <span style="color:${COLORS.border};">|</span>
-                      <a href="https://globalhealth.works/privacy" style="color:${COLORS.primary};text-decoration:none;font-size:12px;margin:0 8px;">Privacy</a>
-                      <span style="color:${COLORS.border};">|</span>
-                      <a href="https://globalhealth.works/terms" style="color:${COLORS.primary};text-decoration:none;font-size:12px;margin:0 8px;">Terms</a>
                     </p>
                   </td>
                 </tr>
