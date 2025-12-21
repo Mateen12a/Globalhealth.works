@@ -6,10 +6,12 @@ export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('ghw-theme');
-      if (saved) return saved;
-      return 'dark';
+      if (saved === 'light' || saved === 'dark') {
+        return saved;
+      }
+      return 'light';
     }
-    return 'dark';
+    return 'light';
   });
 
   useEffect(() => {
@@ -20,7 +22,7 @@ export function ThemeProvider({ children }) {
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+    setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
   };
 
   return (
