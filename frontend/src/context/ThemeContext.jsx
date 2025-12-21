@@ -3,16 +3,25 @@ import { createContext, useContext, useEffect, useState } from 'react';
 const ThemeContext = createContext();
 
 export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('ghw-theme');
-      if (saved === 'light' || saved === 'dark') {
-        return saved;
-      }
-      return 'light';
+  const [theme, setTheme] = useState('light');
+
+  useEffect(() => {
+    const hasSeenLightDefault = localStorage.getItem('ghw-light-default-applied');
+
+    if (!hasSeenLightDefault) {
+      // Force light theme for everyone once
+      setTheme('light');
+      localStorage.setItem('ghw-theme', 'light');
+      localStorage.setItem('ghw-light-default-applied', 'true');
+      return;
     }
-    return 'light';
-  });
+
+    // After first load, respect user choice
+    const savedTheme = localStorage.getItem('ghw-theme');
+    if (savedTheme === 'light' || savedTheme === 'dark') {
+      setTheme(savedTheme);
+    }
+  }, []);
 
   useEffect(() => {
     const root = document.documentElement;
