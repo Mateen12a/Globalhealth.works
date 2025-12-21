@@ -67,7 +67,7 @@ export default function Signup() {
             className="border border-[#357FE9] bg-white shadow-md p-8 rounded-2xl hover:bg-[#357FE9] hover:text-white transition transform hover:scale-[1.02]"
           >
             <h3 className="text-2xl font-semibold">Task Owner</h3>
-            <p className="text-sm mt-2 text-gray-600">Post health projects & connect with experts.</p>
+            <p className="text-sm mt-2 text-gray-600">Post global health tasks & connect with experts</p>
           </button>
           <button
             onClick={() => setRole("solutionProvider")}
