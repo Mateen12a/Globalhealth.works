@@ -134,7 +134,7 @@ export default function Navbar() {
           </Link>
 
           <div className="hidden md:flex items-center gap-6">
-            {!user && (
+            {/* {!user && (
               <div className="flex items-center gap-1">
                 <Link
                   to="/about"
@@ -151,9 +151,9 @@ export default function Navbar() {
                   How It Works
                 </button>
               </div>
-            )}
+            )} */}
 
-            <div className="relative group">
+            {/* <div className="relative group">
               <motion.button
                 onClick={toggleTheme}
                 whileHover={{ scale: 1.1 }}
@@ -198,7 +198,7 @@ export default function Navbar() {
               <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
                 {theme === "light" ? "Switch to Dark Mode" : "Switch to Light Mode"}
               </div>
-            </div>
+            </div> */}
 
             {!user ? (
               <div className="flex items-center gap-3">
@@ -321,7 +321,7 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-2 md:hidden">
-            <div className="relative group">
+            {/* <div className="relative group">
               <motion.button
                 onClick={toggleTheme}
                 whileTap={{ scale: 0.95 }}
@@ -338,7 +338,7 @@ export default function Navbar() {
                   <Sun size={20} className="text-[var(--color-accent-light)]" />
                 )}
               </motion.button>
-            </div>
+            </div> */}
 
             <button
               onClick={() => setMenuOpen(!menuOpen)}
@@ -370,7 +370,7 @@ export default function Navbar() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 h-screen pt-20 w-80 max-w-[85vw] bg-white dark:bg-slate-900 shadow-2xl z-50 md:hidden overflow-y-auto"
+              className="fixed top-0 right-0 h-screen  w-80 max-w-[85vw] bg-white dark:bg-slate-900 shadow-2xl z-50 md:hidden overflow-y-auto"
             >
               <div className="p-6">
                 <div className="flex items-center justify-between mb-8">
@@ -385,7 +385,7 @@ export default function Navbar() {
 
                 {!user ? (
                   <div className="space-y-4">
-                    <div className="space-y-1 mb-6">
+                    {/* <div className="space-y-1 mb-6">
                       <Link
                         to="/about"
                         className="flex items-center gap-3 px-4 py-3 rounded-xl text-white hover:bg-[var(--color-primary)]/10 transition-colors"
@@ -401,9 +401,9 @@ export default function Navbar() {
                         <HelpCircle size={20} className="text-white" />
                         How It Works
                       </button>
-                    </div>
+                    </div> */}
 
-                    <div className="border-t border-[var(--color-border)] pt-4 space-y-3">
+                    <div className=" space-y-3">
                       <Link
                         to="/login"
                         className="flex items-center justify-center gap-2 px-4 py-3 font-semibold rounded-xl border-2 border-white text-white hover:bg-[var(--color-primary)]/10 transition-colors"

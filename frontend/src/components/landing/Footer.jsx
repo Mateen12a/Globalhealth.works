@@ -8,16 +8,16 @@ const footerLinks = {
     { label: "How It Works", href: "/#how-it-works" },
     { label: "For Task Owners", href: "/signup?role=TO" },
     { label: "For Solution Providers", href: "/signup?role=SP" },
-    { label: "Browse Tasks", href: "/browse-tasks" },
+    // { label: "Browse Tasks", href: "/browse-tasks" },
   ],
-  Company: [
-    { label: "About Us", href: "/about" },
-    { label: "Contact", href: "/contact" },
+  Contact: [
+    // { label: "About Us", href: "/about" },
+    { label: "info@globalhealth.works", href: "mailto:info@globalhealth.works" },
   ],
-  Legal: [
-    { label: "Privacy Policy", href: "/privacy" },
-    { label: "Terms of Service", href: "/terms" },
-  ],
+  // Legal: [
+  //   { label: "Privacy Policy", href: "/privacy" },
+  //   { label: "Terms of Service", href: "/terms" },
+  // ],
 };
 
 export default function Footer() {
@@ -40,7 +40,7 @@ export default function Footer() {
               The Marketplace for Global Health Work. Connecting experts with impactful health projects worldwide.
             </p>
             
-            <div className="space-y-4 mb-8">
+            {/* <div className="space-y-4 mb-8">
               <a 
                 href="mailto:info@globalhealth.works"
                 className="flex items-center gap-3 text-[var(--color-text-secondary)] hover:text-[var(--color-primary-light)] transition-colors group"
@@ -50,9 +50,9 @@ export default function Footer() {
                 </div>
                 <span>info@globalhealth.works</span>
               </a>
-            </div>
+            </div> */}
 
-            <div className="flex gap-3">
+            {/* <div className="flex gap-3">
               <a 
                 href="https://linkedin.com" 
                 target="_blank" 
@@ -71,7 +71,7 @@ export default function Footer() {
                   <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                 </svg>
               </a>
-            </div>
+            </div> */}
           </div>
 
           <div className="lg:col-span-7">

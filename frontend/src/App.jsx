@@ -58,8 +58,8 @@ function App() {
         <Hero />
         <Partners />
         <HowItWorks />
-        <FocusAreas />
-        <Features />
+        {/* <FocusAreas /> */}
+        {/* <Features /> */}
         <Stats />
         <Testimonials />
         <CTA />

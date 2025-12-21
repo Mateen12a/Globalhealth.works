@@ -6,7 +6,6 @@ const benefits = [
   "Free to join and create a profile",
   "Access to verified health professionals",
   "Secure messaging and collaboration",
-  "Global reach across 50+ countries",
 ];
 
 export default function CTA() {

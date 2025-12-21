@@ -38,16 +38,7 @@ const testimonials = [
     rating: 5,
     initials: "CW",
     color: "from-orange-500 to-orange-600",
-  },
-  {
-    name: "Sarah Thompson",
-    role: "Programme Manager",
-    organisation: "Global Health Foundation, UK",
-    quote: "GlobalHealth.Works has revolutionised how we source expertise. The platform's intuitive design and quality of professionals have made it our go-to resource for all health consultancy needs.",
-    rating: 5,
-    initials: "ST",
-    color: "from-pink-500 to-pink-600",
-  },
+  }
 ];
 
 export default function Testimonials() {

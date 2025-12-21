@@ -6,6 +6,22 @@ import { useState, useEffect } from "react";
 export default function Hero() {
   const [videoLoaded, setVideoLoaded] = useState(false);
 
+  const scrollToHowItWorks = () => {
+  const element = document.getElementById('how-it-works');
+
+  if (element) {
+    const navHeight = 80;
+    const elementPosition =
+      element.getBoundingClientRect().top + window.pageYOffset;
+
+    window.scrollTo({
+      top: elementPosition - navHeight,
+      behavior: 'smooth',
+    });
+  }
+};
+
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background with video and fallback image */}
@@ -46,23 +62,23 @@ export default function Hero() {
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-20">
         <div className="text-center">
-          <motion.div
+          {/*<motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: "easeOut" }}
             className="mb-8"
           >
-            <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white/90 text-sm font-medium">
+             <span className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white/90 text-sm font-medium">
               <Sparkles size={16} className="text-[var(--color-accent-light)]" />
-              The Future of Global Health Collaboration
+              The Future of Global Health Collaboration 
             </span>
-          </motion.div>
+          </motion.div>*/}
 
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.1, ease: "easeOut" }}
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight mb-8"
+            className="text-4xl sm:text-5xl md:text-6xl lg:text-[5.8rem] font-bold text-white leading-tight mb-8 md:mt-6 lg:mt-10"
           >
             The Marketplace for{" "}
             <span className="relative">
@@ -85,8 +101,7 @@ export default function Hero() {
             className="text-lg sm:text-xl md:text-2xl text-white/70 max-w-3xl mx-auto mb-12 leading-relaxed"
           >
             Where Global Health Problems Meet Global Health Solutions.
-            <br className="hidden sm:block" />
-            Connect, collaborate, and create lasting impact together.
+            
           </motion.p>
 
           <motion.div
@@ -100,7 +115,7 @@ export default function Hero() {
               className="group w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-gradient-to-r from-[var(--color-accent)] to-[#d45428] hover:from-[#d45428] hover:to-[var(--color-accent)] text-white text-lg font-semibold px-8 py-4 rounded-xl transition-all duration-300 shadow-lg shadow-[var(--color-accent)]/30 hover:shadow-xl hover:shadow-[var(--color-accent)]/40 hover:-translate-y-1"
             >
               <Briefcase size={22} />
-              I have a task
+              I want to post a task
               <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
             </Link>
             <Link
@@ -108,12 +123,12 @@ export default function Hero() {
               className="group w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-white/10 backdrop-blur-sm border border-white/30 hover:bg-white/20 text-white text-lg font-semibold px-8 py-4 rounded-xl transition-all duration-300 hover:-translate-y-1"
             >
               <Users size={22} />
-              I'm a solution provider
+              I want to work on tasks
               <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
             </Link>
           </motion.div>
 
-          <motion.div
+          {/* <motion.div
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
@@ -150,24 +165,18 @@ export default function Hero() {
                 <p className="text-white/60 text-sm leading-relaxed">{feature.description}</p>
               </motion.div>
             ))}
-          </motion.div>
+          </motion.div> */}
         </div>
       </div>
 
       {/* Scroll indicator */}
       <motion.button
+        type="button"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1, delay: 1 }}
-        onClick={() => {
-          const nextSection = document.querySelector('section + section') || document.querySelector('main > div:nth-child(2)');
-          if (nextSection) {
-            nextSection.scrollIntoView({ behavior: 'smooth' });
-          } else {
-            window.scrollTo({ top: window.innerHeight, behavior: 'smooth' });
-          }
-        }}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 cursor-pointer hover:scale-110 transition-transform"
+        onClick={scrollToHowItWorks}
+        className="z-20 cursor-pointer absolute bottom-8 left-1/2 -translate-x-1/2 hover:scale-110 transition-transform"
         aria-label="Scroll to next section"
       >
         <motion.div
@@ -178,6 +187,7 @@ export default function Hero() {
           <motion.div className="w-1.5 h-2.5 bg-white/60 rounded-full" />
         </motion.div>
       </motion.button>
+
     </section>
   );
 }
