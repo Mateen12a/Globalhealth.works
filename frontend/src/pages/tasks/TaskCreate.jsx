@@ -40,6 +40,80 @@ const focusAreas = [
   "Global Health Security",
 ];
 
+const InputField = ({ label, name, type = "text", placeholder, required, multiline, formData, errors, handleChange, ...props }) => (
+    <div>
+      <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+        {label}
+        {required ? (
+          <span className="text-red-500 ml-1">*</span>
+        ) : (
+          <span className="text-[var(--color-text-muted)] ml-2 text-xs font-normal">(optional)</span>
+        )}
+      </label>
+      {multiline ? (
+        <textarea
+          name={name}
+          value={formData[name]}
+          onChange={handleChange}
+          rows={5}
+          className={`w-full px-4 py-3 border rounded-xl bg-[var(--color-bg-secondary)] text-[var(--color-text)] focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-all resize-none ${
+            errors[name] ? "border-red-500" : "border-[var(--color-border)]"
+          }`}
+          placeholder={placeholder}
+          {...props}
+        />
+      ) : (
+        <input
+          type={type}
+          name={name}
+          value={formData[name]}
+          onChange={handleChange}
+          className={`w-full px-4 py-3 border rounded-xl bg-[var(--color-bg-secondary)] text-[var(--color-text)] focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-all ${
+            errors[name] ? "border-red-500" : "border-[var(--color-border)]"
+          }`}
+          placeholder={placeholder}
+          {...props}
+        />
+      )}
+      {errors[name] && (
+        <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+          <AlertCircle className="w-4 h-4" />
+          {errors[name]}
+        </p>
+      )}
+    </div>
+);
+
+const SelectField = ({ label, name, options, required, formData, errors, handleChange }) => (
+    <div>
+      <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+        {label}
+        {required && <span className="text-red-500 ml-1">*</span>}
+      </label>
+      <select
+        name={name}
+        value={formData[name]}
+        onChange={handleChange}
+        className={`w-full px-4 py-3 border rounded-xl bg-[var(--color-bg-secondary)] text-[var(--color-text)] focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-all ${
+          errors[name] ? "border-red-500" : "border-[var(--color-border)]"
+        }`}
+      >
+        <option value="">Select an option</option>
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+      {errors[name] && (
+        <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+          <AlertCircle className="w-4 h-4" />
+          {errors[name]}
+        </p>
+      )}
+    </div>
+);
+
 export default function TaskCreate() {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
@@ -117,81 +191,7 @@ export default function TaskCreate() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const InputField = ({ label, name, type = "text", placeholder, required, multiline, ...props }) => (
-    <div>
-      <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
-        {label}
-        {required ? (
-          <span className="text-red-500 ml-1">*</span>
-        ) : (
-          <span className="text-[var(--color-text-muted)] ml-2 text-xs font-normal">(optional)</span>
-        )}
-      </label>
-      {multiline ? (
-        <textarea
-          name={name}
-          value={formData[name]}
-          onChange={handleChange}
-          rows={5}
-          className={`w-full px-4 py-3 border rounded-xl bg-[var(--color-bg-secondary)] text-[var(--color-text)] focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-all resize-none ${
-            errors[name] ? "border-red-500" : "border-[var(--color-border)]"
-          }`}
-          placeholder={placeholder}
-          {...props}
-        />
-      ) : (
-        <input
-          type={type}
-          name={name}
-          value={formData[name]}
-          onChange={handleChange}
-          className={`w-full px-4 py-3 border rounded-xl bg-[var(--color-bg-secondary)] text-[var(--color-text)] focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-all ${
-            errors[name] ? "border-red-500" : "border-[var(--color-border)]"
-          }`}
-          placeholder={placeholder}
-          {...props}
-        />
-      )}
-      {errors[name] && (
-        <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-          <AlertCircle className="w-4 h-4" />
-          {errors[name]}
-        </p>
-      )}
-    </div>
-  );
-
-  const SelectField = ({ label, name, options, required }) => (
-    <div>
-      <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
-        {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
-      </label>
-      <select
-        name={name}
-        value={formData[name]}
-        onChange={handleChange}
-        className={`w-full px-4 py-3 border rounded-xl bg-[var(--color-bg-secondary)] text-[var(--color-text)] focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-all ${
-          errors[name] ? "border-red-500" : "border-[var(--color-border)]"
-        }`}
-      >
-        <option value="">Select an option</option>
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
-      {errors[name] && (
-        <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-          <AlertCircle className="w-4 h-4" />
-          {errors[name]}
-        </p>
-      )}
-    </div>
-  );
+  }
 
   return (
     <DashboardLayout title="Create New Task">
@@ -240,6 +240,9 @@ export default function TaskCreate() {
               name="title"
               placeholder="e.g., Strengthening community health systems in rural areas"
               required
+              formData={formData}
+              errors={errors}
+              handleChange={handleChange}
             />
 
             <InputField
@@ -247,6 +250,9 @@ export default function TaskCreate() {
               name="summary"
               placeholder="Provide a brief overview of the task (2-3 sentences)"
               required
+              formData={formData}
+              errors={errors}
+              handleChange={handleChange}
             />
 
             <InputField
@@ -255,6 +261,9 @@ export default function TaskCreate() {
               placeholder="Describe the task in detail including objectives, expected outcomes, context, and any specific requirements..."
               required
               multiline
+              formData={formData}
+              errors={errors}
+              handleChange={handleChange}
             />
           </div>
 
@@ -275,6 +284,9 @@ export default function TaskCreate() {
                 name="requiredSkills"
                 options={expertiseOptions}
                 required
+                formData={formData}
+                errors={errors}
+                handleChange={handleChange}
               />
 
               <SelectField
@@ -282,6 +294,9 @@ export default function TaskCreate() {
                 name="focusAreas"
                 options={focusAreas}
                 required
+                formData={formData}
+                errors={errors}
+                handleChange={handleChange}
               />
             </div>
           </div>
@@ -303,12 +318,18 @@ export default function TaskCreate() {
                 name="duration"
                 placeholder="e.g., 3 months, 6 weeks"
                 required
+                formData={formData}
+                errors={errors}
+                handleChange={handleChange}
               />
 
               <InputField
                 label="Expected Start Date"
                 name="startDate"
                 type="date"
+                formData={formData}
+                errors={errors}
+                handleChange={handleChange}
               />
             </div>
           </div>
