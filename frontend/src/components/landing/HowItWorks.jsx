@@ -56,10 +56,10 @@ export default function HowItWorks() {
           transition={{ duration: 0.6 }}
           className="text-center mb-5"
         >
-          <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[var(--color-primary-light)]/10 text-[var(--color-primary-light)] text-sm font-semibold mb-6">
+          {/* <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[var(--color-primary-light)]/10 text-[var(--color-primary-light)] text-sm font-semibold mb-6">
             <span className="w-2 h-2 rounded-full bg-[var(--color-primary-light)] animate-pulse" />
             Simple 4-Step Process
-          </span>
+          </span> */}
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-[var(--color-text)] mb-16">
             How It <span className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-primary-light)] bg-clip-text text-transparent">Works</span>
           </h2>
