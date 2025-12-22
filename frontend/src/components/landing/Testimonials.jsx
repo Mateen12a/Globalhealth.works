@@ -7,7 +7,7 @@ const testimonials = [
     name: "Dr. Amina Kwame",
     role: "Task Owner",
     organisation: "Health Innovation Hub, Ghana",
-    quote: "Posting a challenge here connected me with skilled providers who transformed my project idea into a working solution. The quality of talent is exceptional and the platform made the entire process seamless.",
+    quote: "Posting a challenge here connected me with skilled providers who transformed my project idea into a working solution.",
     rating: 5,
     initials: "AK",
     color: "from-blue-500 to-blue-600",
@@ -16,7 +16,7 @@ const testimonials = [
     name: "James Okonkwo",
     role: "Solution Provider",
     organisation: "Digital Health Consultant, Nigeria",
-    quote: "I applied to a digital health task and collaborated with global experts. It boosted my career, expanded my network, and allowed me to create real impact in communities across Africa.",
+    quote: "I applied to a digital health task and collaborated with global experts. It boosted my career and impact.",
     rating: 5,
     initials: "JO",
     color: "from-green-500 to-green-600",
@@ -25,20 +25,11 @@ const testimonials = [
     name: "Dr. Maria Santos",
     role: "Policy Analyst",
     organisation: "WHO Regional Office, Switzerland",
-    quote: "This platform bridges the gap between health challenges and those ready to solve them. A brilliant initiative that's changing how we work in global health! Highly recommend to all health professionals.",
+    quote: "his platform bridges the gap between health challenges and those ready to solve them. A brilliant initiative!",
     rating: 5,
     initials: "MS",
     color: "from-purple-500 to-purple-600",
   },
-  {
-    name: "Dr. Chen Wei",
-    role: "Research Director",
-    organisation: "Asia Pacific Health Institute, Singapore",
-    quote: "The verification process ensures high-quality collaborations. I've found exceptional solution providers for three major projects, each delivered beyond expectations with outstanding professionalism.",
-    rating: 5,
-    initials: "CW",
-    color: "from-orange-500 to-orange-600",
-  }
 ];
 
 export default function Testimonials() {
@@ -71,11 +62,11 @@ export default function Testimonials() {
             Success Stories
           </span>
           <h2 className="text-4xl md:text-5xl font-bold text-[var(--color-text)] mb-6">
-            What Our <span className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-light)] bg-clip-text text-transparent">Community</span> Says
+            What Our <span className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-light)] bg-clip-text text-transparent">Users</span> Say
           </h2>
-          <p className="text-xl text-[var(--color-text-secondary)] max-w-2xl mx-auto">
+          {/* <p className="text-xl text-[var(--color-text-secondary)] max-w-2xl mx-auto">
             Hear from health professionals who have transformed their work and created lasting impact through our platform.
-          </p>
+          </p> */}
         </motion.div>
 
         <div className="grid md:grid-cols-3 gap-8 mb-12">
@@ -118,7 +109,7 @@ export default function Testimonials() {
           ))}
         </div>
 
-        <div className="flex items-center justify-center gap-4">
+        {/* <div className="flex items-center justify-center gap-4">
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
@@ -152,7 +143,7 @@ export default function Testimonials() {
           >
             <ArrowRight size={20} />
           </motion.button>
-        </div>
+        </div> */}
       </div>
     </section>
   );

@@ -56,11 +56,11 @@ function App() {
       <Navbar />
       <main>
         <Hero />
-        <Partners />
+        {/* <Partners /> */}
         <HowItWorks />
         {/* <FocusAreas /> */}
         {/* <Features /> */}
-        <Stats />
+        {/* <Stats /> */}
         <Testimonials />
         <CTA />
       </main>

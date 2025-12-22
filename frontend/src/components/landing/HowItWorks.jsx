@@ -5,8 +5,8 @@ import { UserPlus, FileSearch, Handshake, Trophy, ArrowRight, CheckCircle, Users
 const steps = [
   {
     icon: UserPlus,
-    title: "Create Your Profile",
-    description: "Sign up as a Task Owner or Solution Provider and showcase your expertise or organisational needs.",
+    title: "Join the Community",
+    description: "Choose your role: Post tasks as an Owner or solve tasks as a Provider.",
     details: ["Complete your professional profile", "Add qualifications and experience", "Get verified by our team"],
     color: "from-blue-500 to-blue-600",
     bgColor: "bg-blue-500/10",
@@ -14,8 +14,8 @@ const steps = [
   },
   {
     icon: FileSearch,
-    title: "Discover Opportunities",
-    description: "Browse available tasks or find qualified health professionals ready to tackle your challenges.",
+    title: "Create / Apply",
+    description: "Owners create tasks. Providers apply to work on tasks.",
     details: ["Search by expertise area", "Filter by location and budget", "View detailed task requirements"],
     color: "from-orange-500 to-orange-600",
     bgColor: "bg-orange-500/10",
@@ -23,8 +23,8 @@ const steps = [
   },
   {
     icon: Handshake,
-    title: "Connect & Collaborate",
-    description: "Submit proposals, communicate directly, and build meaningful partnerships in global health.",
+    title: "Match & Collaborate",
+    description: "Smart matching connects the right people to the right tasks.",
     details: ["Send tailored proposals", "Real-time messaging", "Share documents securely"],
     color: "from-green-500 to-green-600",
     bgColor: "bg-green-500/10",
@@ -32,8 +32,8 @@ const steps = [
   },
   {
     icon: Trophy,
-    title: "Deliver Impact",
-    description: "Complete tasks, build your reputation, and contribute to improving health outcomes worldwide.",
+    title: "Deliver & Feedback",
+    description: "Work is delivered, feedback collected, and impact measured.",
     details: ["Track project milestones", "Receive feedback and ratings", "Build your portfolio"],
     color: "from-purple-500 to-purple-600",
     bgColor: "bg-purple-500/10",
@@ -54,7 +54,7 @@ export default function HowItWorks() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-20"
+          className="text-center mb-5"
         >
           <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[var(--color-primary-light)]/10 text-[var(--color-primary-light)] text-sm font-semibold mb-6">
             <span className="w-2 h-2 rounded-full bg-[var(--color-primary-light)] animate-pulse" />
@@ -106,21 +106,21 @@ export default function HowItWorks() {
                 </p>
                 
                 {/* Detail checklist */}
-                <ul className="space-y-2">
+                {/* <ul className="space-y-2">
                   {step.details.map((detail, i) => (
                     <li key={i} className="flex items-center gap-2 text-sm text-[var(--color-text-secondary)]">
                       <CheckCircle size={14} className={`text-${step.color.includes('blue') ? 'blue' : step.color.includes('orange') ? 'orange' : step.color.includes('green') ? 'green' : 'purple'}-500 flex-shrink-0`} />
                       <span>{detail}</span>
                     </li>
                   ))}
-                </ul>
+                </ul> */}
               </div>
             </motion.div>
           ))}
         </div>
 
         {/* Role-based CTAs */}
-        <motion.div
+        {/* <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -188,10 +188,10 @@ export default function HowItWorks() {
               </motion.div>
             </Link>
           </div>
-        </motion.div>
+        </motion.div> */}
 
         {/* Bottom CTA */}
-        <motion.div
+        {/* <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -219,7 +219,7 @@ export default function HowItWorks() {
               Read success stories
             </a>
           </div>
-        </motion.div>
+        </motion.div> */}
       </div>
     </section>
   );

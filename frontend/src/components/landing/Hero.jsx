@@ -80,7 +80,7 @@ export default function Hero() {
             transition={{ duration: 0.7, delay: 0.1, ease: "easeOut" }}
             className="text-4xl sm:text-5xl md:text-6xl lg:text-[5.8rem] font-bold text-white leading-tight mb-8 md:mt-6 lg:mt-10"
           >
-            The Marketplace for{" "}
+            The Marketplace for<br/>
             <span className="relative">
               <span className="relative z-10 bg-gradient-to-r from-[var(--color-accent)] via-[var(--color-accent-light)] to-[var(--color-primary-light)] bg-clip-text text-transparent">
                 Global Health Work
