@@ -57,10 +57,10 @@ export default function Testimonials() {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[var(--color-accent)]/10 text-[var(--color-accent)] text-sm font-semibold mb-6">
+          {/* <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[var(--color-accent)]/10 text-[var(--color-accent)] text-sm font-semibold mb-6">
             <Star size={14} className="fill-current" />
             Success Stories
-          </span>
+          </span> */}
           <h2 className="text-4xl md:text-5xl font-bold text-[var(--color-text)] mb-6">
             What Our <span className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-light)] bg-clip-text text-transparent">Users</span> Say
           </h2>
