@@ -359,7 +359,7 @@ const Templates = {
         <p style="color:${COLORS.textDark};font-weight:600;margin:24px 0 12px;">Once approved, you'll be able to:</p>
         <ul style="color:${COLORS.textLight};margin:0 0 24px;padding-left:20px;">
           <li style="margin-bottom:8px;"><strong style="color:${COLORS.textDark};">Post Tasks:</strong> Create detailed challenges and projects for global health experts to solve.</li>
-          <li style="margin-bottom:8px;"><strong style="color:${COLORS.textDark};">Review Proposals:</strong> Receive applications from qualified professionals worldwide.</li>
+          <li style="margin-bottom:8px;"><strong style="color:${COLORS.textDark};">Review Proposals:</strong> Receive applications from qualified professionals on our platform.</li>
           <li style="margin-bottom:8px;"><strong style="color:${COLORS.textDark};">Collaborate:</strong> Work directly with selected experts to achieve your goals.</li>
         </ul>
         
