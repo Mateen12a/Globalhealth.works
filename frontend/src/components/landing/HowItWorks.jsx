@@ -60,16 +60,16 @@ export default function HowItWorks() {
             <span className="w-2 h-2 rounded-full bg-[var(--color-primary-light)] animate-pulse" />
             Simple 4-Step Process
           </span>
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-[var(--color-text)] mb-6">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-[var(--color-text)] mb-16">
             How It <span className="bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-primary-light)] bg-clip-text text-transparent">Works</span>
           </h2>
-          <p className="text-xl text-[var(--color-text-secondary)] max-w-3xl mx-auto leading-relaxed">
+          {/* <p className="text-xl text-[var(--color-text-secondary)] max-w-3xl mx-auto leading-relaxed">
             Get started in minutes. Our streamlined process makes it easy to connect, collaborate, and create meaningful impact in global health.
-          </p>
+          </p> */}
         </motion.div>
 
         {/* Steps grid */}
-        <div className="grid lg:grid-cols-4 gap-8 mb-16">
+        <div className="grid lg:grid-cols-4 gap-8 mb-5">
           {steps.map((step, index) => (
             <motion.div
               key={step.title}
