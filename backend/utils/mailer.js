@@ -272,7 +272,7 @@ const Templates = {
         <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Dear ${user.firstName},</p>
         
         <div class="success-box">
-          Great news! Your account has been approved by our admin team.
+          <strong>Great news!</strong> Your account has been approved by our admin team.
         </div>
         
         <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:24px;">You now have full access to GlobalHealth.Works. Log in to start connecting with global health professionals, browse opportunities, and make an impact.</p>
@@ -788,7 +788,7 @@ const Templates = {
           <strong>Great news!</strong> Your account has been reactivated.
         </div>
         
-        <p style="color:${COLORS.textLight};margin-bottom:24px;">You now have full access to GlobalHealth.Works again. You can log in and continue using all features.</p>
+        <p style="color:${COLORS.textDark};margin-bottom:24px;">You now have full access to GlobalHealth.Works again. You can log in and continue using all features.</p>
         
         <div style="text-align:center;margin-top:32px;">
           <a href="https://globalhealth.works/login" class="btn btn-accent">
