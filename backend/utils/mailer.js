@@ -272,10 +272,10 @@ const Templates = {
         <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Dear ${user.firstName},</p>
         
         <div class="success-box">
-          <strong>Great news!</strong> Your account has been approved by our admin team.
+          Great news! Your account has been approved by our admin team.
         </div>
         
-        <p style="color:${COLORS.textLight};margin-bottom:24px;">You now have full access to GlobalHealth.Works. Log in to start connecting with global health professionals, browse opportunities, and make an impact.</p>
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:24px;">You now have full access to GlobalHealth.Works. Log in to start connecting with global health professionals, browse opportunities, and make an impact.</p>
         
         <div style="text-align:center;margin-top:32px;">
           <a href="https://globalhealth.works/login" class="btn btn-accent">
@@ -283,9 +283,9 @@ const Templates = {
           </a>
         </div>
         
-        <p style="color:${COLORS.textLight};margin-top:32px;font-size:14px;">
+        <p style="color:${COLORS.textDark};margin-top:32px;font-size:14px;">
           Welcome aboard,<br>
-          <strong style="color:${COLORS.textDark};">The GlobalHealth.Works Team</strong>
+          The GlobalHealth.Works Team
         </p>
       `,
     }),
@@ -313,8 +313,8 @@ const Templates = {
     
     const solutionProviderContent = `
         <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Dear ${user.firstName},</p>
-        <p style="color:${COLORS.textLight};margin-bottom:24px;">Thank you for applying to join <strong style="color:${COLORS.textDark};">GlobalHealth.Works</strong> as a Solution Provider.</p>
-        <p style="color:${COLORS.textLight};margin-bottom:24px;">We are building the world's premier network of global health professionals, and we are excited to review your application.</p>
+        <p style="color:${COLORS.textDark};margin-bottom:24px;">Thank you for applying to join <strong style="color:${COLORS.textDark};">GlobalHealth.Works</strong> as a Solution Provider.</p>
+        <p style="color:${COLORS.textDark};margin-bottom:24px;">We are building the world's premier network of global health professionals, and we are excited to review your application.</p>
         
         <div class="info-box">
           <strong>What happens next?</strong>
@@ -322,7 +322,7 @@ const Templates = {
         </div>
         
         <p style="color:${COLORS.textDark};font-weight:600;margin:24px 0 12px;">Once verified, you will unlock access to:</p>
-        <ul style="color:${COLORS.textLight};margin:0 0 24px;padding-left:20px;">
+        <ul style="color:${COLORS.textDark};margin:0 0 24px;padding-left:20px;">
           <li style="margin-bottom:8px;"><strong style="color:${COLORS.textDark};">High-Impact Tasks:</strong> Browse and apply for challenges posted by Governments, leading NGOs and health organizations.</li>
           <li style="margin-bottom:8px;"><strong style="color:${COLORS.textDark};">Global Collaboration:</strong> Partner with other experts to deliver comprehensive solutions.</li>
         </ul>
@@ -332,7 +332,7 @@ const Templates = {
           <p style="margin:8px 0 0;font-size:14px;">We recommend preparing your portfolio or CV so you are ready to apply for tasks the moment your account is live.</p>
         </div>
         
-        <p style="color:${COLORS.textLight};margin:24px 0;">We're thrilled to have you join a growing network of researchers, practitioners, technologists, and innovators. Your skills and insights are what make this community powerful.</p>
+        <p style="color:${COLORS.textDark};margin:24px 0;">We're thrilled to have you join a growing network of researchers, practitioners, technologists, and innovators. Your skills and insights are what make this community powerful.</p>
         
         <div style="text-align:center;margin-top:32px;">
           <a href="https://globalhealth.works" class="btn btn-primary">

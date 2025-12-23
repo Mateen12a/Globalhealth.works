@@ -85,12 +85,12 @@ export default function Hero() {
               <span className="relative z-10 bg-gradient-to-r from-[var(--color-accent)] via-[var(--color-accent-light)] to-[var(--color-primary-light)] bg-clip-text text-transparent">
                 Global Health Work
               </span>
-              <motion.span
+              {/* <motion.span
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: 1 }}
                 transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
                 className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-[var(--color-accent)] to-[var(--color-accent-light)] rounded-full origin-left"
-              />
+              /> */}
             </span>
           </motion.h1>
 

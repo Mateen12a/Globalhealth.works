@@ -627,12 +627,12 @@ const handleSubmit = async (e) => {
     <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 text-center animate-fadeIn">
       <img src={logo} alt="GlobalHealth.Works" className="h-16 mx-auto mb-4" />
       <h2 className="text-2xl font-bold text-[#1E376E] mb-3">
-        Registration Successful!
+        Registration Recieved
       </h2>
       <p className="text-gray-600 text-sm mb-6">
-        Your account has been successfully created.  
-        It will be reviewed by an admin and approved within 24 hours.
-        You’ll receive an email once it’s verified.
+        Thanks for registering. Your account is now 
+        pending review. We aim to approve accounts within 24-48 hours.
+        We'll email you once verified.
       </p>
       <button
         onClick={() => {
@@ -642,7 +642,7 @@ const handleSubmit = async (e) => {
         }}
         className="w-full py-3 rounded-lg font-semibold bg-gradient-to-r from-[#357FE9] to-[#1E376E] text-white hover:opacity-90 transition-all duration-300"
       >
-        Go to Login
+        Close
       </button>
     </div>
   </div>

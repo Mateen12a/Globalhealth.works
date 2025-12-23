@@ -7,7 +7,7 @@ export default function Footer() {
         <div>
           <h3 className="text-2xl font-bold mb-3">GlobalHealth.Works</h3>
           <p className="text-gray-300 text-sm md:text-base">
-            The Digital Marketplace for Global Health Solutions. Connecting experts with impactful projects worldwide.
+            Where Global Health Problems Meet Global Health Solutions.
           </p>
         </div>
 

@@ -282,7 +282,7 @@ exports.login = async (req, res) => {
       await user.save();
 
       return res.status(403).json({
-        msg: "Your account is awaiting admin approval. You'll be notified once approved.",
+        msg: "To maintain the integrity of our network and ensure the security of all memebers, our team manually reviews every new account. Your application is currently in the queue and will be finalized shortly. We appreciate your patience in helping us keep Global Health Works as a trusted space.",
       });
     }
 
