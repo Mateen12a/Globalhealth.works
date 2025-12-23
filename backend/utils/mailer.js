@@ -323,8 +323,8 @@ const Templates = {
         
         <p style="color:${COLORS.textDark};font-weight:600;margin:24px 0 12px;">Once verified, you will unlock access to:</p>
         <ul style="color:${COLORS.textDark};margin:0 0 24px;padding-left:20px;">
-          <li style="margin-bottom:8px;"><strong style="color:${COLORS.textDark};">High-Impact Tasks:</strong> Browse and apply for challenges posted by Governments, leading NGOs and health organizations.</li>
-          <li style="margin-bottom:8px;"><strong style="color:${COLORS.textDark};">Global Collaboration:</strong> Partner with other experts to deliver comprehensive solutions.</li>
+          <li style="margin-bottom:8px;"><strong style="color:${COLORS.textDark};">High-Impact Tasks:</strong> Browse and apply for challenges posted by Task Owners.</li>
+          <li style="margin-bottom:8px;"><strong style="color:${COLORS.textDark};">Global Health Collaboration:</strong> Partner with other experts to deliver solutions.</li>
         </ul>
         
         <div class="warning-box">
@@ -332,7 +332,7 @@ const Templates = {
           <p style="margin:8px 0 0;font-size:14px;">We recommend preparing your portfolio or CV so you are ready to apply for tasks the moment your account is live.</p>
         </div>
         
-        <p style="color:${COLORS.textDark};margin:24px 0;">We're thrilled to have you join a growing network of researchers, practitioners, technologists, and innovators. Your skills and insights are what make this community powerful.</p>
+        <p style="color:${COLORS.textDark};margin:24px 0;">We're thrilled to have you join a growing network of global health professionals. Your skills and insights are what make this community powerful.</p>
         
         <div style="text-align:center;margin-top:32px;">
           <a href="https://globalhealth.works" class="btn btn-primary">
@@ -353,7 +353,7 @@ const Templates = {
         
         <div class="info-box">
           <strong>Account Under Review</strong>
-          <p style="margin:8px 0 0;font-size:14px;">Our team is reviewing your registration to verify your organization. This typically takes 24-48 hours.</p>
+          <p style="margin:8px 0 0;font-size:14px;">Our team is reviewing your registration to verify your account. This typically takes 24-48 hours.</p>
         </div>
         
         <p style="color:${COLORS.textDark};font-weight:600;margin:24px 0 12px;">Once approved, you'll be able to:</p>
