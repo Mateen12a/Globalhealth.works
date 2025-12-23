@@ -235,7 +235,7 @@ const Templates = {
       preheader: `New ${user.role} registration requires your review`,
       content: `
         <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Hello Admin,</p>
-        <p style="color:${COLORS.textLight};margin-bottom:24px;">A new <strong style="color:${COLORS.textDark};">${user.role}</strong> has registered and requires your approval.</p>
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:24px;">A new <strong style="color:${COLORS.textDark};">${user.role}</strong> has registered and requires your approval.</p>
         
         <table class="data-table">
           <tr>
@@ -296,7 +296,7 @@ const Templates = {
       preheader: `You approved ${user.firstName} ${user.lastName}'s account`,
       content: `
         <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Hello ${admin.firstName},</p>
-        <p style="color:${COLORS.textLight};margin-bottom:24px;">You have successfully approved the following user:</p>
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:24px;">You have successfully approved the following user:</p>
         
         <div class="info-box">
           <p style="margin:0;"><strong>${user.firstName} ${user.lastName}</strong></p>
@@ -313,8 +313,8 @@ const Templates = {
     
     const solutionProviderContent = `
         <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Dear ${user.firstName},</p>
-        <p style="color:${COLORS.textDark};margin-bottom:24px;">Thank you for applying to join <strong style="color:${COLORS.textDark};">GlobalHealth.Works</strong> as a Solution Provider.</p>
-        <p style="color:${COLORS.textDark};margin-bottom:24px;">We are building the world's premier network of global health professionals, and we are excited to review your application.</p>
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:24px;">Thank you for applying to join <strong style="color:${COLORS.textDark};">GlobalHealth.Works</strong> as a Solution Provider.</p>
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:24px;">We are building the world's premier network of global health professionals, and we are excited to review your application.</p>
         
         <div class="info-box">
           <strong>What happens next?</strong>
@@ -348,8 +348,8 @@ const Templates = {
     
     const taskOwnerContent = `
         <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Dear ${user.firstName},</p>
-        <p style="color:${COLORS.textLight};margin-bottom:24px;">Thank you for registering with <strong style="color:${COLORS.textDark};">GlobalHealth.Works</strong> as a Task Owner.</p>
-        <p style="color:${COLORS.textLight};margin-bottom:24px;">We connect organizations with global health professionals who can help solve your most pressing challenges.</p>
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:24px;">Thank you for registering with <strong style="color:${COLORS.textDark};">GlobalHealth.Works</strong> as a Task Owner.</p>
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:24px;">We connect organizations with global health professionals who can help solve your most pressing challenges.</p>
         
         <div class="info-box">
           <strong>Account Under Review</strong>
@@ -388,8 +388,8 @@ const Templates = {
       preheader: "An update regarding your GlobalHealth.Works registration",
       content: `
         <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Dear ${user.firstName},</p>
-        <p style="color:${COLORS.textLight};margin-bottom:24px;">Thank you for your interest in joining GlobalHealth.Works.</p>
-        <p style="color:${COLORS.textLight};margin-bottom:24px;">After reviewing your details, our team was unable to approve your account at this time.</p>
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:24px;">Thank you for your interest in joining GlobalHealth.Works.</p>
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:24px;">After reviewing your details, our team was unable to approve your account at this time.</p>
         
         <div class="error-box">
           <strong>Reason:</strong>
@@ -411,7 +411,7 @@ const Templates = {
       preheader: `You rejected ${user.firstName} ${user.lastName}'s account`,
       content: `
         <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Hello ${admin.firstName},</p>
-        <p style="color:${COLORS.textLight};margin-bottom:24px;">You have rejected the following user's registration:</p>
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:24px;">You have rejected the following user's registration:</p>
         
         <table class="data-table">
           <tr>
@@ -443,7 +443,7 @@ const Templates = {
       preheader: `${owner.firstName} ${owner.lastName} created a new task`,
       content: `
         <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Hello Admin,</p>
-        <p style="color:${COLORS.textLight};margin-bottom:24px;">A new task has been created on the platform.</p>
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:24px;">A new task has been created on the platform.</p>
         
         <div style="background:linear-gradient(135deg,${COLORS.bgLight} 0%,#E0E7FF 100%);border-radius:12px;padding:24px;margin-bottom:24px;">
           <h2 style="color:${COLORS.textDark};font-size:18px;margin:0 0 12px;">${task.title}</h2>
@@ -482,7 +482,7 @@ const Templates = {
         
         <div style="background:${COLORS.bgLight};border-radius:12px;padding:24px;margin:24px 0;">
           <h3 style="color:${COLORS.textDark};font-size:16px;margin:0 0 16px;">${task.title}</h3>
-          <p style="color:${COLORS.textLight};margin:0 0 16px;font-size:14px;">${task.summary}</p>
+          <p style="color:${COLORS.textDark};margin:0 0 16px;font-size:16px;">${task.summary}</p>
           
           <table style="width:100%;font-size:13px;">
             <tr>
@@ -496,7 +496,7 @@ const Templates = {
           </table>
         </div>
         
-        <p style="color:${COLORS.textLight};margin-bottom:24px;">You can view and manage your task from your dashboard at any time.</p>
+        <p style="color:${COLORS.textDark};margin-bottom:24px;font-size:16px;">You can view and manage your task from your dashboard at any time.</p>
         
         <div style="text-align:center;margin-top:32px;">
           <a href="https://globalhealth.works/dashboard" class="btn btn-accent">
@@ -504,7 +504,7 @@ const Templates = {
           </a>
         </div>
         
-        <p style="color:${COLORS.textLight};margin-top:32px;font-size:14px;">
+        <p style="color:${COLORS.textDark};margin-top:32px;font-size:16px;">
           Thank you for contributing to the global health community.<br>
           <strong style="color:${COLORS.textDark};">The GlobalHealth.Works Team</strong>
         </p>
@@ -517,7 +517,7 @@ const Templates = {
       preheader: `${sender.firstName} ${sender.lastName} sent you a message`,
       content: `
         <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Dear ${receiver.firstName},</p>
-        <p style="color:${COLORS.textLight};margin-bottom:24px;">You have a new message from <strong style="color:${COLORS.textDark};">${sender.firstName} ${sender.lastName}</strong>.</p>
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:24px;">You have a new message from <strong style="color:${COLORS.textDark};">${sender.firstName} ${sender.lastName}</strong>.</p>
         
         <div class="info-box">
           <p style="margin:0;font-style:italic;color:${COLORS.textDark};">
@@ -544,7 +544,7 @@ const Templates = {
       preheader: `${applicant.firstName} submitted a proposal for "${task.title}"`,
       content: `
         <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Hello ${taskOwner.firstName},</p>
-        <p style="color:${COLORS.textLight};margin-bottom:24px;">Great news! You've received a new proposal for your task.</p>
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:24px;">Great news! You've received a new proposal for your task.</p>
         
         <div style="background:${COLORS.bgLight};border-radius:12px;padding:24px;margin-bottom:24px;">
           <p style="color:${COLORS.textLight};font-size:12px;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 8px;">Task</p>
@@ -788,7 +788,7 @@ const Templates = {
           <strong>Great news!</strong> Your account has been reactivated.
         </div>
         
-        <p style="color:${COLORS.textDark};margin-bottom:24px;">You now have full access to GlobalHealth.Works again. You can log in and continue using all features.</p>
+        <p style="color:${COLORS.textLight};margin-bottom:24px;">You now have full access to GlobalHealth.Works again. You can log in and continue using all features.</p>
         
         <div style="text-align:center;margin-top:32px;">
           <a href="https://globalhealth.works/login" class="btn btn-accent">

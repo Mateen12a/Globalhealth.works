@@ -636,9 +636,8 @@ const handleSubmit = async (e) => {
       </p>
       <button
         onClick={() => {
-          setShowSuccessModal(false);
           ["token", "user", "role"].forEach((k) => localStorage.removeItem(k));
-          navigate("/login");
+          window.location.reload();
         }}
         className="w-full py-3 rounded-lg font-semibold bg-gradient-to-r from-[#357FE9] to-[#1E376E] text-white hover:opacity-90 transition-all duration-300"
       >
