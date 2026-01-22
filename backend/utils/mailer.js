@@ -285,7 +285,8 @@ const Templates = {
         
         <p style="color:${COLORS.textDark};margin-top:32px;font-size:14px;">
           Welcome aboard,<br>
-          The GlobalHealth.Works Team
+          <strong style="color:${COLORS.textDark};">The GlobalHealth.Works Team</strong>
+
         </p>
       `,
     }),
@@ -314,7 +315,7 @@ const Templates = {
     const solutionProviderContent = `
         <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Dear ${user.firstName},</p>
         <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:24px;">Thank you for applying to join <strong style="color:${COLORS.textDark};">GlobalHealth.Works</strong> as a Solution Provider.</p>
-        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:24px;">We are building the world's premier network of global health professionals, and we are excited to review your application.</p>
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:24px;">To maintain the integrity of our network and ensure the security of all members, our team manually reviews every new account. Your application is currently in the queue and will be finalized shortly. We appreciate your patience in helping us keep Global Health Works a trusted space.</p>
         
         <div class="info-box">
           <strong>What happens next?</strong>
@@ -336,7 +337,7 @@ const Templates = {
         
         <div style="text-align:center;margin-top:32px;">
           <a href="https://globalhealth.works" class="btn btn-primary">
-            Explore Platform
+            Explore the platform
           </a>
         </div>
         
@@ -349,7 +350,7 @@ const Templates = {
     const taskOwnerContent = `
         <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Dear ${user.firstName},</p>
         <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:24px;">Thank you for registering with <strong style="color:${COLORS.textDark};">GlobalHealth.Works</strong> as a Task Owner.</p>
-        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:24px;">We connect organizations with global health professionals who can help solve your most pressing challenges.</p>
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:24px;">To maintain the integrity of our network and ensure the security of all members, our team manually reviews every new account. Your application is currently in the queue and will be finalized shortly. We appreciate your patience in helping us keep Global Health Works a trusted space.</p>
         
         <div class="info-box">
           <strong>Account Under Review</strong>
@@ -365,7 +366,7 @@ const Templates = {
         
         <div style="text-align:center;margin-top:32px;">
           <a href="https://globalhealth.works" class="btn btn-primary">
-            Explore Platform
+            Explore the platform
           </a>
         </div>
         
