@@ -208,7 +208,7 @@ async function sendMail(to, subject, htmlContent) {
   
   try {
     const { data, error } = await resend.emails.send({
-      from: "GlobalHealth.Works <onboarding@resend.dev>",
+      from: "GlobalHealth.Works <admin@globalhealth.works>",
       to,
       subject,
       html: htmlContent,

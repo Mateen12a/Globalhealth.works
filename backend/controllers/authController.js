@@ -446,7 +446,6 @@ exports.forgotPassword = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (!user) {
-      console.log(`Forgot password request failed: User not found for email ${email}`);
       return res.status(404).json({ msg: "User with this email does not exist" });
     }
 
@@ -457,8 +456,7 @@ exports.forgotPassword = async (req, res) => {
 
     await user.save();
 
-    console.log(`Password reset code generated for ${email}: ${resetToken}`);
-
+    console.log(`Sending reset code ${resetToken} to ${user.email}`);
     const mailResult = await sendMail(
       user.email,
       "Password Reset Verification Code",
@@ -466,13 +464,49 @@ exports.forgotPassword = async (req, res) => {
     );
 
     if (!mailResult.success) {
-      console.error(`Failed to send password reset email to ${email}:`, mailResult.error);
-      return res.status(500).json({ msg: "Failed to send email. Please try again later." });
+      console.error("Failed to send forgot password email:", mailResult.error);
+      return res.status(500).json({ msg: "Failed to send verification email" });
     }
 
-    res.json({ msg: "Verification code sent to email successfully!" });
+    res.json({ msg: "Verification code sent to email" });
   } catch (err) {
     console.error("Forgot password error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
+// Resend Verification Code
+exports.resendVerificationCode = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ msg: "User with this email does not exist" });
+    }
+
+    // Generate new 6-digit verification code
+    const resetToken = Math.floor(100000 + Math.random() * 900000).toString();
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+
+    await user.save();
+
+    console.log(`Resending reset code ${resetToken} to ${user.email}`);
+    const mailResult = await sendMail(
+      user.email,
+      "New Password Reset Verification Code",
+      Templates.forgotPassword(user, resetToken)
+    );
+
+    if (!mailResult.success) {
+      console.error("Failed to resend email:", mailResult.error);
+      return res.status(500).json({ msg: "Failed to resend verification email" });
+    }
+
+    res.json({ msg: "Verification code resent to email" });
+  } catch (err) {
+    console.error("Resend verification code error:", err);
     res.status(500).json({ msg: "Server error" });
   }
 };

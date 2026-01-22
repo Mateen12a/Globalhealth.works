@@ -59,12 +59,10 @@ export default function ForgotPassword() {
       }
 
       if (res.ok) {
-        console.log("Forgot password request successful:", data);
-        setMessage(data.msg || "Verification code sent to email successfully!");
+        setMessage(data.msg);
         setStep(2);
         startResendTimer();
       } else {
-        console.warn("Forgot password request failed:", data);
         setError(data.msg || "Failed to send code");
       }
     } catch (err) {

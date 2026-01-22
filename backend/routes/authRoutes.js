@@ -10,9 +10,10 @@ const {
   updateMe,
   uploadAvatar,
   resetAvatar,
-  uploadCV, // ✅ New
+  uploadCV,
   getPublicProfile,
   forgotPassword,
+  resendVerificationCode,
   resetPassword,
 } = require("../controllers/authController");
 
@@ -52,6 +53,7 @@ const uploadCVFile = multer({
 router.post("/register", register);
 router.post("/login", login);
 router.post("/forgot-password", forgotPassword);
+router.post("/resend-code", resendVerificationCode);
 router.post("/reset-password", resetPassword);
 
 // Profile routes
