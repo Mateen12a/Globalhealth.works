@@ -25,7 +25,8 @@ export default function ForgotPassword() {
 
     try {
       console.log("Requesting code for:", email);
-      const res = await fetch("/api/auth/forgot-password", {
+      // Use full URL to avoid proxy issues in some environments
+      const res = await fetch(`${window.location.origin}/api/auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -40,7 +41,7 @@ export default function ForgotPassword() {
       }
     } catch (err) {
       console.error("Forgot password fetch error:", err);
-      setError("Something went wrong. Try again.");
+      setError(`Connection error: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -59,7 +60,7 @@ export default function ForgotPassword() {
     setMessage("");
 
     try {
-      const res = await fetch("/api/auth/reset-password", {
+      const res = await fetch(`${window.location.origin}/api/auth/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, token, newPassword }),
@@ -106,8 +107,8 @@ export default function ForgotPassword() {
 
         {step === 1 ? (
           <form onSubmit={handleRequestCode} className="space-y-4">
-            <div className="relative">
-              <Mail className="absolute left-3 top-3 text-gray-400" size={20} />
+            <div className="relative flex items-center">
+              <Mail className="absolute left-3 text-gray-400 pointer-events-none" size={20} />
               <input
                 type="email"
                 placeholder="Email Address"
@@ -127,8 +128,8 @@ export default function ForgotPassword() {
           </form>
         ) : (
           <form onSubmit={handleResetPassword} className="space-y-4">
-            <div className="relative">
-              <CheckCircle className="absolute left-3 top-3 text-gray-400" size={20} />
+            <div className="relative flex items-center">
+              <CheckCircle className="absolute left-3 text-gray-400 pointer-events-none" size={20} />
               <input
                 type="text"
                 placeholder="Verification Code"
@@ -138,8 +139,8 @@ export default function ForgotPassword() {
                 required
               />
             </div>
-            <div className="relative">
-              <Lock className="absolute left-3 top-3 text-gray-400" size={20} />
+            <div className="relative flex items-center">
+              <Lock className="absolute left-3 text-gray-400 pointer-events-none" size={20} />
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="New Password"
@@ -151,13 +152,13 @@ export default function ForgotPassword() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 transition"
+                className="absolute right-3 text-gray-400 hover:text-gray-600 transition"
               >
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
-            <div className="relative">
-              <Lock className="absolute left-3 top-3 text-gray-400" size={20} />
+            <div className="relative flex items-center">
+              <Lock className="absolute left-3 text-gray-400 pointer-events-none" size={20} />
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="Confirm New Password"
