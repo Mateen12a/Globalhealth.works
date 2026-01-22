@@ -17,15 +17,32 @@ export default function ForgotPassword() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
+  const [resendDisabled, setResendDisabled] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
+
+  const startResendTimer = () => {
+    setResendDisabled(true);
+    setResendTimer(60);
+    const interval = setInterval(() => {
+      setResendTimer((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          setResendDisabled(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
   const handleRequestCode = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     setLoading(true);
     setError("");
     setMessage("");
 
     try {
       console.log("Requesting code for:", email);
-      // Use the proper proxy path or full URL
       const res = await fetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -44,6 +61,7 @@ export default function ForgotPassword() {
       if (res.ok) {
         setMessage(data.msg);
         setStep(2);
+        startResendTimer();
       } else {
         setError(data.msg || "Failed to send code");
       }
@@ -192,6 +210,17 @@ export default function ForgotPassword() {
             >
               {loading ? "Resetting..." : "Reset Password"}
             </button>
+            
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => handleRequestCode()}
+                disabled={loading || resendDisabled}
+                className="text-sm text-[#357FE9] hover:underline disabled:text-gray-400 disabled:no-underline"
+              >
+                {resendDisabled ? `Resend code in ${resendTimer}s` : "Didn't receive a code? Resend"}
+              </button>
+            </div>
           </form>
         )}
 
