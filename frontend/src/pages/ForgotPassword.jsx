@@ -25,14 +25,22 @@ export default function ForgotPassword() {
 
     try {
       console.log("Requesting code for:", email);
-      // Use full URL to avoid proxy issues in some environments
-      const res = await fetch(`${window.location.origin}/api/auth/forgot-password`, {
+      // Use the proper proxy path or full URL
+      const res = await fetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
 
-      const data = await res.json();
+      const text = await res.text();
+      let data;
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (parseErr) {
+        console.error("Parse error:", parseErr, "Raw text:", text);
+        throw new Error("Invalid response from server");
+      }
+
       if (res.ok) {
         setMessage(data.msg);
         setStep(2);
@@ -41,7 +49,7 @@ export default function ForgotPassword() {
       }
     } catch (err) {
       console.error("Forgot password fetch error:", err);
-      setError(`Connection error: ${err.message}`);
+      setError(`Error: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -60,13 +68,21 @@ export default function ForgotPassword() {
     setMessage("");
 
     try {
-      const res = await fetch(`${window.location.origin}/api/auth/reset-password`, {
+      const res = await fetch("/api/auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, token, newPassword }),
       });
 
-      const data = await res.json();
+      const text = await res.text();
+      let data;
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (parseErr) {
+        console.error("Parse error:", parseErr, "Raw text:", text);
+        throw new Error("Invalid response from server");
+      }
+
       if (res.ok) {
         setMessage("Password reset successfully! Redirecting to login...");
         setTimeout(() => navigate("/login"), 3000);
@@ -74,7 +90,8 @@ export default function ForgotPassword() {
         setError(data.msg || "Failed to reset password");
       }
     } catch (err) {
-      setError("Something went wrong. Try again.");
+      console.error("Reset password fetch error:", err);
+      setError(`Error: ${err.message}`);
     } finally {
       setLoading(false);
     }
