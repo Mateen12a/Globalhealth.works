@@ -207,6 +207,7 @@ async function sendMail(to, subject, htmlContent) {
   }
   
   try {
+    console.log(`[Email Attempt] Sending email to ${to} with subject "${subject}"`);
     const { data, error } = await resend.emails.send({
       from: "GlobalHealth.Works <admin@globalhealth.works>",
       to,
@@ -215,14 +216,14 @@ async function sendMail(to, subject, htmlContent) {
     });
 
     if (error) {
-      console.error("Email send error:", error);
+      console.error("[Email Error] Resend reported failure:", error);
       return { success: false, error };
     } else {
-      console.log("Email sent:", data.id);
+      console.log("[Email Success] Email sent successfully. ID:", data.id);
       return { success: true, id: data.id };
     }
   } catch (err) {
-    console.error("Email send error:", err);
+    console.error("[Email Exception] Unexpected error in sendMail:", err);
     return { success: false, error: err.message };
   }
 }

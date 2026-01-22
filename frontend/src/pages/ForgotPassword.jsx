@@ -49,14 +49,7 @@ export default function ForgotPassword() {
         body: JSON.stringify({ email }),
       });
 
-      const text = await res.text();
-      let data;
-      try {
-        data = text ? JSON.parse(text) : {};
-      } catch (parseErr) {
-        console.error("Parse error:", parseErr, "Raw text:", text);
-        throw new Error("Invalid response from server");
-      }
+      const data = await res.json();
 
       if (res.ok) {
         setMessage(data.msg);
@@ -67,6 +60,35 @@ export default function ForgotPassword() {
       }
     } catch (err) {
       console.error("Forgot password fetch error:", err);
+      setError(`Error: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    setLoading(true);
+    setError("");
+    setMessage("");
+
+    try {
+      console.log("Resending code for:", email);
+      const res = await fetch("/api/auth/resend-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setMessage(data.msg);
+        startResendTimer();
+      } else {
+        setError(data.msg || "Failed to resend code");
+      }
+    } catch (err) {
+      console.error("Resend code fetch error:", err);
       setError(`Error: ${err.message}`);
     } finally {
       setLoading(false);
@@ -214,7 +236,7 @@ export default function ForgotPassword() {
             <div className="text-center">
               <button
                 type="button"
-                onClick={() => handleRequestCode()}
+                onClick={handleResendCode}
                 disabled={loading || resendDisabled}
                 className="text-sm text-[#357FE9] hover:underline disabled:text-gray-400 disabled:no-underline"
               >
