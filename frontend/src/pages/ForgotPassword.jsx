@@ -49,7 +49,14 @@ export default function ForgotPassword() {
         body: JSON.stringify({ email }),
       });
 
-      const data = await res.json();
+      const text = await res.text();
+      let data;
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (parseErr) {
+        console.error("Parse error:", parseErr, "Raw text:", text);
+        throw new Error(`Server returned non-JSON: ${text.substring(0, 50)}`);
+      }
 
       if (res.ok) {
         setMessage(data.msg);
@@ -79,7 +86,14 @@ export default function ForgotPassword() {
         body: JSON.stringify({ email }),
       });
 
-      const data = await res.json();
+      const text = await res.text();
+      let data;
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (parseErr) {
+        console.error("Parse error:", parseErr, "Raw text:", text);
+        throw new Error(`Server returned non-JSON: ${text.substring(0, 50)}`);
+      }
 
       if (res.ok) {
         setMessage(data.msg);
@@ -120,7 +134,7 @@ export default function ForgotPassword() {
         data = text ? JSON.parse(text) : {};
       } catch (parseErr) {
         console.error("Parse error:", parseErr, "Raw text:", text);
-        throw new Error("Invalid response from server");
+        throw new Error(`Server returned non-JSON: ${text.substring(0, 50)}`);
       }
 
       if (res.ok) {
