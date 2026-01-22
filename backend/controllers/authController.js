@@ -446,6 +446,7 @@ exports.forgotPassword = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (!user) {
+      console.log(`Forgot password request failed: User not found for email ${email}`);
       return res.status(404).json({ msg: "User with this email does not exist" });
     }
 
@@ -456,13 +457,20 @@ exports.forgotPassword = async (req, res) => {
 
     await user.save();
 
-    await sendMail(
+    console.log(`Password reset code generated for ${email}: ${resetToken}`);
+
+    const mailResult = await sendMail(
       user.email,
       "Password Reset Verification Code",
       Templates.forgotPassword(user, resetToken)
     );
 
-    res.json({ msg: "Verification code sent to email" });
+    if (!mailResult.success) {
+      console.error(`Failed to send password reset email to ${email}:`, mailResult.error);
+      return res.status(500).json({ msg: "Failed to send email. Please try again later." });
+    }
+
+    res.json({ msg: "Verification code sent to email successfully!" });
   } catch (err) {
     console.error("Forgot password error:", err);
     res.status(500).json({ msg: "Server error" });
