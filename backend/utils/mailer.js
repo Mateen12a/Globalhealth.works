@@ -1080,6 +1080,29 @@ const Templates = {
       `,
     }),
 
+  forgotPassword: (user, token) =>
+    emailLayout({
+      title: "Reset Your Password",
+      preheader: "Verification code for your password reset request",
+      content: `
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Hello ${user.firstName},</p>
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:24px;">You are receiving this email because you (or someone else) have requested the reset of the password for your account.</p>
+        
+        <div class="info-box" style="text-align:center;">
+          <p style="margin:0; font-size: 24px; font-weight: bold; letter-spacing: 5px;">${token}</p>
+        </div>
+        
+        <p style="color:${COLORS.textDark};margin:24px 0;font-size:16px;">Please enter this code on the reset password page. This code will expire in 1 hour.</p>
+        
+        <p style="color:${COLORS.textLight};font-size:14px;">If you did not request this, please ignore this email and your password will remain unchanged.</p>
+        
+        <p style="color:${COLORS.textLight};margin-top:32px;font-size:14px;">
+          Warm regards,<br>
+          <strong style="color:${COLORS.textDark};">The GlobalHealth.Works Team</strong>
+        </p>
+      `,
+    }),
+
   userWarning: (user, reason, adminName) =>
     emailLayout({
       title: "Account Warning",
@@ -1200,6 +1223,29 @@ const Templates = {
         
         <p style="color:${COLORS.textLight};margin-top:24px;font-size:13px;">
           <em>This is reminder ${attemptNumber} of 2. The user will not receive further reminders after this.</em>
+        </p>
+      `,
+    }),
+
+  forgotPassword: (user, token) =>
+    emailLayout({
+      title: "Reset Your Password",
+      preheader: "Verification code for your password reset request",
+      content: `
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Hello ${user.firstName},</p>
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:24px;">You are receiving this email because you (or someone else) have requested the reset of the password for your account.</p>
+        
+        <div class="info-box" style="text-align:center;">
+          <p style="margin:0; font-size: 24px; font-weight: bold; letter-spacing: 5px;">${token}</p>
+        </div>
+        
+        <p style="color:${COLORS.textDark};margin:24px 0;font-size:16px;">Please enter this code on the reset password page. This code will expire in 1 hour.</p>
+        
+        <p style="color:${COLORS.textLight};font-size:14px;">If you did not request this, please ignore this email and your password will remain unchanged.</p>
+        
+        <p style="color:${COLORS.textLight};margin-top:32px;font-size:14px;">
+          Warm regards,<br>
+          <strong style="color:${COLORS.textDark};">The GlobalHealth.Works Team</strong>
         </p>
       `,
     }),

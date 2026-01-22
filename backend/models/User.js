@@ -100,6 +100,10 @@ const userSchema = new mongoose.Schema(
       lastAttempt: { type: Date },
       emailsSent: { type: Number, default: 0 }
     },
+    
+    // Forgot password fields
+    resetPasswordToken: { type: String },
+    resetPasswordExpires: { type: Date },
   },
   { timestamps: true }
 );

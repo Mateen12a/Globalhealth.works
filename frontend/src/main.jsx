@@ -6,6 +6,7 @@ import useKeepAlive from "./hooks/useKeepAlive";
 import App from "./App";
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
 import PrivateRoute from "./utils/PrivateRoute";
 import RoleGuard from "./utils/RoleGuard";
 import ProfileSettings from "./pages/ProfileSettings";
@@ -49,6 +50,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="/" element={<App />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/dashboard" element={<DashboardRouter />} />
         

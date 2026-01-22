@@ -12,6 +12,8 @@ const {
   resetAvatar,
   uploadCV, // ✅ New
   getPublicProfile,
+  forgotPassword,
+  resetPassword,
 } = require("../controllers/authController");
 
 // Avatar upload setup
@@ -49,6 +51,8 @@ const uploadCVFile = multer({
 // Routes
 router.post("/register", register);
 router.post("/login", login);
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password", resetPassword);
 
 // Profile routes
 router.get("/me", authMiddleware, getMe);
