@@ -209,6 +209,7 @@ async function sendMail(to, subject, htmlContent) {
   
   try {
     console.log(`[Email Attempt] Sending email to ${to} with subject "${subject}"`);
+    console.log("[Email Debug] From:", "GlobalHealth.Works <admin@globalhealth.works>");
     const { data, error } = await resend.emails.send({
       from: "GlobalHealth.Works <admin@globalhealth.works>",
       to,

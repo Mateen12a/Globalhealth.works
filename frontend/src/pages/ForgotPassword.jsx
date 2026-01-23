@@ -215,6 +215,7 @@ export default function ForgotPassword() {
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="New Password"
+                autoComplete="new-password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 className="w-full border p-3 pl-10 pr-10 rounded-lg focus:ring-2 focus:ring-[#357FE9] transition"
@@ -233,6 +234,7 @@ export default function ForgotPassword() {
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="Confirm New Password"
+                autoComplete="new-password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="w-full border p-3 pl-10 pr-10 rounded-lg focus:ring-2 focus:ring-[#357FE9] transition"
