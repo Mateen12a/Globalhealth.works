@@ -5,6 +5,7 @@ const { Resend } = require("resend");
 let resend = null;
 if (process.env.RESEND_API_KEY) {
   resend = new Resend(process.env.RESEND_API_KEY);
+  console.log("Resend initialized with API Key (masked):", process.env.RESEND_API_KEY.substring(0, 5) + "...");
 } else {
   console.warn("Warning: RESEND_API_KEY not configured. Email functionality is disabled.");
 }
