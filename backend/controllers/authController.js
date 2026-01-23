@@ -463,7 +463,7 @@ exports.forgotPassword = async (req, res) => {
       Templates.forgotPassword(user, resetToken)
     );
 
-    if (!mailResult.success) {
+    if (mailResult.error) {
       console.error("Failed to send forgot password email:", mailResult.error);
       return res.status(500).json({ msg: "Failed to send verification email" });
     }
@@ -499,7 +499,7 @@ exports.resendVerificationCode = async (req, res) => {
       Templates.forgotPassword(user, resetToken)
     );
 
-    if (!mailResult.success) {
+    if (mailResult.error) {
       console.error("Failed to resend email:", mailResult.error);
       return res.status(500).json({ msg: "Failed to resend verification email" });
     }

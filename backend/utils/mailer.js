@@ -201,7 +201,7 @@ function emailLayout({ title, preheader = '', content, footerText = '' }) {
 
 // Send email using Resend
 async function sendMail(to, subject, htmlContent) {
-  // If Resend is not configured, log and return success (emails are skipped)
+  // If Resend is not configured, return success (emails are skipped)
   if (!resend) {
     console.log(`[Email Skipped] To: ${to}, Subject: ${subject} (RESEND_API_KEY not configured)`);
     return { success: true, skipped: true };
@@ -209,7 +209,6 @@ async function sendMail(to, subject, htmlContent) {
   
   try {
     console.log(`[Email Attempt] Sending email to ${to} with subject "${subject}"`);
-    console.log("[Email Debug] From:", "GlobalHealth.Works <admin@globalhealth.works>");
     const { data, error } = await resend.emails.send({
       from: "GlobalHealth.Works <admin@globalhealth.works>",
       to,
@@ -219,14 +218,14 @@ async function sendMail(to, subject, htmlContent) {
 
     if (error) {
       console.error("[Email Error] Resend reported failure:", error);
-      return { success: false, error };
+      return { error };
     } else {
       console.log("[Email Success] Email sent successfully. ID:", data.id);
-      return { success: true, id: data.id };
+      return { data };
     }
   } catch (err) {
     console.error("[Email Exception] Unexpected error in sendMail:", err);
-    return { success: false, error: err.message };
+    return { error: err.message };
   }
 }
 
