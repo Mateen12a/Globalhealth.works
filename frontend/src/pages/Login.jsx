@@ -32,6 +32,14 @@ export default function Login() {
         localStorage.setItem("role", data.user.role);
         localStorage.setItem("user", JSON.stringify(data.user));
 
+        try {
+          const versionRes = await fetch(`${API_URL}/api/auth/session-version`);
+          const versionData = await versionRes.json();
+          localStorage.setItem("sessionVersion", versionData.version);
+        } catch (err) {
+          console.error("Failed to fetch session version:", err);
+        }
+
         if (data.user.role === "taskOwner") navigate("/dashboard/to");
         else if (data.user.role === "solutionProvider") navigate("/dashboard/sp");
         else if (data.user.role === "admin") navigate("/dashboard/admin");

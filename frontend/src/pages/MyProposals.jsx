@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FileText, Clock, CheckCircle, XCircle, AlertCircle, ExternalLink, Loader2 } from "lucide-react";
+import { FileText, Clock, CheckCircle, XCircle, AlertCircle, ExternalLink, Loader2, DollarSign, Calendar, ArrowUpRight } from "lucide-react";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -106,7 +106,7 @@ export default function MyProposals() {
           variants={container}
           initial="hidden"
           animate="visible"
-          className="space-y-4"
+          className="grid gap-4"
         >
           {proposals.map(p => {
             const statusConfig = getStatusConfig(p.status);
@@ -116,56 +116,80 @@ export default function MyProposals() {
               <motion.div
                 key={p._id}
                 variants={item}
-                className="card p-6 hover:shadow-lg transition-all"
+                className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-lg transition-all overflow-hidden group"
               >
-                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start gap-3">
-                      <div className={`w-10 h-10 rounded-xl ${statusConfig.bg} flex items-center justify-center flex-shrink-0`}>
-                        <StatusIcon className={`w-5 h-5 ${statusConfig.color}`} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <Link 
-                          to={`/tasks/${p.task?._id}`} 
-                          className="text-lg font-bold text-[var(--color-primary)] hover:text-[var(--color-primary-light)] transition-colors line-clamp-1"
-                        >
-                          {p.task?.title || 'Task'}
-                        </Link>
-                        <p className="text-sm text-[var(--color-text-secondary)] mt-1 line-clamp-2">
-                          {p.message?.slice(0, 150)}{p.message?.length > 150 ? '...' : ''}
-                        </p>
-                        <div className="flex items-center gap-4 mt-3 text-sm">
-                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full ${statusConfig.bg} ${statusConfig.color} font-medium`}>
-                            <StatusIcon className="w-3.5 h-3.5" />
-                            {statusConfig.label}
-                          </span>
-                          <span className="text-[var(--color-text-muted)]">
-                            {new Date(p.createdAt).toLocaleDateString()}
-                          </span>
+                <div className={`h-1.5 w-full ${
+                  p.status === 'accepted' ? 'bg-gradient-to-r from-emerald-400 to-emerald-600' :
+                  p.status === 'rejected' ? 'bg-gradient-to-r from-red-400 to-red-600' :
+                  p.status === 'withdrawn' ? 'bg-gradient-to-r from-gray-300 to-gray-400' :
+                  'bg-gradient-to-r from-amber-400 to-orange-500'
+                }`} />
+                
+                <div className="p-5">
+                  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start gap-4">
+                        <div className={`w-12 h-12 rounded-xl ${statusConfig.bg} flex items-center justify-center flex-shrink-0 shadow-sm`}>
+                          <StatusIcon className={`w-6 h-6 ${statusConfig.color}`} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Link 
+                              to={`/tasks/${p.task?._id}`} 
+                              className="text-lg font-bold text-gray-900 hover:text-[var(--color-primary)] transition-colors line-clamp-1 group-hover:text-[var(--color-primary)]"
+                            >
+                              {p.task?.title || 'Task'}
+                            </Link>
+                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${statusConfig.bg} ${statusConfig.color}`}>
+                              {statusConfig.label}
+                            </span>
+                          </div>
+                          
+                          <p className="text-sm text-gray-600 mt-2 line-clamp-2">
+                            {p.message?.slice(0, 180)}{p.message?.length > 180 ? '...' : ''}
+                          </p>
+                          
+                          <div className="flex flex-wrap items-center gap-4 mt-3">
+                            {p.proposedBudget && (
+                              <div className="flex items-center gap-1.5 text-sm text-gray-600">
+                                <DollarSign className="w-4 h-4 text-emerald-500" />
+                                <span className="font-medium">${p.proposedBudget.toLocaleString()}</span>
+                              </div>
+                            )}
+                            {p.proposedTimeline && (
+                              <div className="flex items-center gap-1.5 text-sm text-gray-600">
+                                <Calendar className="w-4 h-4 text-blue-500" />
+                                <span>{p.proposedTimeline}</span>
+                              </div>
+                            )}
+                            <div className="flex items-center gap-1.5 text-sm text-gray-500">
+                              <Clock className="w-4 h-4" />
+                              <span>{new Date(p.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 md:flex-col md:items-end">
-                    <Link
-                      to={`/tasks/${p.task?._id}`}
-                      className="px-4 py-2 bg-[var(--color-bg-secondary)] hover:bg-[var(--color-primary)] text-[var(--color-text)] hover:text-white rounded-lg text-sm font-medium transition-all"
-                    >
-                      View Task
-                    </Link>
-                    {p.status === "pending" && (
-                      <button
-                        onClick={() => handleWithdraw(p._id)}
-                        disabled={withdrawingId === p._id}
-                        className="px-4 py-2 border border-red-300 hover:bg-red-50 text-red-600 rounded-lg text-sm font-medium transition-all disabled:opacity-50 flex items-center gap-2"
+                    
+                    <div className="flex items-center gap-2 lg:flex-col lg:items-end">
+                      <Link
+                        to={`/tasks/${p.task?._id}`}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-light)] hover:opacity-90 text-white rounded-lg text-sm font-medium transition-all shadow-sm"
                       >
-                        {withdrawingId === p._id ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : null}
-                        Withdraw
-                      </button>
-                    )}
+                        View Task
+                        <ArrowUpRight className="w-4 h-4" />
+                      </Link>
+                      {p.status === "pending" && (
+                        <button
+                          onClick={() => handleWithdraw(p._id)}
+                          disabled={withdrawingId === p._id}
+                          className="px-4 py-2 border border-red-200 hover:bg-red-50 hover:border-red-300 text-red-600 rounded-lg text-sm font-medium transition-all disabled:opacity-50 flex items-center gap-2"
+                        >
+                          {withdrawingId === p._id && <Loader2 className="w-4 h-4 animate-spin" />}
+                          Withdraw
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </motion.div>

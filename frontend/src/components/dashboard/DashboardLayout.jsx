@@ -93,14 +93,14 @@ export default function DashboardLayout({ children, role: propRole, title }) {
           { to: "/admin/users", label: "Manage Users", icon: Users },
           { to: "/admin/tasks", label: "Manage Tasks", icon: Clipboard },
           { to: "/admin/proposals", label: "Proposals", icon: FolderOpen },
-          { to: "/inbox", label: "Messages", icon: MessageSquare },
+          { to: "/messages", label: "Messages", icon: MessageSquare },
           { to: "/settings", label: "Settings", icon: Settings },
         ]
       : role === "Task Owner"
       ? [
           { to: "/dashboard/to", label: "My Tasks", icon: FolderOpen },
           { to: "/tasks/create", label: "Create Task", icon: PlusCircle },
-          { to: "/inbox", label: "Messages", icon: MessageSquare },
+          { to: "/messages", label: "Messages", icon: MessageSquare },
           { to: "/profile", label: "Profile", icon: User },
           { to: "/settings", label: "Settings", icon: Settings },
         ]
@@ -108,7 +108,7 @@ export default function DashboardLayout({ children, role: propRole, title }) {
           { to: "/dashboard/sp", label: "Available Tasks", icon: Clipboard },
           { to: "/browse-tasks", label: "Browse All Tasks", icon: FolderOpen },
           { to: "/my-applications", label: "My Applications", icon: Users },
-          { to: "/inbox", label: "Messages", icon: MessageSquare },
+          { to: "/messages", label: "Messages", icon: MessageSquare },
           { to: "/profile", label: "Profile", icon: User },
           { to: "/settings", label: "Settings", icon: Settings },
         ];
@@ -157,7 +157,7 @@ export default function DashboardLayout({ children, role: propRole, title }) {
                 <Icon className={`w-5 h-5 ${active ? "text-white" : ""}`} />
                 <span>{l.label}</span>
               </div>
-              {l.to === "/inbox" && unreadCount > 0 && (
+              {l.to === "/messages" && unreadCount > 0 && (
                 <span className="bg-[var(--color-accent)] text-white text-xs font-bold px-2 py-0.5 rounded-full">
                   {unreadCount}
                 </span>

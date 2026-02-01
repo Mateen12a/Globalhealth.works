@@ -7,6 +7,8 @@ const http = require("http");
 const { Server } = require("socket.io");
 const path = require("path");
 
+const SESSION_VERSION = "v2";
+
 const authRoutes = require("./routes/authRoutes");
 const taskRoutes = require("./routes/taskRoutes");
 const feedbackRoutes = require("./routes/feedbackRoutes");
@@ -133,6 +135,9 @@ mongoose
 
 // Health check route
 app.get("/api/health", (req, res) => res.json({ status: "ok", timestamp: new Date().toISOString() }));
+
+// Session version endpoint for forced logout on deployment
+app.get("/api/auth/session-version", (req, res) => res.json({ version: SESSION_VERSION }));
 
 // Serve frontend for all non-API routes (SPA support)
 const fs = require("fs");

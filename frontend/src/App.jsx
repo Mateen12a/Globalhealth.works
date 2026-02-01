@@ -11,9 +11,38 @@ import Testimonials from "./components/landing/Testimonials";
 import CTA from "./components/landing/CTA";
 import Footer from "./components/landing/Footer";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 function App() {
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    const checkSessionVersion = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      
+      try {
+        const response = await fetch(`${API_URL}/api/auth/session-version`);
+        const data = await response.json();
+        const storedVersion = localStorage.getItem("sessionVersion");
+        
+        if (storedVersion && storedVersion !== data.version) {
+          ["token", "user", "role", "sessionVersion"].forEach((k) => localStorage.removeItem(k));
+          navigate("/login", { replace: true });
+          return;
+        }
+        
+        if (!storedVersion) {
+          localStorage.setItem("sessionVersion", data.version);
+        }
+      } catch (err) {
+        console.error("Session version check failed:", err);
+      }
+    };
+    
+    checkSessionVersion();
+  }, [navigate]);
 
   useEffect(() => {
     const token = localStorage.getItem("token");

@@ -33,6 +33,13 @@ export default function InboxPage() {
   const navigate = useNavigate();
   
   const currentUserId = getCurrentUserId();
+  
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (user?.role?.toLowerCase().includes("admin")) {
+      navigate("/admin/messaging");
+    }
+  }, [navigate]);
 
   const fetchInbox = useCallback(async () => {
     if (!currentUserId) return setIsLoading(false);

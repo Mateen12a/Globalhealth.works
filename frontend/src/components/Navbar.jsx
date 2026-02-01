@@ -15,7 +15,6 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useTheme } from "../context/ThemeContext";
 import ghwLogo from "../assets/ghw-logo.png";
 import NotificationBell from "./NotificationBell";
 
@@ -29,7 +28,6 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const userMenuRef = useRef();
-  const { theme, toggleTheme } = useTheme();
 
   const isLandingPage = location.pathname === "/";
 
@@ -109,25 +107,17 @@ export default function Navbar() {
               whileHover={{ scale: 1.02 }}
               transition={{ duration: 0.2 }}
               className={`flex items-center gap-3 ${
-                theme === "dark" || scrolled
+                scrolled
                   ? "bg-white/95 rounded-xl px-3 py-1.5"
-                  : needsLightContent
-                    ? "bg-white/10 backdrop-blur-sm rounded-xl px-3 py-1.5"
-                    : "bg-white/10 backdrop-blur-sm rounded-xl px-3 py-1.5"
+                  : "bg-white/10 backdrop-blur-sm rounded-xl px-3 py-1.5"
               }`}
             >
               <img
                 src={ghwLogo}
                 alt="Global Health Works"
-                className={`h-10 md:h-12 w-auto object-contain ${needsLightContent && theme === "light" ? "" : ""}`}
+                className="h-10 md:h-12 w-auto object-contain"
               />
-              <span
-                className={`font-bold text-sm sm:text-lg md:text-xl tracking-tight ${
-                  needsLightContent && theme === "light"
-                    ? "text-[var(--color-primary)]"
-                    : "text-[var(--color-primary)]"
-                }`}
-              >
+              <span className="font-bold text-sm sm:text-lg md:text-xl tracking-tight text-[var(--color-primary)]">
                 Global Health Works
               </span>
             </motion.div>
@@ -204,18 +194,7 @@ export default function Navbar() {
               <div className="flex items-center gap-3">
                 <Link
                   to="/login"
-                  className={`px-5 py-2.5 font-semibold transition-colors rounded-xl border ${
-                  isLandingPage
-                    ? "text-[var(--color-primary)] border-[var(--color-primary)] hover:bg-[var(--color-primary)]/10"
-                    : `
-                        ${theme === "dark"
-                          ? "text-[var(--color-primary)] border-slate-600 hover:bg-slate-800 hover:border-slate-500"
-                          : "text-[var(--color-primary)] border-[var(--color-primary)] hover:bg-[var(--color-primary)]/10"
-                        } 
-                        ${scrolled && theme === "dark" ? "!text-white" : ""} 
-                        ${scrolled && theme === "light" ? "text-[var(--color-primary)]" : ""}
-                      `
-                }`}>
+                  className="px-5 py-2.5 font-semibold transition-colors rounded-xl border text-[var(--color-primary)] border-[var(--color-primary)] hover:bg-[var(--color-primary)]/10">
                   Log in
                 </Link>
                 <motion.div
@@ -342,11 +321,7 @@ export default function Navbar() {
 
             <button
               onClick={() => setMenuOpen(!menuOpen)}
-              className={`p-2 rounded-lg ${
-                theme === "dark"
-                  ? "bg-slate-800 text-gray-200"
-                  : "bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
-              }`}
+              className="p-2 rounded-lg bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
             >
               {menuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -374,7 +349,7 @@ export default function Navbar() {
             >
               <div className="p-6">
                 <div className="flex items-center justify-between mb-8">
-                  <span className="font-bold text-lg text-white">Menu</span>
+                  <span className="font-bold text-lg text-[var(--color-primary)]">Menu</span>
                   <button
                     onClick={() => setMenuOpen(false)}
                     className="p-2 rounded-lg hover:bg-[var(--color-bg-secondary)] transition-colors"
@@ -406,7 +381,7 @@ export default function Navbar() {
                     <div className=" space-y-3">
                       <Link
                         to="/login"
-                        className="flex items-center justify-center gap-2 px-4 py-3 font-semibold rounded-xl border-2 border-white text-white hover:bg-[var(--color-primary)]/10 transition-colors"
+                        className="flex items-center justify-center gap-2 px-4 py-3 font-semibold rounded-xl border-2 border-[var(--color-primary)] text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 transition-colors"
                         onClick={() => setMenuOpen(false)}
                       >
                         <User size={18} />

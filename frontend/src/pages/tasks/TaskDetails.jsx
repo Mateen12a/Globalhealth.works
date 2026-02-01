@@ -214,7 +214,7 @@ export default function TaskDetails() {
         const data = await res.json();
         if (res.ok) {
           // The server is expected to return the new/existing conversation object with a primary key, usually _id
-          navigate(`/chat/${data._id}`);
+          navigate(`/messages/${data._id}`);
         } else {
           alert(data.msg || "Error starting conversation");
         }
@@ -224,7 +224,14 @@ export default function TaskDetails() {
       }
     };
 
-  if (loading) return <p className="text-center p-8">Loading...</p>;
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="text-center">
+        <div className="w-12 h-12 border-4 border-[var(--color-primary)]/30 border-t-[var(--color-primary)] rounded-full animate-spin mx-auto mb-4" />
+        <p className="text-[var(--color-text-muted)]">Loading task details...</p>
+      </div>
+    </div>
+  );
   if (!task) return <p className="text-center p-8">Task not found</p>;
 
   // Check if current user is task owner

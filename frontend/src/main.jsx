@@ -26,8 +26,7 @@ import MyApplications from "./pages/sp/MyApplications";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminTasks from "./pages/admin/AdminTasks";
 import AdminProposals from "./pages/admin/AdminProposals";
-import InboxPage from "./pages/messages/InboxPage";
-import ChatPage from "./pages/messages/ChatPage";
+import MessagesPage from "./pages/messages/MessagesPage";
 import PublicProfile from "./pages/PublicProfile";
 import About from "./pages/static/About";
 import Contact from "./pages/static/Contact";
@@ -120,8 +119,10 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
         <Route path="/settings" element={<PrivateRoute><Settings /></PrivateRoute>} />
         <Route path="/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
-        <Route path="/inbox" element={<PrivateRoute><InboxPage /></PrivateRoute>} />
-        <Route path="/chat/:conversationId" element={<PrivateRoute><ChatPage /></PrivateRoute>} />
+        <Route path="/messages" element={<PrivateRoute><MessagesPage /></PrivateRoute>} />
+        <Route path="/messages/:conversationId" element={<PrivateRoute><MessagesPage /></PrivateRoute>} />
+        <Route path="/inbox" element={<PrivateRoute><MessagesPage /></PrivateRoute>} />
+        <Route path="/chat/:conversationId" element={<PrivateRoute><MessagesPage /></PrivateRoute>} />
         <Route path="/profile/:id" element={<PublicProfile />} />
         <Route path="/review/:id" element={<PublicProfile />} />
         <Route path="/about" element={<About />} />
