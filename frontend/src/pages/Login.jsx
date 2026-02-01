@@ -1,15 +1,23 @@
 // src/pages/Login.jsx
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { ArrowLeft, Eye, EyeOff, AlertCircle } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function Login() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("session") === "expired") {
+      setSessionExpired(true);
+    }
+  }, [searchParams]);
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -69,6 +77,13 @@ export default function Login() {
         }}
       >
         <h2 className="text-3xl font-bold text-[#1E376E] mb-6 text-center">Welcome Back</h2>
+
+        {sessionExpired && (
+          <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm">
+            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+            <span>Your session has expired. Please log in again.</span>
+          </div>
+        )}
 
         <div>
           <input
