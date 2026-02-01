@@ -76,12 +76,12 @@ export default function TaskOwnerDashboard() {
   const getStatusColor = (status) => {
     switch (status) {
       case "completed":
-        return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400";
+        return "bg-emerald-100 text-emerald-700";
       case "in progress":
       case "ongoing":
-        return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400";
+        return "bg-amber-100 text-amber-700";
       case "published":
-        return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400";
+        return "bg-blue-100 text-blue-700";
       default:
         return "bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)]";
     }
@@ -175,32 +175,44 @@ export default function TaskOwnerDashboard() {
               <motion.div
                 key={task._id}
                 variants={item}
-                whileHover={{ y: -4 }}
-                className="card p-5 group"
+                whileHover={{ y: -4, boxShadow: "0 12px 24px -8px rgba(0,0,0,0.15)" }}
+                className="card p-6 group cursor-pointer relative overflow-hidden"
               >
-                <div className="flex justify-between items-start mb-3">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-light)] opacity-0 group-hover:opacity-100 transition-opacity" />
+                
+                <div className="flex justify-between items-start mb-4">
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-semibold text-[var(--color-text)] truncate group-hover:text-[var(--color-primary-light)] transition-colors">
+                    <h3 className="text-lg font-bold text-[var(--color-text)] truncate group-hover:text-[var(--color-primary-light)] transition-colors">
                       {task.title}
                     </h3>
+                    <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                      Created {new Date(task.createdAt).toLocaleDateString()}
+                    </p>
                   </div>
                   <Link
                     to={`/tasks/${task._id}`}
-                    className="ml-3 p-2 rounded-lg hover:bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:text-[var(--color-primary-light)] transition-all"
+                    className="ml-3 p-2.5 rounded-xl bg-[var(--color-bg-secondary)] hover:bg-[var(--color-primary)] text-[var(--color-text-secondary)] hover:text-white transition-all shadow-sm"
                   >
                     <ExternalLink className="w-4 h-4" />
                   </Link>
                 </div>
-                <p className="text-sm text-[var(--color-text-secondary)] line-clamp-2 mb-4">
+                
+                <p className="text-sm text-[var(--color-text-secondary)] line-clamp-2 mb-4 leading-relaxed">
                   {task.summary}
                 </p>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
+                
+                <div className="flex items-center gap-2 flex-wrap pt-3 border-t border-[var(--color-border)]">
+                  <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${getStatusColor(task.status)}`}>
                     {getStatusIcon(task.status)}
-                    {task.status}
+                    <span className="capitalize">{task.status}</span>
                   </span>
+                  {task.applicants?.length > 0 && (
+                    <span className="px-3 py-1.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                      {task.applicants.length} applicant{task.applicants.length !== 1 ? 's' : ''}
+                    </span>
+                  )}
                   {task.fundingStatus && (
-                    <span className="px-3 py-1 rounded-full text-xs font-medium bg-[var(--color-accent-light)]/20 text-[var(--color-accent)]">
+                    <span className="px-3 py-1.5 rounded-full text-xs font-medium bg-[var(--color-accent-light)]/20 text-[var(--color-accent)]">
                       {task.fundingStatus}
                     </span>
                   )}
@@ -226,14 +238,14 @@ export default function TaskOwnerDashboard() {
                 <Link
                   key={t._id}
                   to={`/tasks/${t._id}`}
-                  className="card p-4 hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors group"
+                  className="card p-4 hover:border-emerald-300 transition-colors group"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
                       <CheckCircle className="w-5 h-5 text-emerald-500" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-[var(--color-text)] truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                      <h4 className="font-semibold text-[var(--color-text)] truncate group-hover:text-emerald-600 transition-colors">
                         {t.title}
                       </h4>
                       <p className="text-sm text-[var(--color-text-secondary)] line-clamp-1">

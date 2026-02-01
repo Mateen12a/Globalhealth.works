@@ -207,7 +207,7 @@ export default function WelcomeOnboarding({ user, onComplete }) {
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden"
+          className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden"
         >
           <div className="relative bg-gradient-to-br from-[#1E376E] to-[#2B4A8C] p-8 text-white">
             <button
@@ -235,7 +235,7 @@ export default function WelcomeOnboarding({ user, onComplete }) {
               key={`desc-${step}`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="text-gray-600 dark:text-gray-300 text-center text-lg leading-relaxed mb-8"
+              className="text-gray-600 text-center text-lg leading-relaxed mb-8"
             >
               {currentStep.description}
             </motion.p>
@@ -250,7 +250,7 @@ export default function WelcomeOnboarding({ user, onComplete }) {
                       ? "w-8 bg-[#E96435]"
                       : i < step
                       ? "w-2 bg-[#1E376E]"
-                      : "w-2 bg-gray-300 dark:bg-gray-600"
+                      : "w-2 bg-gray-300"
                   }`}
                 />
               ))}
@@ -260,7 +260,7 @@ export default function WelcomeOnboarding({ user, onComplete }) {
               {step > 0 ? (
                 <button
                   onClick={handlePrev}
-                  className="flex items-center gap-2 px-6 py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-xl transition-colors font-medium"
+                  className="flex items-center gap-2 px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl transition-colors font-medium"
                 >
                   <ChevronLeft className="w-5 h-5" />
                   Back
@@ -268,7 +268,7 @@ export default function WelcomeOnboarding({ user, onComplete }) {
               ) : (
                 <button
                   onClick={handleSkip}
-                  className="px-6 py-3 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors font-medium"
+                  className="px-6 py-3 text-gray-500 hover:text-gray-700 transition-colors font-medium"
                 >
                   Skip Tour
                 </button>

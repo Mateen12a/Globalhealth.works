@@ -14,6 +14,8 @@ import {
   MessageSquare,
   CheckCircle,
   XCircle,
+  AlertTriangle,
+  Loader2,
 } from "lucide-react";
 import ProposalModal from "../../components/proposals/ProposalModal";
 import FeedbackForm from "../../components/FeedbackForm";
@@ -48,6 +50,9 @@ export default function TaskDetails() {
   const [showProposalModal, setShowProposalModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [viewingProfileId, setViewingProfileId] = useState(null);
+  const [markingComplete, setMarkingComplete] = useState(false);
+  const [withdrawing, setWithdrawing] = useState(false);
+  const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false);
 
   // === Fetch Task ===
   useEffect(() => {
@@ -139,6 +144,59 @@ export default function TaskDetails() {
     }
   };
 
+  // === Mark Task Complete ===
+  const handleMarkComplete = async () => {
+    setMarkingComplete(true);
+    try {
+      const res = await fetch(`${API_URL}/api/tasks/${id}/mark-complete`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setTask(data.task);
+        alert(data.msg || "Marked as complete!");
+      } else {
+        alert(data.msg || "Error marking complete");
+      }
+    } catch (err) {
+      console.error("Mark complete error:", err);
+      alert("Could not mark as complete.");
+    } finally {
+      setMarkingComplete(false);
+    }
+  };
+
+  // === Withdraw Task ===
+  const handleWithdrawTask = async () => {
+    setWithdrawing(true);
+    try {
+      const res = await fetch(`${API_URL}/api/tasks/${id}/withdraw`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setTask(data.task);
+        setShowWithdrawConfirm(false);
+        alert("Task withdrawn successfully");
+      } else {
+        alert(data.msg || "Error withdrawing task");
+      }
+    } catch (err) {
+      console.error("Withdraw error:", err);
+      alert("Could not withdraw task.");
+    } finally {
+      setWithdrawing(false);
+    }
+  };
+
   // === Start or continue conversation (SIMPLIFIED) ===
   const startConversation = async (toUserId, taskId = null, proposalId = null) => {
       try {
@@ -168,6 +226,27 @@ export default function TaskDetails() {
 
   if (loading) return <p className="text-center p-8">Loading...</p>;
   if (!task) return <p className="text-center p-8">Task not found</p>;
+
+  // Check if current user is task owner
+  const isOwner = task.owner?._id === currentUserId || task.owner === currentUserId;
+  
+  // Check if current user is assigned solution provider
+  const isAssignedProvider = currentUserId && (
+    task?.assignedTo?.some(id => String(id) === String(currentUserId) || String(id?._id) === String(currentUserId)) ||
+    String(task?.accepted) === String(currentUserId) ||
+    String(task?.accepted?._id) === String(currentUserId)
+  );
+
+  // Can mark complete: task is in-progress AND user is owner or assigned provider
+  const canMarkComplete = task.status === "in-progress" && (isOwner || isAssignedProvider);
+
+  // Has user already marked complete
+  const ownerMarkedComplete = !!task.ownerCompletedAt;
+  const providerMarkedComplete = !!task.providerCompletedAt;
+  const userAlreadyMarked = (isOwner && ownerMarkedComplete) || (isAssignedProvider && providerMarkedComplete);
+
+  // Can withdraw: owner only, task is published
+  const canWithdraw = isOwner && task.status === "published";
 
   // Helper to format roles
 const formatRole = (role) => {
@@ -287,10 +366,10 @@ const formatRole = (role) => {
         {/* Status */}
       <div className="bg-gray-50 border p-4 rounded-lg mb-6">
         <h3 className="font-semibold text-[#1E376E] mb-2">Task Status</h3>
-        <p className="mb-4">
-          Current status:{" "}
+        <div className="flex flex-wrap items-center gap-3 mb-4">
+          <span>Current status:</span>
           <span
-            className="px-3 py-1 rounded-full text-sm font-semibold"
+            className="px-3 py-1 rounded-full text-sm font-semibold capitalize"
             style={{
               backgroundColor:
                 task.status === "published"
@@ -300,7 +379,7 @@ const formatRole = (role) => {
                   : task.status === "completed"
                   ? "#16a34a33"
                   : task.status === "withdrawn"
-                  ? "#ef444433"
+                  ? "#6b728033"
                   : "#e5e7eb",
               color:
                 task.status === "published"
@@ -310,13 +389,86 @@ const formatRole = (role) => {
                   : task.status === "completed"
                   ? "#16a34a"
                   : task.status === "withdrawn"
-                  ? "#ef4444"
+                  ? "#6b7280"
                   : "#374151",
             }}
           >
-            {task.status}
+            {task.status === "withdrawn" ? "Withdrawn" : task.status}
           </span>
-        </p>
+        </div>
+
+        {/* Completion Status Indicators */}
+        {(task.status === "in-progress" || task.status === "completed") && (
+          <div className="mb-4 space-y-2">
+            <div className="flex items-center gap-2">
+              {ownerMarkedComplete ? (
+                <span className="flex items-center gap-1 text-sm text-green-600 font-medium bg-green-50 px-3 py-1.5 rounded-lg">
+                  <CheckCircle className="w-4 h-4" /> Task Owner: Marked Complete
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 text-sm text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg">
+                  <Clock className="w-4 h-4" /> Task Owner: Pending
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {providerMarkedComplete ? (
+                <span className="flex items-center gap-1 text-sm text-green-600 font-medium bg-green-50 px-3 py-1.5 rounded-lg">
+                  <CheckCircle className="w-4 h-4" /> Solution Provider: Marked Complete
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 text-sm text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg">
+                  <Clock className="w-4 h-4" /> Solution Provider: Pending
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Mark Complete Button */}
+        {canMarkComplete && !userAlreadyMarked && (
+          <button
+            onClick={handleMarkComplete}
+            disabled={markingComplete}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg text-sm font-medium hover:opacity-90 transition disabled:opacity-50 mb-3"
+          >
+            {markingComplete ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" /> Processing...
+              </>
+            ) : (
+              <>
+                <CheckCircle className="w-4 h-4" /> Mark Complete
+              </>
+            )}
+          </button>
+        )}
+
+        {/* Waiting indicators after marking */}
+        {canMarkComplete && userAlreadyMarked && (
+          <div className="mb-3">
+            {isOwner && ownerMarkedComplete && !providerMarkedComplete && (
+              <span className="flex items-center gap-2 text-sm text-amber-600 font-medium bg-amber-50 px-3 py-2 rounded-lg">
+                <Clock className="w-4 h-4" /> Waiting for Provider to mark complete
+              </span>
+            )}
+            {isAssignedProvider && providerMarkedComplete && !ownerMarkedComplete && (
+              <span className="flex items-center gap-2 text-sm text-amber-600 font-medium bg-amber-50 px-3 py-2 rounded-lg">
+                <Clock className="w-4 h-4" /> Waiting for Owner to mark complete
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Withdraw Task Button */}
+        {canWithdraw && (
+          <button
+            onClick={() => setShowWithdrawConfirm(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg text-sm font-medium hover:opacity-90 transition mb-3"
+          >
+            <AlertTriangle className="w-4 h-4" /> Withdraw Task
+          </button>
+        )}
 
         {role === "taskOwner" && (
           <select
@@ -324,7 +476,6 @@ const formatRole = (role) => {
             onChange={(e) => updateStatus(e.target.value)}
             className="border p-2 rounded"
           >
-            <option value="draft">Draft</option>
             <option value="published">Published</option>
             <option value="in-progress">In Progress</option>
             <option value="completed">Completed</option>
@@ -491,6 +642,50 @@ const formatRole = (role) => {
           userId={viewingProfileId}
           onClose={() => setViewingProfileId(null)}
         />
+      )}
+
+      {/* Withdraw Confirmation Modal */}
+      {showWithdrawConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center">
+                <AlertTriangle className="w-6 h-6 text-orange-500" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-[#1E376E]">Withdraw Task?</h3>
+                <p className="text-sm text-gray-500">This action cannot be undone</p>
+              </div>
+            </div>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to withdraw this task? It will no longer be visible to solution providers and any pending proposals will be cancelled.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowWithdrawConfirm(false)}
+                disabled={withdrawing}
+                className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleWithdrawTask}
+                disabled={withdrawing}
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg text-sm font-medium hover:opacity-90 transition disabled:opacity-50"
+              >
+                {withdrawing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" /> Withdrawing...
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle className="w-4 h-4" /> Withdraw Task
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

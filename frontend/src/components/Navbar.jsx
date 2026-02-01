@@ -99,7 +99,7 @@ export default function Navbar() {
   isLandingPage
     ? "bg-white border-b border-gray-100"
     : scrolled
-      ? "bg-white/95 dark:bg-slate-900/5 backdrop-blur-md shadow-lg border-b border-gray-200/50 dark:border-slate-700/50"
+      ? "bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-200/50"
       : "bg-white  border-b border-gray-100"
 }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -306,7 +306,7 @@ export default function Navbar() {
                         <div className="border-t border-[var(--color-border)] mt-1 pt-1">
                           <button
                             onClick={logout}
-                            className="flex items-center gap-3 w-full px-4 py-2.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                            className="flex items-center gap-3 w-full px-4 py-2.5 text-red-500 hover:bg-red-50 transition-colors"
                           >
                             <LogOut size={18} />
                             Log Out
@@ -370,7 +370,7 @@ export default function Navbar() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 h-screen  w-80 max-w-[85vw] bg-white dark:bg-slate-900 shadow-2xl z-50 md:hidden overflow-y-auto"
+              className="fixed top-0 right-0 h-screen  w-80 max-w-[85vw] bg-white shadow-2xl z-50 md:hidden overflow-y-auto"
             >
               <div className="p-6">
                 <div className="flex items-center justify-between mb-8">
@@ -486,7 +486,7 @@ export default function Navbar() {
                           logout();
                           setMenuOpen(false);
                         }}
-                        className="flex items-center gap-3 w-full px-4 py-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors"
+                        className="flex items-center gap-3 w-full px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors"
                       >
                         <LogOut size={20} /> Log Out
                       </button>

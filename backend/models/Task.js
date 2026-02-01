@@ -28,9 +28,13 @@ const taskSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["draft", "published", "in-progress", "completed", "withdrawn"],
-      default: "draft",
+      enum: ["published", "in-progress", "completed", "withdrawn"],
+      default: "published",
     },
+
+    // Completion workflow - both parties must mark complete
+    ownerCompletedAt: { type: Date },
+    providerCompletedAt: { type: Date },
 
     // Relationships
     owner: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },

@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
   X, User, Briefcase, Share2, Star, Mail, Phone, Globe, Building, 
   MapPin, Calendar, CheckCircle, XCircle, AlertTriangle, FileText,
-  ExternalLink, Award, Clock, Shield
+  ExternalLink, Award, Clock, Shield, MessageSquare
 } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -39,8 +40,8 @@ function RejectModal({ open, onClose, onSubmit, loading }) {
         className="relative bg-[var(--color-surface)] rounded-2xl shadow-2xl max-w-lg w-full p-6 z-50 border border-[var(--color-border)]"
       >
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-            <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
+          <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center">
+            <XCircle className="w-5 h-5 text-red-600" />
           </div>
           <h3 className="text-lg font-semibold text-[var(--color-text)]">Reject User</h3>
         </div>
@@ -76,6 +77,7 @@ function RejectModal({ open, onClose, onSubmit, loading }) {
 }
 
 export default function PublicProfileModal({ userId, onClose, currentUser }) {
+  const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -84,6 +86,7 @@ export default function PublicProfileModal({ userId, onClose, currentUser }) {
   const [rejectLoading, setRejectLoading] = useState(false);
   const [forbiddenMsg, setForbiddenMsg] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
+  const [startingConversation, setStartingConversation] = useState(false);
 
   const isAdmin = currentUser?.role === "admin";
   const token = localStorage.getItem("token");
@@ -217,28 +220,74 @@ export default function PublicProfileModal({ userId, onClose, currentUser }) {
     }
   };
 
+  const startConversation = async () => {
+    if (!userId || startingConversation) return;
+    try {
+      setStartingConversation(true);
+      
+      if (isAdmin) {
+        const res = await fetch(`${API_URL}/api/admin/conversations`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ participantId: userId }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          onClose();
+          navigate("/admin/messaging");
+        } else {
+          alert(data.msg || "Could not start conversation");
+        }
+      } else {
+        const res = await fetch(`${API_URL}/api/conversations/start`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ toUserId: userId }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          onClose();
+          navigate(`/messages/${data._id}`);
+        } else {
+          alert(data.msg || "Could not start conversation");
+        }
+      }
+    } catch (err) {
+      console.error("Start conversation error:", err);
+      alert("Could not start conversation");
+    } finally {
+      setStartingConversation(false);
+    }
+  };
+
   const StatusBadge = () => {
     if (!profile) return null;
     if (profile.status === "suspended")
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-full">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium bg-red-100 text-red-700 rounded-full">
           <XCircle className="w-3.5 h-3.5" /> Suspended
         </span>
       );
     if (profile.rejectionReason)
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-full">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium bg-red-100 text-red-700 rounded-full">
           <XCircle className="w-3.5 h-3.5" /> Rejected
         </span>
       );
     if (profile.isApproved)
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 rounded-full">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium bg-emerald-100 text-emerald-700 rounded-full">
           <CheckCircle className="w-3.5 h-3.5" /> Approved
         </span>
       );
     return (
-      <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded-full">
+      <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium bg-amber-100 text-amber-700 rounded-full">
         <AlertTriangle className="w-3.5 h-3.5" /> Pending
       </span>
     );
@@ -246,11 +295,11 @@ export default function PublicProfileModal({ userId, onClose, currentUser }) {
 
   const RoleBadge = ({ role }) => {
     const config = {
-      admin: { bg: "bg-purple-100 dark:bg-purple-900/30", text: "text-purple-700 dark:text-purple-400", icon: Shield },
-      taskOwner: { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-700 dark:text-blue-400", icon: Briefcase },
+      admin: { bg: "bg-purple-100", text: "text-purple-700", icon: Shield },
+      taskOwner: { bg: "bg-blue-100", text: "text-blue-700", icon: Briefcase },
       solutionProvider: { bg: "bg-[var(--color-accent)]/10", text: "text-[var(--color-accent)]", icon: Award },
     };
-    const { bg, text, icon: Icon } = config[role] || { bg: "bg-gray-100 dark:bg-gray-800", text: "text-gray-600 dark:text-gray-300", icon: User };
+    const { bg, text, icon: Icon } = config[role] || { bg: "bg-gray-100", text: "text-gray-600", icon: User };
     
     return (
       <span className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full ${bg} ${text}`}>
@@ -299,10 +348,10 @@ export default function PublicProfileModal({ userId, onClose, currentUser }) {
             </div>
           ) : forbiddenMsg ? (
             <div className="p-12 text-center">
-              <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto mb-4">
-                <XCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
+              <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                <XCircle className="w-8 h-8 text-red-600" />
               </div>
-              <p className="text-red-600 dark:text-red-400 font-semibold mb-2">{forbiddenMsg}</p>
+              <p className="text-red-600 font-semibold mb-2">{forbiddenMsg}</p>
               <p className="text-sm text-[var(--color-text-secondary)]">If you believe this is an error, contact an administrator.</p>
             </div>
           ) : !profile ? (
@@ -311,7 +360,12 @@ export default function PublicProfileModal({ userId, onClose, currentUser }) {
             </div>
           ) : (
             <div className="overflow-y-auto max-h-[90vh]">
-              <div className="relative bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-light)] h-32" />
+              <div className="relative bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-light)] px-6 py-6 pb-20">
+                <h1 className="text-2xl font-bold text-white mt-6">
+                  {profile.title && `${profile.title} `}{profile.firstName} {profile.lastName}
+                </h1>
+                <p className="text-white/80 text-sm mt-1">{formatRole(profile.role)}</p>
+              </div>
               
               <div className="px-6 pb-6">
                 <div className="flex flex-col md:flex-row gap-6 -mt-16 relative z-10">
@@ -333,9 +387,6 @@ export default function PublicProfileModal({ userId, onClose, currentUser }) {
                   
                   <div className="flex-1 pt-2 md:pt-8">
                     <div className="flex flex-wrap items-start gap-3 mb-2">
-                      <h1 className="text-2xl font-bold text-[var(--color-text)]">
-                        {profile.title && `${profile.title} `}{profile.firstName} {profile.lastName}
-                      </h1>
                       <StatusBadge />
                     </div>
                     
@@ -354,6 +405,17 @@ export default function PublicProfileModal({ userId, onClose, currentUser }) {
                     </div>
 
                     <div className="flex flex-wrap gap-2">
+                      {isAdmin && userId !== currentUser?._id && userId !== currentUser?.id && (
+                        <motion.button 
+                          onClick={startConversation}
+                          disabled={startingConversation}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium text-sm transition-colors disabled:opacity-50"
+                        >
+                          <MessageSquare className="w-4 h-4" /> {startingConversation ? "Starting..." : "Message User"}
+                        </motion.button>
+                      )}
                       <motion.button 
                         onClick={handleShare} 
                         whileHover={{ scale: 1.02 }}
@@ -432,8 +494,8 @@ export default function PublicProfileModal({ userId, onClose, currentUser }) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {profile.email && (
                         <div className="flex items-center gap-3 p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)]">
-                          <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                            <Mail className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                          <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                            <Mail className="w-5 h-5 text-blue-600" />
                           </div>
                           <div>
                             <p className="text-xs text-[var(--color-text-muted)]">Email</p>
@@ -444,8 +506,8 @@ export default function PublicProfileModal({ userId, onClose, currentUser }) {
                       
                       {profile.phone && (
                         <div className="flex items-center gap-3 p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)]">
-                          <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                            <Phone className="w-5 h-5 text-green-600 dark:text-green-400" />
+                          <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+                            <Phone className="w-5 h-5 text-green-600" />
                           </div>
                           <div>
                             <p className="text-xs text-[var(--color-text-muted)]">Phone</p>
@@ -456,8 +518,8 @@ export default function PublicProfileModal({ userId, onClose, currentUser }) {
                       
                       {profile.country && (
                         <div className="flex items-center gap-3 p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)]">
-                          <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                            <Globe className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                          <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                            <Globe className="w-5 h-5 text-purple-600" />
                           </div>
                           <div>
                             <p className="text-xs text-[var(--color-text-muted)]">Location</p>
@@ -468,8 +530,8 @@ export default function PublicProfileModal({ userId, onClose, currentUser }) {
                       
                       {profile.organisationName && (
                         <div className="flex items-center gap-3 p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)]">
-                          <div className="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                            <Building className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                          <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
+                            <Building className="w-5 h-5 text-amber-600" />
                           </div>
                           <div>
                             <p className="text-xs text-[var(--color-text-muted)]">Organisation</p>
@@ -483,8 +545,8 @@ export default function PublicProfileModal({ userId, onClose, currentUser }) {
 
                       {profile.gender && (
                         <div className="flex items-center gap-3 p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)]">
-                          <div className="w-10 h-10 rounded-lg bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center">
-                            <User className="w-5 h-5 text-pink-600 dark:text-pink-400" />
+                          <div className="w-10 h-10 rounded-lg bg-pink-100 flex items-center justify-center">
+                            <User className="w-5 h-5 text-pink-600" />
                           </div>
                           <div>
                             <p className="text-xs text-[var(--color-text-muted)]">Gender</p>
@@ -495,8 +557,8 @@ export default function PublicProfileModal({ userId, onClose, currentUser }) {
 
                       {profile.affiliation?.length > 0 && (
                         <div className="flex items-center gap-3 p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)]">
-                          <div className="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
-                            <Award className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                          <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
+                            <Award className="w-5 h-5 text-indigo-600" />
                           </div>
                           <div>
                             <p className="text-xs text-[var(--color-text-muted)]">Affiliation</p>
@@ -537,16 +599,16 @@ export default function PublicProfileModal({ userId, onClose, currentUser }) {
                     )}
 
                     {profile.approvedBy && (
-                      <div className="mt-4 p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-200 dark:border-emerald-800">
-                        <p className="text-sm text-emerald-700 dark:text-emerald-300">
+                      <div className="mt-4 p-4 bg-emerald-50 rounded-xl border border-emerald-200">
+                        <p className="text-sm text-emerald-700">
                           Approved by <strong>{profile.approvedBy.firstName} {profile.approvedBy.lastName}</strong>
                         </p>
                       </div>
                     )}
 
                     {profile.rejectionReason && (
-                      <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800">
-                        <p className="text-sm text-red-700 dark:text-red-300">
+                      <div className="mt-4 p-4 bg-red-50 rounded-xl border border-red-200">
+                        <p className="text-sm text-red-700">
                           <strong>Rejection Reason:</strong> {profile.rejectionReason}
                         </p>
                       </div>
@@ -560,8 +622,8 @@ export default function PublicProfileModal({ userId, onClose, currentUser }) {
                     animate={{ opacity: 1, y: 0 }}
                     className="mt-6 space-y-4"
                   >
-                    <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800 mb-4">
-                      <p className="text-sm text-amber-700 dark:text-amber-300 flex items-center gap-2">
+                    <div className="p-4 bg-amber-50 rounded-xl border border-amber-200 mb-4">
+                      <p className="text-sm text-amber-700 flex items-center gap-2">
                         <Shield className="w-4 h-4" />
                         Admin actions are logged and may send notifications to the user.
                       </p>

@@ -87,10 +87,10 @@ export default function AdminProposals() {
 
   const getStatusBadge = (status) => {
     const styles = {
-      pending: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-      accepted: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-      rejected: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-      withdrawn: "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400",
+      pending: "bg-amber-100 text-amber-700",
+      accepted: "bg-emerald-100 text-emerald-700",
+      rejected: "bg-red-100 text-red-700",
+      withdrawn: "bg-gray-100 text-gray-700",
     };
     const icons = {
       pending: <Clock className="w-3 h-3" />,
@@ -249,7 +249,7 @@ export default function AdminProposals() {
                           </button>
                           <button
                             onClick={() => deleteProposal(proposal._id)}
-                            className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-[var(--color-text-secondary)] hover:text-red-500 transition-colors"
+                            className="p-2 rounded-lg hover:bg-red-100 text-[var(--color-text-secondary)] hover:text-red-500 transition-colors"
                             title="Delete"
                           >
                             <Trash2 className="w-4 h-4" />

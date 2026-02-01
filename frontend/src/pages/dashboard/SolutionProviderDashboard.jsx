@@ -175,7 +175,7 @@ export default function SolutionProviderDashboard() {
                 </p>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
                       {getStatusIcon(task.status)}
                       {task.status}
                     </span>
@@ -229,14 +229,14 @@ export default function SolutionProviderDashboard() {
                 <Link
                   key={t._id}
                   to={`/tasks/${t._id}`}
-                  className="card p-4 hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors group"
+                  className="card p-4 hover:border-emerald-300 transition-colors group"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
                       <CheckCircle className="w-5 h-5 text-emerald-500" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-[var(--color-text)] truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                      <h4 className="font-semibold text-[var(--color-text)] truncate group-hover:text-emerald-600 transition-colors">
                         {t.title}
                       </h4>
                       <p className="text-sm text-[var(--color-text-secondary)] line-clamp-1">

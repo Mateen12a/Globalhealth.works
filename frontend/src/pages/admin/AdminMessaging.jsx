@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, Send, Users, Search, Check, CheckCheck, Paperclip, X, FileText, Image, Download } from "lucide-react";
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
-import { io } from "socket.io-client";
+import { socket, connectSocket, disconnectSocket } from "../../utils/socket";
 import { InlineLoader } from "../../components/LoadingSpinner";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -20,19 +20,19 @@ export default function AdminMessaging() {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
-  const socketRef = useRef(null);
 
   const token = localStorage.getItem("token");
-  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const currentUser = { ...storedUser, _id: storedUser._id || storedUser.id };
 
   useEffect(() => {
     fetchAdmins();
     fetchConversations();
 
-    socketRef.current = io();
-    socketRef.current.emit("join", currentUser._id);
+    connectSocket(token);
+    socket.emit("join", currentUser._id);
 
-    socketRef.current.on("newMessage", (message) => {
+    socket.on("message:new", (message) => {
       if (selectedConversation && message.conversationId === selectedConversation._id) {
         setMessages((prev) => [...prev, message]);
         scrollToBottom();
@@ -41,16 +41,15 @@ export default function AdminMessaging() {
     });
 
     return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-      }
+      socket.off("message:new");
+      disconnectSocket();
     };
   }, []);
 
   useEffect(() => {
     if (selectedConversation) {
       fetchMessages(selectedConversation._id);
-      socketRef.current?.emit("joinConversation", selectedConversation._id);
+      socket.emit("joinConversation", selectedConversation._id);
     }
   }, [selectedConversation]);
 
@@ -140,13 +139,32 @@ export default function AdminMessaging() {
     e.preventDefault();
     if ((!newMessage.trim() && selectedFiles.length === 0) || !selectedConversation) return;
 
+    const sentText = newMessage;
+    const sentFiles = [...selectedFiles];
+    const tempId = `temp-${Date.now()}`;
+    
+    const optimisticMessage = {
+      _id: tempId,
+      content: sentText,
+      sender: { _id: currentUser._id, firstName: currentUser.firstName, lastName: currentUser.lastName },
+      conversationId: selectedConversation._id,
+      createdAt: new Date().toISOString(),
+      read: false,
+      attachments: sentFiles.map(f => ({ originalName: f.name, mimetype: f.type }))
+    };
+    
+    setMessages(prev => [...prev, optimisticMessage]);
+    setNewMessage("");
+    setSelectedFiles([]);
+    scrollToBottom();
+    
     setSendingMessage(true);
     try {
       const formData = new FormData();
-      if (newMessage.trim()) {
-        formData.append("content", newMessage);
+      if (sentText.trim()) {
+        formData.append("content", sentText);
       }
-      selectedFiles.forEach(file => {
+      sentFiles.forEach(file => {
         formData.append("attachments", file);
       });
 
@@ -159,13 +177,18 @@ export default function AdminMessaging() {
       });
       const data = await res.json();
       if (res.ok) {
-        setMessages((prev) => [...prev, data]);
-        setNewMessage("");
-        setSelectedFiles([]);
+        setMessages(prev => prev.map(m => m._id === tempId ? data : m));
         fetchConversations();
+      } else {
+        setMessages(prev => prev.filter(m => m._id !== tempId));
+        setNewMessage(sentText);
+        setSelectedFiles(sentFiles);
       }
     } catch (err) {
       console.error("Error sending message:", err);
+      setMessages(prev => prev.filter(m => m._id !== tempId));
+      setNewMessage(sentText);
+      setSelectedFiles(sentFiles);
     } finally {
       setSendingMessage(false);
     }
@@ -286,16 +309,19 @@ export default function AdminMessaging() {
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                  {messages.map((msg) => (
+                  {messages.map((msg) => {
+                    const senderId = msg.sender?._id || msg.sender;
+                    const isMe = String(senderId) === String(currentUser._id);
+                    return (
                     <div
                       key={msg._id}
-                      className={`flex ${msg.sender._id === currentUser._id ? "justify-end" : "justify-start"}`}
+                      className={`flex ${isMe ? "justify-end" : "justify-start"}`}
                     >
                       <div
                         className={`max-w-[70%] rounded-2xl px-4 py-3 ${
-                          msg.sender._id === currentUser._id
-                            ? "bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-light)] text-white"
-                            : "bg-[var(--color-bg-secondary)] text-[var(--color-text)]"
+                          isMe
+                            ? "bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-light)] text-white rounded-br-sm"
+                            : "bg-[var(--color-bg-secondary)] text-[var(--color-text)] rounded-bl-sm"
                         }`}
                       >
                         {msg.content && <p className="text-sm">{msg.content}</p>}
@@ -317,7 +343,7 @@ export default function AdminMessaging() {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className={`flex items-center gap-2 p-2 rounded-lg ${
-                                      msg.sender._id === currentUser._id
+                                      isMe
                                         ? "bg-white/20 hover:bg-white/30"
                                         : "bg-[var(--color-bg-tertiary)] hover:bg-[var(--color-border)]"
                                     } transition-colors`}
@@ -332,16 +358,17 @@ export default function AdminMessaging() {
                           </div>
                         )}
                         <p className={`text-xs mt-1 flex items-center gap-1 ${
-                          msg.sender._id === currentUser._id ? "text-white/70" : "text-[var(--color-text-muted)]"
+                          isMe ? "text-white/70" : "text-[var(--color-text-muted)]"
                         }`}>
                           {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          {msg.sender._id === currentUser._id && (
+                          {isMe && (
                             msg.read ? <CheckCheck size={14} /> : <Check size={14} />
                           )}
                         </p>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                   <div ref={messagesEndRef} />
                 </div>
 

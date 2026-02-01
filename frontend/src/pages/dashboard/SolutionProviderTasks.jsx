@@ -76,20 +76,33 @@ export default function SolutionProviderTasks() {
 
       {/* Search */}
       <div className="mt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <h2 className="text-2xl font-semibold text-[#1E376E]">Find Tasks</h2>
-        <input
-          type="text"
-          placeholder="Search tasks..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="border rounded-lg px-4 py-2 w-full md:w-1/3 focus:outline-none focus:ring-2 focus:ring-blue-400"
-        />
+        <h2 className="text-2xl font-bold text-[var(--color-text)]">Find Tasks</h2>
+        <div className="relative w-full md:w-1/3">
+          <input
+            type="text"
+            placeholder="Search tasks..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] rounded-xl px-4 py-2.5 pl-10 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] transition-all"
+          />
+          <svg className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
       </div>
 
       {/* Matched tasks highlight */}
       {matchedTasks.length > 0 && (
-        <div className="mt-6">
-          <h3 className="text-xl font-semibold text-[#6A5ACD] mb-3">Recommended for You</h3>
+        <div className="mt-8">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
+              <span className="text-lg">✨</span>
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-purple-700">Recommended for You</h3>
+              <p className="text-sm text-[var(--color-text-muted)]">Based on your skills and interests</p>
+            </div>
+          </div>
           <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
             {matchedTasks.map((task) => (
               <TaskCard key={task._id} task={task} highlight />
@@ -100,9 +113,19 @@ export default function SolutionProviderTasks() {
 
       {/* Available Tasks */}
       <div className="mt-10">
-        <h3 className="text-xl font-semibold text-[#357FE9] mb-3">All Available Tasks</h3>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+            <span className="text-lg">📋</span>
+          </div>
+          <h3 className="text-xl font-bold text-[var(--color-primary)]">All Available Tasks</h3>
+        </div>
         {filteredTasks.length === 0 ? (
-          <p className="text-gray-500">No tasks match your search or criteria.</p>
+          <div className="text-center py-12 bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)]">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--color-bg-tertiary)] flex items-center justify-center">
+              <span className="text-2xl">🔍</span>
+            </div>
+            <p className="text-[var(--color-text-secondary)]">No tasks match your search criteria.</p>
+          </div>
         ) : (
           <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
             {filteredTasks.map((task) => (
@@ -113,24 +136,34 @@ export default function SolutionProviderTasks() {
       </div>
 
       {/* Recently Completed */}
-      <div className="mt-10">
-        <h3 className="text-xl font-semibold text-[#34A853] mb-4">Recently Completed Tasks</h3>
-        {completedTasks.slice(0, 3).length === 0 ? (
-          <p className="text-gray-500">No recent completions yet.</p>
-        ) : (
-          <ul className="grid md:grid-cols-2 gap-4">
+      {completedTasks.length > 0 && (
+        <div className="mt-10">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+              <span className="text-lg">✅</span>
+            </div>
+            <h3 className="text-xl font-bold text-emerald-600">Recently Completed</h3>
+          </div>
+          <div className="grid md:grid-cols-2 gap-4">
             {completedTasks.slice(0, 3).map((t) => (
-              <li
+              <div
                 key={t._id}
-                className="bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition"
+                className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-5 shadow-sm hover:shadow-md transition-all group"
               >
-                <h4 className="font-semibold text-[#34A853]">{t.title}</h4>
-                <p className="text-sm text-gray-600 line-clamp-2">{t.summary}</p>
-              </li>
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                    <span className="text-emerald-600">✓</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-bold text-emerald-700 truncate group-hover:text-emerald-600 transition-colors">{t.title}</h4>
+                    <p className="text-sm text-[var(--color-text-secondary)] line-clamp-2 mt-1">{t.summary}</p>
+                  </div>
+                </div>
+              </div>
             ))}
-          </ul>
-        )}
-      </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }
@@ -139,36 +172,51 @@ export default function SolutionProviderTasks() {
 function TaskCard({ task, highlight }) {
   return (
     <div
-      className={`bg-white border rounded-xl shadow-sm hover:shadow-md transition p-5 ${
-        highlight ? "ring-2 ring-purple-300" : ""
+      className={`bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 p-6 group relative overflow-hidden ${
+        highlight ? "ring-2 ring-purple-400 bg-purple-50/50" : ""
       }`}
     >
-      <div className="flex justify-between items-start">
-        <div>
-          <h3 className={`text-lg font-semibold ${highlight ? "text-purple-600" : "text-[#357FE9]"}`}>
+      {highlight && (
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-purple-600" />
+      )}
+      
+      <div className="flex justify-between items-start gap-4">
+        <div className="flex-1 min-w-0">
+          <h3 className={`text-lg font-bold truncate ${highlight ? "text-purple-700" : "text-[var(--color-primary)]"} group-hover:text-[var(--color-primary-light)] transition-colors`}>
             {task.title}
           </h3>
-          <p className="text-sm text-gray-600 line-clamp-3">{task.summary}</p>
+          <p className="text-sm text-[var(--color-text-secondary)] line-clamp-2 mt-2 leading-relaxed">{task.summary}</p>
         </div>
         <Link
           to={`/tasks/${task._id}`}
-          className="text-[#1E376E] text-sm font-medium hover:underline"
+          className="flex-shrink-0 px-4 py-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-light)] text-white text-sm font-semibold rounded-lg transition-all shadow-sm hover:shadow-md"
         >
           View & Apply
         </Link>
       </div>
-      <div className="mt-3 flex flex-wrap gap-2">
-        <span className="px-3 py-1 rounded-full text-xs bg-gray-100 text-gray-700">
+      
+      <div className="mt-4 pt-4 border-t border-[var(--color-border)] flex flex-wrap gap-2">
+        <span className="px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 capitalize">
           {task.status}
         </span>
-        {task.requiredSkills?.map((s) => (
+        {task.location && (
+          <span className="px-3 py-1.5 rounded-full text-xs font-medium bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)]">
+            📍 {task.location}
+          </span>
+        )}
+        {task.requiredSkills?.slice(0, 2).map((s) => (
           <span
             key={s}
-            className="px-3 py-1 rounded-full text-xs bg-blue-50 text-blue-600"
+            className="px-3 py-1.5 rounded-full text-xs font-medium bg-blue-50 text-blue-600"
           >
             {s}
           </span>
         ))}
+        {task.requiredSkills?.length > 2 && (
+          <span className="px-3 py-1.5 rounded-full text-xs font-medium bg-[var(--color-bg-tertiary)] text-[var(--color-text-muted)]">
+            +{task.requiredSkills.length - 2} more
+          </span>
+        )}
       </div>
     </div>
   );

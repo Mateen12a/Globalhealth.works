@@ -77,8 +77,8 @@ export default function FeedbackForm({ taskId, toUser, onFeedbackSubmitted }) {
         animate={{ opacity: 1, scale: 1 }}
         className="card p-8 text-center"
       >
-        <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mx-auto mb-4">
-          <CheckCircle className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+        <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
+          <CheckCircle className="w-8 h-8 text-emerald-600" />
         </div>
         <h3 className="text-xl font-semibold text-[var(--color-text)] mb-2">Thank You!</h3>
         <p className="text-[var(--color-text-secondary)]">Your feedback has been submitted successfully.</p>
@@ -104,7 +104,7 @@ export default function FeedbackForm({ taskId, toUser, onFeedbackSubmitted }) {
       </div>
 
       {error && (
-        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-center gap-3 text-red-600 dark:text-red-400">
+        <div className="p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 text-red-600">
           <AlertCircle className="w-5 h-5 flex-shrink-0" />
           {error}
         </div>
@@ -131,7 +131,7 @@ export default function FeedbackForm({ taskId, toUser, onFeedbackSubmitted }) {
                 className={`transition-colors ${
                   star <= (hoverRating || rating)
                     ? "fill-amber-400 text-amber-400"
-                    : "text-gray-300 dark:text-gray-600"
+                    : "text-gray-300"
                 }`}
               />
             </motion.button>

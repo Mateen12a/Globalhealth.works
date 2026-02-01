@@ -52,7 +52,7 @@ export default function FeedbackTable() {
             className={`w-4 h-4 ${
               star <= rating
                 ? "text-yellow-500 fill-yellow-500"
-                : "text-gray-300 dark:text-gray-600"
+                : "text-gray-300"
             }`}
           />
         ))}
@@ -123,7 +123,7 @@ export default function FeedbackTable() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => deleteFeedback(f._id)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors text-xs font-medium flex-shrink-0"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition-colors text-xs font-medium flex-shrink-0"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                     Delete

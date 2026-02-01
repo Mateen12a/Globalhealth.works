@@ -6,8 +6,8 @@ export default function FeedbackSummaryCard({ avgRating, totalReviews }) {
   return (
     <div className="card p-6">
       <div className="flex items-center gap-3 mb-4">
-        <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-          <TrendingUp className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+        <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+          <TrendingUp className="w-5 h-5 text-amber-600" />
         </div>
         <h3 className="text-lg font-semibold text-[var(--color-text)]">
           Overall Rating
@@ -29,7 +29,7 @@ export default function FeedbackSummaryCard({ avgRating, totalReviews }) {
                 className={`${
                   star <= Math.round(parseFloat(avgRating))
                     ? "fill-amber-400 text-amber-400"
-                    : "text-gray-300 dark:text-gray-600"
+                    : "text-gray-300"
                 }`}
               />
             ))}

@@ -36,8 +36,8 @@ function RejectModal({ open, onClose, onSubmit, loading }) {
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-                <UserX className="w-5 h-5 text-red-600 dark:text-red-400" />
+              <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center">
+                <UserX className="w-5 h-5 text-red-600" />
               </div>
               <h2 className="text-lg font-semibold text-[var(--color-text)]">Reject User</h2>
             </div>
@@ -120,8 +120,8 @@ function ChangeRoleModal({ open, onClose, onSubmit, loading, user }) {
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                <RefreshCw className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
+                <RefreshCw className="w-5 h-5 text-purple-600" />
               </div>
               <h2 className="text-lg font-semibold text-[var(--color-text)]">Change User Role</h2>
             </div>
@@ -137,7 +137,7 @@ function ChangeRoleModal({ open, onClose, onSubmit, loading, user }) {
             <p className="text-sm text-[var(--color-text-secondary)] mb-2">
               Change role for <strong className="text-[var(--color-text)]">{user.firstName} {user.lastName}</strong>
             </p>
-            <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded-lg p-2">
+            <p className="text-xs text-amber-600 bg-amber-50 rounded-lg p-2">
               Only Super Admins can change user roles. This action is logged.
             </p>
           </div>
@@ -367,7 +367,7 @@ export default function AdminUsers({ embedded = false }) {
   const StatusBadge = ({ user }) => {
     if (user.status === "suspended")
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-full">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium bg-red-100 text-red-700 rounded-full">
           <XCircle className="w-3.5 h-3.5" />
           Suspended
         </span>
@@ -375,7 +375,7 @@ export default function AdminUsers({ embedded = false }) {
 
     if (user.rejectionReason)
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 rounded-full">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium bg-red-100 text-red-700 rounded-full">
           <XCircle className="w-3.5 h-3.5" />
           Rejected
         </span>
@@ -383,14 +383,14 @@ export default function AdminUsers({ embedded = false }) {
 
     if (user.isApproved)
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 rounded-full">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium bg-emerald-100 text-emerald-700 rounded-full">
           <CheckCircle className="w-3.5 h-3.5" />
           Approved
         </span>
       );
 
     return (
-      <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded-full">
+      <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium bg-amber-100 text-amber-700 rounded-full">
         <AlertTriangle className="w-3.5 h-3.5" />
         Pending
       </span>
@@ -399,8 +399,8 @@ export default function AdminUsers({ embedded = false }) {
 
   const RoleBadge = ({ role }) => {
     const config = {
-      admin: { color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400", icon: Shield },
-      taskOwner: { color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400", icon: null },
+      admin: { color: "bg-purple-100 text-purple-700", icon: Shield },
+      taskOwner: { color: "bg-blue-100 text-blue-700", icon: null },
       solutionProvider: { color: "bg-[var(--color-accent)]/10 text-[var(--color-accent)]", icon: null },
     };
     const { color } = config[role] || { color: "bg-[var(--color-bg-tertiary)] text-[var(--color-text-secondary)]" };

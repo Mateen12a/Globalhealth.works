@@ -101,7 +101,7 @@ export default function Contact() {
             <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl p-8 md:p-12">
               {submitted ? (
                 <div className="text-center py-8">
-                  <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-6">
+                  <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
                     <CheckCircle size={32} className="text-green-600" />
                   </div>
                   <h3 className="text-2xl font-bold text-[var(--color-text)] mb-4">Message Sent!</h3>

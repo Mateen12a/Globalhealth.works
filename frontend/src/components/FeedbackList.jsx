@@ -97,7 +97,7 @@ export default function FeedbackList({ userId }) {
                     className={`${
                       star <= f.rating
                         ? "fill-amber-400 text-amber-400"
-                        : "text-gray-300 dark:text-gray-600"
+                        : "text-gray-300"
                     }`}
                   />
                 ))}
@@ -118,20 +118,20 @@ export default function FeedbackList({ userId }) {
 
             <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
               {f.strengths && (
-                <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-200 dark:border-emerald-800">
-                  <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1 mb-1">
+                <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200">
+                  <p className="text-xs font-medium text-emerald-600 flex items-center gap-1 mb-1">
                     <ThumbsUp className="w-3 h-3" /> Strengths
                   </p>
-                  <p className="text-sm text-emerald-700 dark:text-emerald-300">{f.strengths}</p>
+                  <p className="text-sm text-emerald-700">{f.strengths}</p>
                 </div>
               )}
 
               {f.improvementAreas && (
-                <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800">
-                  <p className="text-xs font-medium text-amber-600 dark:text-amber-400 flex items-center gap-1 mb-1">
+                <div className="p-3 bg-amber-50 rounded-xl border border-amber-200">
+                  <p className="text-xs font-medium text-amber-600 flex items-center gap-1 mb-1">
                     <AlertTriangle className="w-3 h-3" /> Areas for Improvement
                   </p>
-                  <p className="text-sm text-amber-700 dark:text-amber-300">{f.improvementAreas}</p>
+                  <p className="text-sm text-amber-700">{f.improvementAreas}</p>
                 </div>
               )}
             </div>

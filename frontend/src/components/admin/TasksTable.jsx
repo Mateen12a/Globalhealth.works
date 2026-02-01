@@ -6,11 +6,10 @@ import { Search, Filter, ExternalLink, Trash2, CheckCircle, Clock, AlertCircle, 
 const API_URL = import.meta.env.VITE_API_URL;
 
 const statusConfig = {
-  published: { label: "Published", icon: CheckCircle, bg: "bg-emerald-100 dark:bg-emerald-900/30", text: "text-emerald-700 dark:text-emerald-400" },
-  "in-progress": { label: "In Progress", icon: Clock, bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-700 dark:text-blue-400" },
-  completed: { label: "Completed", icon: CheckCircle, bg: "bg-purple-100 dark:bg-purple-900/30", text: "text-purple-700 dark:text-purple-400" },
-  withdrawn: { label: "Withdrawn", icon: XCircle, bg: "bg-red-100 dark:bg-red-900/30", text: "text-red-700 dark:text-red-400" },
-  draft: { label: "Draft", icon: AlertCircle, bg: "bg-gray-100 dark:bg-gray-800", text: "text-gray-700 dark:text-gray-400" },
+  published: { label: "Published", icon: CheckCircle, bg: "bg-emerald-100", text: "text-emerald-700" },
+  "in-progress": { label: "In Progress", icon: Clock, bg: "bg-blue-100", text: "text-blue-700" },
+  completed: { label: "Completed", icon: CheckCircle, bg: "bg-purple-100", text: "text-purple-700" },
+  withdrawn: { label: "Withdrawn", icon: XCircle, bg: "bg-red-100", text: "text-red-700" },
 };
 
 export default function TasksTable() {
@@ -56,7 +55,7 @@ export default function TasksTable() {
     );
 
   const StatusBadge = ({ status }) => {
-    const config = statusConfig[status] || statusConfig.draft;
+    const config = statusConfig[status] || statusConfig.published;
     const Icon = config.icon;
     return (
       <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
@@ -155,7 +154,7 @@ export default function TasksTable() {
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => updateStatus(t._id, "withdrawn")}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors text-xs font-medium"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition-colors text-xs font-medium"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                             Remove

@@ -226,8 +226,8 @@ export default function TaskCreate() {
         >
           <div className="p-6 md:p-8 space-y-6">
             <div className="flex items-center gap-3 pb-4 border-b border-[var(--color-border)]">
-              <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+                <FileText className="w-5 h-5 text-blue-600" />
               </div>
               <div>
                 <h2 className="font-semibold text-[var(--color-text)]">Basic Information</h2>
@@ -269,8 +269,8 @@ export default function TaskCreate() {
 
           <div className="p-6 md:p-8 border-t border-[var(--color-border)] space-y-6">
             <div className="flex items-center gap-3 pb-4 border-b border-[var(--color-border)]">
-              <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                <Target className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
+                <Target className="w-5 h-5 text-purple-600" />
               </div>
               <div>
                 <h2 className="font-semibold text-[var(--color-text)]">Requirements</h2>
@@ -303,8 +303,8 @@ export default function TaskCreate() {
 
           <div className="p-6 md:p-8 border-t border-[var(--color-border)] space-y-6">
             <div className="flex items-center gap-3 pb-4 border-b border-[var(--color-border)]">
-              <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                <Clock className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+                <Clock className="w-5 h-5 text-amber-600" />
               </div>
               <div>
                 <h2 className="font-semibold text-[var(--color-text)]">Timeline</h2>
@@ -336,8 +336,8 @@ export default function TaskCreate() {
 
           <div className="p-6 md:p-8 border-t border-[var(--color-border)] space-y-6">
             <div className="flex items-center gap-3 pb-4 border-b border-[var(--color-border)]">
-              <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                <Paperclip className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+                <Paperclip className="w-5 h-5 text-emerald-600" />
               </div>
               <div>
                 <h2 className="font-semibold text-[var(--color-text)]">Attachments</h2>
@@ -382,7 +382,7 @@ export default function TaskCreate() {
                     <button
                       type="button"
                       onClick={() => removeFile(index)}
-                      className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 rounded text-red-500"
+                      className="p-1 hover:bg-red-100 rounded text-red-500"
                     >
                       <X className="w-4 h-4" />
                     </button>

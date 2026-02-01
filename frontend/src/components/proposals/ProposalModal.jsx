@@ -132,7 +132,7 @@ export default function ProposalModal({ taskId, onClose, onSubmitted }) {
 
         <div className="p-6 max-h-[70vh] overflow-y-auto">
           {error && (
-            <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex items-center gap-3 text-red-600 dark:text-red-400">
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 text-red-600">
               <AlertCircle className="w-5 h-5 flex-shrink-0" />
               {error}
             </div>
@@ -243,7 +243,7 @@ export default function ProposalModal({ taskId, onClose, onSubmitted }) {
                       <button
                         type="button"
                         onClick={() => removeFile(idx)}
-                        className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 transition-colors"
+                        className="p-1.5 rounded-lg hover:bg-red-100 text-red-500 transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

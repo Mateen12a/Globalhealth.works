@@ -102,7 +102,7 @@ export default function AdminDashboard() {
             Admin Messaging
           </Link>
           {isSuperAdmin && (
-            <span className="ml-auto inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 text-sm font-medium">
+            <span className="ml-auto inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-100 text-purple-700 text-sm font-medium">
               <UserCheck size={14} />
               Super Admin
             </span>
@@ -130,7 +130,7 @@ export default function AdminDashboard() {
               </div>
               {!loading && stats?.users && (
                 <div className="mt-2 sm:mt-3 flex flex-wrap gap-1 sm:gap-2 text-xs">
-                  <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full">
+                  <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">
                     {stats.users.taskOwners || 0} TO
                   </span>
                   <span className="px-2 py-0.5 bg-[var(--color-accent)]/10 text-[var(--color-accent)] rounded-full">
@@ -156,10 +156,10 @@ export default function AdminDashboard() {
               </div>
               {!loading && stats?.tasks && (
                 <div className="mt-2 sm:mt-3 flex flex-wrap gap-1 sm:gap-2 text-xs">
-                  <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-full">
+                  <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full">
                     {stats.tasks.published || 0} Active
                   </span>
-                  <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full">
+                  <span className="px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full">
                     {stats.tasks.inProgress || 0} In Progress
                   </span>
                 </div>
@@ -181,7 +181,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
               {!loading && stats?.users?.pendingApproval > 0 && (
-                <p className="mt-2 sm:mt-3 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                <p className="mt-2 sm:mt-3 text-xs text-amber-600 flex items-center gap-1">
                   <AlertTriangle className="w-3 h-3" />
                   Requires attention
                 </p>
@@ -204,7 +204,7 @@ export default function AdminDashboard() {
               </div>
               {!loading && stats?.proposals && (
                 <div className="mt-2 sm:mt-3 flex flex-wrap gap-1 sm:gap-2 text-xs">
-                  <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-full">
+                  <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full">
                     {stats.proposals.pending || 0} Pending
                   </span>
                 </div>
@@ -221,8 +221,8 @@ export default function AdminDashboard() {
         >
           <div className="card p-5">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+                <TrendingUp className="w-4 h-4 text-emerald-600" />
               </div>
               <h3 className="font-semibold text-[var(--color-text)]">Weekly Activity</h3>
             </div>
@@ -244,8 +244,8 @@ export default function AdminDashboard() {
 
           <div className="card p-5">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                <Activity className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                <Activity className="w-4 h-4 text-blue-600" />
               </div>
               <h3 className="font-semibold text-[var(--color-text)]">User Breakdown</h3>
             </div>
@@ -279,11 +279,11 @@ export default function AdminDashboard() {
               </div>
               <div className="flex justify-between">
                 <span className="text-[var(--color-text-secondary)]">Completed</span>
-                <span className="font-medium text-emerald-600 dark:text-emerald-400">{stats?.tasks?.completed || 0}</span>
+                <span className="font-medium text-emerald-600">{stats?.tasks?.completed || 0}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[var(--color-text-secondary)]">Draft</span>
-                <span className="font-medium text-[var(--color-text)]">{stats?.tasks?.draft || 0}</span>
+                <span className="text-[var(--color-text-secondary)]">Withdrawn</span>
+                <span className="font-medium text-[var(--color-text)]">{stats?.tasks?.withdrawn || 0}</span>
               </div>
             </div>
           </div>

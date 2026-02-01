@@ -45,11 +45,11 @@ export default function MyApplications() {
 
   const getStatusConfig = (status) => {
     switch(status) {
-      case "published": return { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-700 dark:text-blue-400", icon: Clock };
-      case "in-progress": return { bg: "bg-amber-100 dark:bg-amber-900/30", text: "text-amber-700 dark:text-amber-400", icon: Clock };
-      case "completed": return { bg: "bg-emerald-100 dark:bg-emerald-900/30", text: "text-emerald-700 dark:text-emerald-400", icon: CheckCircle };
-      case "withdrawn": return { bg: "bg-red-100 dark:bg-red-900/30", text: "text-red-700 dark:text-red-400", icon: XCircle };
-      default: return { bg: "bg-gray-100 dark:bg-gray-800", text: "text-gray-700 dark:text-gray-300", icon: Clock };
+      case "published": return { bg: "bg-blue-100", text: "text-blue-700", icon: Clock };
+      case "in-progress": return { bg: "bg-amber-100", text: "text-amber-700", icon: Clock };
+      case "completed": return { bg: "bg-emerald-100", text: "text-emerald-700", icon: CheckCircle };
+      case "withdrawn": return { bg: "bg-red-100", text: "text-red-700", icon: XCircle };
+      default: return { bg: "bg-gray-100", text: "text-gray-700", icon: Clock };
     }
   };
 

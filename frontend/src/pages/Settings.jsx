@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
-import { useTheme } from "../context/ThemeContext";
 import CountrySelect from "../components/CountrySelect";
 import {
   UploadCloud,
@@ -11,14 +10,10 @@ import {
   Lock,
   FileText,
   Trash2,
-  Sun,
-  Moon,
-  Monitor,
   Save,
   Camera,
   Shield,
   Bell,
-  Palette,
   User,
   Key,
   Mail,
@@ -72,7 +67,6 @@ const genderOptions = ["Male", "Female", "Prefer not to say"];
 
 export default function Settings() {
   const navigate = useNavigate();
-  const { theme, setTheme } = useTheme();
   const token = localStorage.getItem("token");
   const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
 
@@ -365,7 +359,6 @@ export default function Settings() {
     { id: "profile", label: "Profile", icon: Edit3 },
     { id: "security", label: "Security", icon: Shield },
     { id: "notifications", label: "Notifications", icon: Bell },
-    { id: "appearance", label: "Appearance", icon: Palette },
     { id: "account", label: "Account", icon: User },
   ];
 
@@ -389,82 +382,6 @@ export default function Settings() {
           ))}
         </div>
 
-        {activeTab === "appearance" && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="card p-6"
-          >
-            <h2 className="text-xl font-semibold text-[var(--color-text)] mb-6 flex items-center gap-2">
-              <Palette className="w-5 h-5 text-[var(--color-primary)]" />
-              Appearance
-            </h2>
-            <div className="space-y-4">
-              <p className="text-[var(--color-text-secondary)]">
-                Choose your preferred theme for the interface
-              </p>
-              <div className="grid grid-cols-3 gap-4">
-                {[
-                  {
-                    id: "light",
-                    label: "Light",
-                    icon: Sun,
-                    desc: "Light background",
-                  },
-                  {
-                    id: "dark",
-                    label: "Dark",
-                    icon: Moon,
-                    desc: "Dark background",
-                  },
-                  {
-                    id: "system",
-                    label: "System",
-                    icon: Monitor,
-                    desc: "Match device",
-                  },
-                ].map((option) => (
-                  <button
-                    key={option.id}
-                    onClick={() => {
-                      if (option.id === "system") {
-                        const isDark = window.matchMedia(
-                          "(prefers-color-scheme: dark)",
-                        ).matches;
-                        setTheme(isDark ? "dark" : "light");
-                      } else {
-                        setTheme(option.id);
-                      }
-                    }}
-                    className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${
-                      theme === option.id ||
-                      (option.id === "system" &&
-                        !["light", "dark"].includes(theme))
-                        ? "border-[var(--color-primary)] bg-[var(--color-primary)]/10 shadow-md"
-                        : "border-[var(--color-border)] hover:border-[var(--color-primary)]/50 hover:bg-[var(--color-bg-secondary)]"
-                    }`}
-                  >
-                    <option.icon
-                      size={28}
-                      className={
-                        theme === option.id
-                          ? "text-[var(--color-primary)]"
-                          : "text-[var(--color-text-secondary)]"
-                      }
-                    />
-                    <span className="font-medium text-[var(--color-text)]">
-                      {option.label}
-                    </span>
-                    <span className="text-xs text-[var(--color-text-muted)]">
-                      {option.desc}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        )}
-
         {activeTab === "security" && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -482,8 +399,8 @@ export default function Settings() {
                   <div
                     className={`p-4 rounded-xl flex items-center gap-3 ${
                       passwordMessage.type === "error"
-                        ? "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800"
-                        : "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800"
+                        ? "bg-red-50 text-red-600 border border-red-200"
+                        : "bg-emerald-50 text-emerald-600 border border-emerald-200"
                     }`}
                   >
                     {passwordMessage.type === "error" ? (
@@ -585,8 +502,8 @@ export default function Settings() {
               <div className="p-4 bg-[var(--color-bg-secondary)] rounded-xl border border-[var(--color-border)]">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                      <Globe className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                    <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+                      <Globe className="w-5 h-5 text-emerald-600" />
                     </div>
                     <div>
                       <p className="font-medium text-[var(--color-text)]">
@@ -597,7 +514,7 @@ export default function Settings() {
                       </p>
                     </div>
                   </div>
-                  <span className="px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-xs font-medium rounded-full">
+                  <span className="px-3 py-1 bg-emerald-100 text-emerald-600 text-xs font-medium rounded-full">
                     Active
                   </span>
                 </div>
@@ -672,7 +589,7 @@ export default function Settings() {
                     className={`relative w-12 h-6 rounded-full transition-colors ${
                       notifications[item.key]
                         ? "bg-[var(--color-primary)]"
-                        : "bg-gray-300 dark:bg-gray-600"
+                        : "bg-gray-300"
                     }`}
                   >
                     <span
@@ -740,7 +657,7 @@ export default function Settings() {
                     <p className="text-sm text-[var(--color-text-muted)]">
                       Account Status
                     </p>
-                    <p className="font-medium text-emerald-600 dark:text-emerald-400">
+                    <p className="font-medium text-emerald-600">
                       Active
                     </p>
                   </div>
@@ -749,14 +666,14 @@ export default function Settings() {
               </div>
             </div>
 
-            <div className="card p-6 border-red-200 dark:border-red-800">
-              <h2 className="text-xl font-semibold text-red-600 dark:text-red-400 mb-4 flex items-center gap-2">
+            <div className="card p-6 border-red-200">
+              <h2 className="text-xl font-semibold text-red-600 mb-4 flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5" />
                 Danger Zone
               </h2>
 
-              <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800">
-                <p className="text-sm text-red-600 dark:text-red-400 mb-4">
+              <div className="p-4 bg-red-50 rounded-xl border border-red-200">
+                <p className="text-sm text-red-600 mb-4">
                   Once you delete your account, there is no going back. Please
                   be certain.
                 </p>

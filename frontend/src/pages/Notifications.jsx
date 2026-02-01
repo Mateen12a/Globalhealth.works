@@ -190,7 +190,7 @@ export default function Notifications() {
             {unreadCount > 0 && (
               <button
                 onClick={markAllAsRead}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors"
               >
                 <CheckCheck className="w-4 h-4" />
                 Mark all read
@@ -200,7 +200,7 @@ export default function Notifications() {
             {selectedIds.length > 0 && (
               <button
                 onClick={deleteSelected}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-xl hover:bg-red-100 transition-colors"
               >
                 <Trash2 className="w-4 h-4" />
                 Delete ({selectedIds.length})
@@ -266,7 +266,7 @@ export default function Notifications() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, x: -100 }}
                     className={`flex items-start gap-4 p-4 hover:bg-[var(--color-bg-secondary)] transition-colors ${
-                      !n.read ? "bg-blue-50/50 dark:bg-blue-900/10" : ""
+                      !n.read ? "bg-blue-50/50" : ""
                     }`}
                   >
                     <input
@@ -277,7 +277,7 @@ export default function Notifications() {
                     />
                     
                     <div className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${
-                      !n.read ? "bg-blue-100 dark:bg-blue-900/30" : "bg-[var(--color-bg-secondary)]"
+                      !n.read ? "bg-blue-100" : "bg-[var(--color-bg-secondary)]"
                     }`}>
                       {getNotificationIcon(n.type)}
                     </div>
@@ -315,7 +315,7 @@ export default function Notifications() {
                       )}
                       <button
                         onClick={() => deleteNotification(n._id)}
-                        className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-[var(--color-text-muted)] hover:text-red-500 transition-colors"
+                        className="p-2 rounded-lg hover:bg-red-100 text-[var(--color-text-muted)] hover:text-red-500 transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

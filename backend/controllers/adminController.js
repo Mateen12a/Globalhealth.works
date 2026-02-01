@@ -311,9 +311,18 @@ exports.rejectUser = async (req, res) => {
 exports.getAllTasks = async (req, res) => {
   try {
     const tasks = await Task.find()
-      .populate("owner", "name email role")
+      .populate("owner", "firstName lastName email role")
       .sort({ createdAt: -1 });
-    res.json(tasks);
+    
+    const tasksWithOwnerName = tasks.map(task => {
+      const taskObj = task.toObject();
+      if (taskObj.owner) {
+        taskObj.owner.name = `${taskObj.owner.firstName || ''} ${taskObj.owner.lastName || ''}`.trim() || 'Unknown';
+      }
+      return taskObj;
+    });
+    
+    res.json(tasksWithOwnerName);
   } catch (err) {
     console.error("Get tasks error:", err);
     res.status(500).json({ msg: "Server error" });

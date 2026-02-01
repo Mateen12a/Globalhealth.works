@@ -166,7 +166,7 @@ export default function AdminOnboarding() {
                       </td>
                       <td className="px-6 py-4 text-[var(--color-text-secondary)]">{admin.email}</td>
                       <td className="px-6 py-4">
-                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
                           <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
                           Active
                         </span>
@@ -177,7 +177,7 @@ export default function AdminOnboarding() {
                       <td className="px-6 py-4 text-right">
                         <button
                           onClick={() => handleDeleteAdmin(admin._id)}
-                          className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                          className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
                           title="Remove admin"
                         >
                           <Trash2 size={18} />
@@ -228,16 +228,16 @@ export default function AdminOnboarding() {
 
               <form onSubmit={handleSubmit} className="p-6 space-y-4">
                 {error && (
-                  <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 flex items-start gap-3">
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
                     <AlertCircle size={18} className="text-red-500 flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                    <p className="text-sm text-red-600">{error}</p>
                   </div>
                 )}
 
                 {success && (
-                  <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4 flex items-start gap-3">
+                  <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-start gap-3">
                     <CheckCircle size={18} className="text-green-500 flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-green-600 dark:text-green-400">{success}</p>
+                    <p className="text-sm text-green-600">{success}</p>
                   </div>
                 )}
 

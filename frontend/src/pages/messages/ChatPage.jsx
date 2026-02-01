@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { Paperclip, Send, CheckCheck, ChevronLeft, X, File, Image as ImageIcon } from "lucide-react"; 
 import dayjs from "dayjs";
-import { socket as sharedSocket } from "../../utils/socket";
+import { socket as sharedSocket, connectSocket } from "../../utils/socket";
 import { jwtDecode } from "jwt-decode";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -80,18 +80,21 @@ export default function ChatPage({ currentUser: propUser }) {
   }, [currentUser, fetchConversation, fetchMessages]);
 
   useEffect(() => {
-    if (!currentUser?._id || !conversationId) return;
+    if (!currentUser?._id || !conversationId || !token) return;
 
-    if (!sharedSocket.connected) {
-      sharedSocket.connect();
-    }
+    connectSocket(token);
     socketRef.current = sharedSocket;
     sharedSocket.emit("join", currentUser._id);
 
     const handleNewMessage = (msg) => {
       if (msg.conversationId === conversationId) {
-        setMessages(prev => [...prev, msg]); scrollToBottom();
-        if (msg.receiver === currentUser._id) {
+        setMessages(prev => {
+          const exists = prev.some(m => m._id === msg._id);
+          if (exists) return prev;
+          return [...prev, msg];
+        });
+        scrollToBottom();
+        if (String(msg.receiver) === String(currentUser._id)) {
           axios.patch(`${API_URL}/api/messages/${msg._id}/read`, {}, { headers: { Authorization: `Bearer ${token}` } })
                .catch(console.error);
         }
@@ -106,8 +109,11 @@ export default function ChatPage({ currentUser: propUser }) {
     };
     const handleMessagesSeen = ({ conversationId: cId, seenAt }) => {
       if (cId === conversationId) {
-        setMessages(prev => prev.map(msg => (msg.sender === currentUser._id && msg.status !== 'seen') 
-          ? { ...msg, status: 'seen', read: true, readAt: seenAt } : msg));
+        setMessages(prev => prev.map(msg => {
+          const senderId = msg.sender?._id || msg.sender;
+          return (String(senderId) === String(currentUser._id) && msg.status !== 'seen') 
+            ? { ...msg, status: 'seen', read: true, readAt: seenAt } : msg;
+        }));
       }
     };
     const handleMessageEdited = (editedMsg) => {
@@ -136,19 +142,44 @@ export default function ChatPage({ currentUser: propUser }) {
 
   const sendMessage = async () => {
     if ((!messageText && attachments.length === 0) || isSending) return;
-    const otherUser = conversation?.participants?.find(p => p._id !== currentUser._id);
+    const otherUser = conversation?.participants?.find(p => String(p._id) !== String(currentUser._id));
     setIsSending(true);
+    const sentText = messageText;
+    const sentAttachments = [...attachments];
+    
+    const tempId = `temp-${Date.now()}`;
+    const optimisticMessage = {
+      _id: tempId,
+      text: sentText,
+      sender: { _id: currentUser._id },
+      receiver: otherUser?._id,
+      conversationId,
+      createdAt: new Date().toISOString(),
+      status: 'sending',
+      attachments: sentAttachments.map(f => ({ fileName: f.name, type: f.type.startsWith('image/') ? 'image' : 'file' }))
+    };
+    
+    setMessages(prev => [...prev, optimisticMessage]);
+    setMessageText(""); 
+    setAttachments([]);
+    scrollToBottom();
+    
     try {
       const formData = new FormData();
       formData.append("conversationId", conversationId);
-      formData.append("text", messageText);
+      formData.append("text", sentText);
       formData.append("receiverId", otherUser?._id);
-      attachments.forEach(file => formData.append("attachments", file));
-      await axios.post(`${API_URL}/api/messages`, formData, {
+      sentAttachments.forEach(file => formData.append("attachments", file));
+      const { data: savedMessage } = await axios.post(`${API_URL}/api/messages`, formData, {
         headers: { "Content-Type": "multipart/form-data", Authorization: `Bearer ${token}` }
       });
-      setMessageText(""); setAttachments([]); scrollToBottom();
-    } catch (err) { console.error(err); }
+      setMessages(prev => prev.map(m => m._id === tempId ? savedMessage : m));
+    } catch (err) { 
+      console.error(err);
+      setMessages(prev => prev.filter(m => m._id !== tempId));
+      setMessageText(sentText);
+      setAttachments(sentAttachments);
+    }
     finally { setIsSending(false); }
   };
 

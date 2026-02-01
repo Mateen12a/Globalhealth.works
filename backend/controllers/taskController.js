@@ -161,7 +161,13 @@ exports.updateTask = async (req, res) => {
 // ✅ Get tasks
 exports.getTasks = async (req, res) => {
   try {
-    const filter = req.user.role === "taskOwner" ? { owner: req.user.id } : {};
+    let filter = {};
+    if (req.user.role === "taskOwner") {
+      filter = { owner: req.user.id };
+    } else if (req.user.role === "solutionProvider") {
+      // Solution providers should only see published and in-progress tasks (not withdrawn)
+      filter = { status: { $in: ["published", "in-progress"] } };
+    }
     const tasks = await Task.find(filter)
       .populate("owner", "firstName lastName email role");
     res.json(tasks);
@@ -354,6 +360,153 @@ exports.reportTask = async (req, res) => {
     res.json({ msg: "Task reported successfully" });
   } catch (err) {
     console.error("Report task error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
+// ✅ Mark task as complete (both owner and provider must mark)
+exports.markComplete = async (req, res) => {
+  try {
+    const task = await Task.findById(req.params.id)
+      .populate("owner", "firstName lastName email")
+      .populate("assignedTo", "firstName lastName email");
+    
+    if (!task) return res.status(404).json({ msg: "Task not found" });
+
+    if (task.status !== "in-progress") {
+      return res.status(400).json({ msg: "Task must be in-progress to mark complete" });
+    }
+
+    const hasAssignedProvider = (task.assignedTo && task.assignedTo.length > 0) || task.accepted;
+    if (!hasAssignedProvider) {
+      return res.status(400).json({ msg: "No solution provider is assigned to this task yet" });
+    }
+
+    const userId = req.user.id;
+    const isOwner = String(task.owner._id) === userId;
+    const isAssignedProvider = task.assignedTo.some(sp => String(sp._id) === userId) || String(task.accepted) === userId;
+
+    if (!isOwner && !isAssignedProvider) {
+      return res.status(403).json({ msg: "Only task owner or assigned solution provider can mark as complete" });
+    }
+
+    // Set the appropriate completion timestamp
+    if (isOwner) {
+      if (task.ownerCompletedAt) {
+        return res.status(400).json({ msg: "You have already marked this task as complete" });
+      }
+      task.ownerCompletedAt = new Date();
+    } else if (isAssignedProvider) {
+      if (task.providerCompletedAt) {
+        return res.status(400).json({ msg: "You have already marked this task as complete" });
+      }
+      task.providerCompletedAt = new Date();
+    }
+
+    // Check if both have marked complete
+    if (task.ownerCompletedAt && task.providerCompletedAt) {
+      task.status = "completed";
+      
+      // Notify both parties that task is fully completed
+      await createNotification(
+        task.owner._id,
+        "task",
+        `Task "${task.title}" has been marked as completed by both parties! 🎉`,
+        `/tasks/${task._id}`,
+        { title: "Task Completed", sendEmail: true }
+      );
+      
+      for (const provider of task.assignedTo) {
+        await createNotification(
+          provider._id,
+          "task",
+          `Task "${task.title}" has been marked as completed by both parties! 🎉`,
+          `/tasks/${task._id}`,
+          { title: "Task Completed", sendEmail: true }
+        );
+      }
+    } else {
+      // Notify the other party that one side has marked complete
+      if (isOwner) {
+        for (const provider of task.assignedTo) {
+          await createNotification(
+            provider._id,
+            "task",
+            `Task owner has marked "${task.title}" as complete. Please confirm completion.`,
+            `/tasks/${task._id}`,
+            { title: "Awaiting Your Confirmation", sendEmail: true }
+          );
+        }
+      } else {
+        await createNotification(
+          task.owner._id,
+          "task",
+          `Solution provider has marked "${task.title}" as complete. Please confirm completion.`,
+          `/tasks/${task._id}`,
+          { title: "Awaiting Your Confirmation", sendEmail: true }
+        );
+      }
+    }
+
+    await task.save();
+    res.json({ msg: "Task marked as complete", task });
+  } catch (err) {
+    console.error("Mark complete error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
+// ✅ Withdraw task (owner only)
+exports.withdrawTask = async (req, res) => {
+  try {
+    const task = await Task.findById(req.params.id)
+      .populate("assignedTo", "firstName lastName email");
+    
+    if (!task) return res.status(404).json({ msg: "Task not found" });
+
+    if (String(task.owner) !== req.user.id) {
+      return res.status(403).json({ msg: "Only task owner can withdraw the task" });
+    }
+
+    if (task.status === "withdrawn") {
+      return res.status(400).json({ msg: "Task is already withdrawn" });
+    }
+
+    if (task.status === "completed") {
+      return res.status(400).json({ msg: "Cannot withdraw a completed task" });
+    }
+
+    task.status = "withdrawn";
+    await task.save();
+
+    // Notify assigned solution providers
+    for (const provider of task.assignedTo) {
+      await createNotification(
+        provider._id,
+        "task",
+        `Task "${task.title}" has been withdrawn by the owner.`,
+        `/tasks/${task._id}`,
+        { title: "Task Withdrawn", sendEmail: true }
+      );
+    }
+
+    // Also notify applicants who haven't been assigned
+    for (const applicantId of task.applicants) {
+      const isAssigned = task.assignedTo.some(sp => String(sp._id) === String(applicantId));
+      if (!isAssigned) {
+        await createNotification(
+          applicantId,
+          "task",
+          `Task "${task.title}" has been withdrawn by the owner.`,
+          `/tasks/${task._id}`,
+          { title: "Task Withdrawn", sendEmail: false }
+        );
+      }
+    }
+
+    res.json({ msg: "Task withdrawn successfully", task });
+  } catch (err) {
+    console.error("Withdraw task error:", err);
     res.status(500).json({ msg: "Server error" });
   }
 };

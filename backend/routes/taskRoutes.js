@@ -11,7 +11,9 @@ const {
   updateStatus,
   getMyApplications,
   uploadTaskAttachments,
-  reportTask
+  reportTask,
+  markComplete,
+  withdrawTask
 } = require("../controllers/taskController");
 
 // Task Owner: create
@@ -37,5 +39,11 @@ router.put("/:id", authMiddleware, uploadTaskAttachments, updateTask );
 
 // Task Owner: update status
 router.patch("/:id/status", authMiddleware, updateStatus);
+
+// Mark task as complete (both owner and provider)
+router.patch("/:id/mark-complete", authMiddleware, markComplete);
+
+// Withdraw task (owner only)
+router.patch("/:id/withdraw", authMiddleware, withdrawTask);
 
 module.exports = router;

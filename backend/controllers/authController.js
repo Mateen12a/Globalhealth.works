@@ -83,45 +83,65 @@ exports.register = async (req, res) => {
       Templates.welcomePending(user)
     );
 
-    // Get all active admins
-const admins = await User.find({ role: "admin", isActive: true }).select("email _id firstName lastName");
+    // Admin notification block - wrapped in try-catch to prevent registration failure
+    try {
+      // Get all active admins (case-insensitive role match)
+      const admins = await User.find({ role: { $regex: /^admin$/i }, isActive: true }).select("email _id firstName lastName");
+      console.log(`Found ${admins.length} active admins for notification`);
 
-// Build admin recipient list (ensure fallbacks from env)
-const fallbackAdminEmails = process.env.ADMIN_NOTIFICATION_EMAILS 
-  ? process.env.ADMIN_NOTIFICATION_EMAILS.split(',').map(e => e.trim())
-  : [];
-const adminEmails = [
-  ...admins.map((a) => a.email),
-  ...fallbackAdminEmails,
-];
+      // Build admin recipient list (ensure fallbacks from env)
+      const fallbackAdminEmails = process.env.ADMIN_NOTIFICATION_EMAILS 
+        ? process.env.ADMIN_NOTIFICATION_EMAILS.split(',').map(e => e.trim())
+        : [];
+      const adminEmails = [
+        ...admins.map((a) => a.email),
+        ...fallbackAdminEmails,
+      ];
 
-// Send alert email to all admins
-await Promise.all(
-  adminEmails.map((email) =>
-    sendMail(
-      email,
-      "New User Registration Pending Approval",
-      Templates.newUserAdminAlert(user)
-    )
-  )
-);
+      // Send alert email to all admins using allSettled to handle individual failures
+      const emailResults = await Promise.allSettled(
+        adminEmails.map((email) =>
+          sendMail(
+            email,
+            "New User Registration Pending Approval",
+            Templates.newUserAdminAlert(user)
+          )
+        )
+      );
 
-// Create in-app notifications for all admins
-const roleDisplay = role === "solutionProvider" ? "Solution Provider" : "Task Owner";
-await Promise.all(
-  admins.map((admin) =>
-    createNotification(
-      admin._id,
-      "system",
-      `New ${roleDisplay} registration: ${user.firstName} ${user.lastName} (${user.email}) requires your approval.`,
-      `/admin/users/${user._id}`,
-      {
-        title: "New User Registration",
-        sendEmail: false,
-      }
-    )
-  )
-);
+      // Log any failed email attempts
+      emailResults.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          console.error(`Failed to send admin notification email to ${adminEmails[index]}:`, result.reason);
+        }
+      });
+
+      // Create in-app notifications for all admins
+      const roleDisplay = role === "solutionProvider" ? "Solution Provider" : "Task Owner";
+      const notificationResults = await Promise.allSettled(
+        admins.map((admin) =>
+          createNotification(
+            admin._id,
+            "system",
+            `New ${roleDisplay} registration: ${user.firstName} ${user.lastName} (${user.email}) requires your approval.`,
+            `/admin/users/${user._id}`,
+            {
+              title: "New User Registration",
+              sendEmail: false,
+            }
+          )
+        )
+      );
+
+      // Log any failed notification attempts
+      notificationResults.forEach((result, index) => {
+        if (result.status === 'rejected') {
+          console.error(`Failed to create in-app notification for admin ${admins[index]?.email}:`, result.reason);
+        }
+      });
+    } catch (adminNotifyErr) {
+      console.error("Admin notification error (registration still succeeded):", adminNotifyErr);
+    }
 
 
 

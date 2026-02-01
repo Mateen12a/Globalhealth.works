@@ -209,7 +209,7 @@ export default function BrowseTasks() {
                           {task.title}
                         </h3>
                         {task.matchScore > 0 && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-medium">
                             <Sparkles size={12} />
                             {task.matchScore}% Match
                           </span>
@@ -251,7 +251,7 @@ export default function BrowseTasks() {
                     <div className="flex md:flex-col items-center gap-2">
                       <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                         task.fundingStatus === "funded"
-                          ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                          ? "bg-green-100 text-green-700"
                           : "bg-[var(--color-accent-light)]/20 text-[var(--color-accent)]"
                       }`}>
                         {task.fundingStatus}

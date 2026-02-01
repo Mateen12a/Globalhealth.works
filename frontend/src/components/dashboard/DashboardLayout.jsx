@@ -13,10 +13,7 @@ import {
   MessageSquare,
   PlusCircle,
   FolderOpen,
-  Sun,
-  Moon,
 } from "lucide-react";
-import { useTheme } from "../../context/ThemeContext";
 import NotificationBell from "../NotificationBell";
 import logo from "../../assets/logo.png";
 
@@ -25,7 +22,6 @@ const API_URL = import.meta.env.VITE_API_URL;
 export default function DashboardLayout({ children, role: propRole, title }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { theme, toggleTheme } = useTheme();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -121,7 +117,7 @@ export default function DashboardLayout({ children, role: propRole, title }) {
     <div className="flex flex-col bg-[var(--color-surface)] h-full border-r border-[var(--color-border)] w-64 p-6">
       <div className="flex items-center justify-between mb-8">
         <Link to="/" className="block">
-          <div className="bg-white dark:bg-white rounded-xl p-3">
+          <div className="bg-white rounded-xl p-3">
             <img src={logo} alt="Logo" className="h-14 w-auto object-contain" />
           </div>
         </Link>
@@ -171,17 +167,10 @@ export default function DashboardLayout({ children, role: propRole, title }) {
         })}
       </nav>
 
-      <div className="border-t border-[var(--color-border)] pt-4 mt-4 space-y-2">
-        <button
-          onClick={toggleTheme}
-          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
-        >
-          {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
-        </button>
+      <div className="border-t border-[var(--color-border)] pt-4 mt-4">
         <button
           onClick={logout}
-          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors"
+          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-red-50 text-red-600 transition-colors"
         >
           <LogOut className="w-5 h-5" />
           <span>Log out</span>
