@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext";
 import useKeepAlive from "./hooks/useKeepAlive";
 import { setupGlobalAxiosInterceptor } from "./utils/api";
+import AuthInitializer from "./components/AuthInitializer";
 import App from "./App";
 
 setupGlobalAxiosInterceptor();
@@ -48,6 +49,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <ThemeProvider>
     <KeepAliveWrapper>
       <BrowserRouter>
+      <AuthInitializer>
       <Routes>
         <Route path="/" element={<App />} />
         <Route path="/signup" element={<Signup />} />
@@ -133,6 +135,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
       </Routes>
+      </AuthInitializer>
       </BrowserRouter>
     </KeepAliveWrapper>
   </ThemeProvider>

@@ -56,6 +56,11 @@ router.post("/forgot-password", forgotPassword);
 router.post("/resend-code", resendVerificationCode);
 router.post("/reset-password", resetPassword);
 
+// Token validation endpoint (lightweight - just checks if token is valid)
+router.get("/validate", authMiddleware, (req, res) => {
+  res.json({ valid: true, userId: req.userId });
+});
+
 // Profile routes
 router.get("/me", authMiddleware, getMe);
 router.put("/me", authMiddleware, updateMe);
