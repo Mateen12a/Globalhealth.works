@@ -25,7 +25,7 @@ const testimonials = [
     name: "Dr. Maria Santos",
     role: "Policy Analyst",
     organisation: "WHO Regional Office, Switzerland",
-    quote: "his platform bridges the gap between health challenges and those ready to solve them. A brilliant initiative!",
+    quote: "This platform bridges the gap between health challenges and those ready to solve them. A brilliant initiative!",
     rating: 5,
     initials: "MS",
     color: "from-purple-500 to-purple-600",

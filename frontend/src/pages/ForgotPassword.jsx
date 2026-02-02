@@ -19,6 +19,7 @@ export default function ForgotPassword() {
 
   const [resendDisabled, setResendDisabled] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
+  const [showSignUpPrompt, setShowSignUpPrompt] = useState(false);
 
   const startResendTimer = () => {
     setResendDisabled(true);
@@ -40,6 +41,7 @@ export default function ForgotPassword() {
     setLoading(true);
     setError("");
     setMessage("");
+    setShowSignUpPrompt(false);
 
     try {
       console.log("Requesting code for:", email);
@@ -63,7 +65,11 @@ export default function ForgotPassword() {
         setStep(2);
         startResendTimer();
       } else {
-        setError(data.msg || "Failed to send code");
+        if (res.status === 404 || data.msg?.toLowerCase().includes("does not exist")) {
+          setShowSignUpPrompt(true);
+        } else {
+          setError(data.msg || "Failed to send code");
+        }
       }
     } catch (err) {
       console.error("Forgot password fetch error:", err);
@@ -173,6 +179,18 @@ export default function ForgotPassword() {
         {error && (
           <div className="bg-red-50 text-red-700 p-3 rounded-lg">
             <p className="text-sm">{error}</p>
+          </div>
+        )}
+
+        {showSignUpPrompt && (
+          <div className="bg-blue-50 text-blue-800 p-4 rounded-lg border border-blue-200">
+            <p className="text-sm">
+              We couldn't find an account with that email. Please{" "}
+              <Link to="/signup" className="font-semibold underline hover:text-blue-900">
+                Sign Up
+              </Link>{" "}
+              to create a new account.
+            </p>
           </div>
         )}
 

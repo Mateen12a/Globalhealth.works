@@ -12,6 +12,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [sessionExpired, setSessionExpired] = useState(false);
+  const [loginError, setLoginError] = useState("");
 
   useEffect(() => {
     if (searchParams.get("session") === "expired") {
@@ -25,6 +26,7 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setLoginError("");
 
     try {
       const res = await fetch(`${API_URL}/api/auth/login`, {
@@ -53,11 +55,15 @@ export default function Login() {
         else if (data.user.role === "admin") navigate("/dashboard/admin");
         else navigate("/");
       } else {
-        alert(data.msg || "Login failed");
+        if (data.msg === "Invalid credentials") {
+          setLoginError("invalid_credentials");
+        } else {
+          setLoginError(data.msg || "Login failed. Please try again.");
+        }
       }
     } catch (err) {
       console.error("Login error:", err);
-      alert("Something went wrong. Try again.");
+      setLoginError("Something went wrong. Please check your connection and try again.");
     } finally {
       setLoading(false);
     }
@@ -82,6 +88,25 @@ export default function Login() {
           <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm">
             <AlertCircle className="w-5 h-5 flex-shrink-0" />
             <span>Your session has expired. Please log in again.</span>
+          </div>
+        )}
+
+        {loginError && (
+          <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+            <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+            <div>
+              {loginError === "invalid_credentials" ? (
+                <span>
+                  The email or password you entered is incorrect. Please try again or{" "}
+                  <Link to="/signup" className="font-semibold underline hover:text-red-800">
+                    Sign Up
+                  </Link>
+                  .
+                </span>
+              ) : (
+                <span>{loginError}</span>
+              )}
+            </div>
           </div>
         )}
 

@@ -98,6 +98,7 @@ function SignupForm({ role, navigate, goBack }) {
     lastName: "",
     email: "",
     password: "",
+    confirmPassword: "",
     phone: "",
     organisationName: "",
     organisationType: "",
@@ -112,12 +113,35 @@ function SignupForm({ role, navigate, goBack }) {
   });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [showMissingTooltip, setShowMissingTooltip] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [emailError, setEmailError] = useState("");
+  const [orgNameError, setOrgNameError] = useState("");
 
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+(?:\.[^\s@]+)*@[^\s@]+\.[^\s@]+$/;
+    if (!email) return "";
+    if (!emailRegex.test(email)) return "Please enter a valid email address";
+    if (email.includes("..")) return "Email cannot contain consecutive dots";
+    return "";
+  };
 
-  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    if (name === "email") {
+      setEmailError(validateEmail(value));
+    }
+    if (name === "organisationName") {
+      if (value && value.length < 2) {
+        setOrgNameError("Organization name must be at least 2 characters");
+      } else {
+        setOrgNameError("");
+      }
+    }
+  };
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) setFormData({ ...formData, resume: e.target.files[0] });
   };
@@ -132,15 +156,20 @@ function SignupForm({ role, navigate, goBack }) {
     });
   };
 
-  const getPasswordStrength = (password) => {
-    const criteria = [/.{8,}/, /[A-Z]/, /[a-z]/, /[0-9]/, /[^A-Za-z0-9]/];
-    return criteria.reduce((acc, regex) => acc + (regex.test(password) ? 1 : 0), 0);
+  const passwordCriteria = {
+    minLength: /.{8,}/.test(formData.password),
+    uppercase: /[A-Z]/.test(formData.password),
+    lowercase: /[a-z]/.test(formData.password),
+    number: /[0-9]/.test(formData.password),
+    special: /[^A-Za-z0-9]/.test(formData.password),
   };
-  const passwordStrength = getPasswordStrength(formData.password);
+  const passwordStrength = Object.values(passwordCriteria).filter(Boolean).length;
+  const passwordsMatch = formData.password === formData.confirmPassword;
+  const isPasswordValid = passwordStrength === 5;
 
   // merged requiredFields logic
   const requiredFields = useMemo(() => {
-    const fields = ["title", "firstName", "lastName", "email", "password", "phone", "country", "gender"];
+    const fields = ["title", "firstName", "lastName", "email", "password", "confirmPassword", "phone", "country", "gender"];
     if (role === "taskOwner") {
       fields.push("organisationName", "organisationType");
     } else if (role === "solutionProvider") {
@@ -153,10 +182,12 @@ function SignupForm({ role, navigate, goBack }) {
 
   const missingFields = requiredFields.filter((f) => {
     if (f === "expertise") return formData.expertise.length === 0;
+    if (f === "confirmPassword") return !formData.confirmPassword || !passwordsMatch;
     return !formData[f];
   });
 
-  const allFilled = missingFields.length === 0;
+  const hasValidationErrors = emailError || orgNameError || !isPasswordValid || !passwordsMatch;
+  const allFilled = missingFields.length === 0 && !hasValidationErrors;
 
 const handleSubmit = async (e) => {
   e.preventDefault();
@@ -220,9 +251,10 @@ const handleSubmit = async (e) => {
 
 
 
-  const Label = ({ text, required }) => (
+  const Label = ({ text, required, optional }) => (
     <label className="block font-semibold text-gray-800 mb-1">
       {text} {required && <span className="text-red-500">*</span>}
+      {optional && <span className="text-gray-400 font-normal text-sm ml-1">(Optional)</span>}
     </label>
   );
 
@@ -297,9 +329,12 @@ const handleSubmit = async (e) => {
             name="email"
             value={formData.email}
             onChange={handleChange}
-            className="w-full border p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#357FE9]"
+            className={`w-full border p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#357FE9] ${emailError ? "border-red-500" : ""}`}
             required
           />
+          {emailError && (
+            <p className="text-red-500 text-xs mt-1">{emailError}</p>
+          )}
         </div>
 
         {/* Password */}
@@ -324,40 +359,77 @@ const handleSubmit = async (e) => {
           </div>
 
           {formData.password && (
-            <div className="mt-2">
-              <div className="h-2 bg-gray-200 rounded overflow-hidden">
-                <div
-                  className={`h-2 transition-all duration-300 rounded ${
-                    passwordStrength <= 2
-                      ? "bg-red-500 w-1/4"
-                      : passwordStrength === 3
-                      ? "bg-yellow-400 w-2/4"
-                      : passwordStrength === 4
-                      ? "bg-blue-400 w-3/4"
-                      : "bg-green-500 w-full"
-                  }`}
-                ></div>
+            <div className="mt-3 p-3 bg-gray-50 rounded-lg border">
+              <p className="text-sm font-medium text-gray-700 mb-2">Password Requirements:</p>
+              <div className="grid grid-cols-1 gap-1.5 text-xs">
+                <div className={`flex items-center gap-2 ${passwordCriteria.minLength ? "text-green-600" : "text-gray-500"}`}>
+                  <span>{passwordCriteria.minLength ? "✓" : "○"}</span>
+                  <span>At least 8 characters</span>
+                </div>
+                <div className={`flex items-center gap-2 ${passwordCriteria.uppercase ? "text-green-600" : "text-gray-500"}`}>
+                  <span>{passwordCriteria.uppercase ? "✓" : "○"}</span>
+                  <span>At least one uppercase letter (A-Z)</span>
+                </div>
+                <div className={`flex items-center gap-2 ${passwordCriteria.lowercase ? "text-green-600" : "text-gray-500"}`}>
+                  <span>{passwordCriteria.lowercase ? "✓" : "○"}</span>
+                  <span>At least one lowercase letter (a-z)</span>
+                </div>
+                <div className={`flex items-center gap-2 ${passwordCriteria.number ? "text-green-600" : "text-gray-500"}`}>
+                  <span>{passwordCriteria.number ? "✓" : "○"}</span>
+                  <span>At least one number (0-9)</span>
+                </div>
+                <div className={`flex items-center gap-2 ${passwordCriteria.special ? "text-green-600" : "text-gray-500"}`}>
+                  <span>{passwordCriteria.special ? "✓" : "○"}</span>
+                  <span>At least one special character (!@#$%^&*)</span>
+                </div>
               </div>
-              <p
-                className={`text-xs mt-1 font-medium transition-all duration-300 ${
-                  passwordStrength <= 2
-                    ? "text-red-500"
-                    : passwordStrength === 3
-                    ? "text-yellow-600"
-                    : passwordStrength === 4
-                    ? "text-blue-600"
-                    : "text-green-600"
-                }`}
-              >
-                {passwordStrength <= 2
-                  ? "Weak password, try adding uppercase letters, numbers, and a symbol."
-                  : passwordStrength === 3
-                  ? "Good password strength, add one more symbol or number for extra security."
-                  : passwordStrength === 4
-                  ? "Strong password, this password is quite secure."
-                  : "Excellent! Your password is very strong."}
-              </p>
+              <div className="mt-2">
+                <div className="h-2 bg-gray-200 rounded overflow-hidden">
+                  <div
+                    className={`h-2 transition-all duration-300 rounded ${
+                      passwordStrength <= 2
+                        ? "bg-red-500"
+                        : passwordStrength === 3
+                        ? "bg-yellow-400"
+                        : passwordStrength === 4
+                        ? "bg-blue-400"
+                        : "bg-green-500"
+                    }`}
+                    style={{ width: `${(passwordStrength / 5) * 100}%` }}
+                  ></div>
+                </div>
+              </div>
             </div>
+          )}
+        </div>
+
+        {/* Confirm Password */}
+        <div>
+          <Label text="Confirm Password" required />
+          <div className="relative">
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              className={`w-full border p-3 rounded-lg shadow-sm pr-10 focus:ring-2 focus:ring-[#357FE9] ${
+                formData.confirmPassword && !passwordsMatch ? "border-red-500" : ""
+              }`}
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-3 top-3 text-gray-500 hover:text-gray-700"
+            >
+              {showConfirmPassword ? <EyeOff /> : <Eye />}
+            </button>
+          </div>
+          {formData.confirmPassword && !passwordsMatch && (
+            <p className="text-red-500 text-xs mt-1">Passwords do not match</p>
+          )}
+          {formData.confirmPassword && passwordsMatch && (
+            <p className="text-green-600 text-xs mt-1">Passwords match</p>
           )}
         </div>
 
@@ -405,9 +477,14 @@ const handleSubmit = async (e) => {
                 name="organisationName"
                 value={formData.organisationName}
                 onChange={handleChange}
-                className="w-full border p-3 rounded-lg shadow-sm mt-1 focus:ring-2 focus:ring-[#357FE9]"
+                placeholder="Enter your organization name (minimum 2 characters)"
+                className={`w-full border p-3 rounded-lg shadow-sm mt-1 focus:ring-2 focus:ring-[#357FE9] ${orgNameError ? "border-red-500" : ""}`}
                 required
               />
+              <p className="text-gray-500 text-xs mt-1">Minimum 2 characters required</p>
+              {orgNameError && (
+                <p className="text-red-500 text-xs mt-1">{orgNameError}</p>
+              )}
             </div>
 
             <div>
@@ -551,7 +628,7 @@ const handleSubmit = async (e) => {
 
         {/* Bio & Link */}
         <div>
-          <Label text="Short Bio" />
+          <Label text="Short Bio" optional />
           <textarea
             name="bio"
             value={formData.bio}
@@ -563,7 +640,7 @@ const handleSubmit = async (e) => {
         </div>
 
         <div>
-          <Label text="Professional Link (LinkedIn, website, etc.)" />
+          <Label text="Professional Link (LinkedIn, website, etc.)" optional />
           <input
             type="url"
             name="professionalLink"

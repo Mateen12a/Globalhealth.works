@@ -302,7 +302,7 @@ exports.login = async (req, res) => {
       await user.save();
 
       return res.status(403).json({
-        msg: "To maintain the integrity of our network and ensure the security of all memebers, our team manually reviews every new account. Your application is currently in the queue and will be finalized shortly. We appreciate your patience in helping us keep Global Health Works as a trusted space.",
+        msg: "To maintain the integrity of our network and ensure the security of all members, our team manually reviews every new account. Your application is currently in the queue and will be finalized shortly. We appreciate your patience in helping us keep Global Health Works as a trusted space.",
       });
     }
 
