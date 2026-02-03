@@ -75,7 +75,7 @@ export default function MyProposals() {
   };
 
   return (
-    <DashboardLayout role="Solution Provider" title="My Proposals">
+    <DashboardLayout role="Solution Provider" title="My Applications">
       {loading ? (
         <div className="flex items-center justify-center py-16">
           <div className="text-center">

@@ -6,6 +6,9 @@ const dotenv = require("dotenv");
 const http = require("http");
 const { Server } = require("socket.io");
 const path = require("path");
+const helmet = require("helmet");
+const compression = require("compression");
+const rateLimit = require("express-rate-limit");
 
 const SESSION_VERSION = "v2";
 
@@ -26,12 +29,96 @@ const conversationController = require("./controllers/conversationController");
 
 dotenv.config();
 
+// Rate limiting - 100 requests per 15 minutes per IP
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: { msg: "Too many requests, please try again later" },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Stricter rate limit for auth endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { msg: "Too many login attempts, please try again later" },
+});
+
 const app = express();
+app.set('trust proxy', 1); // Trust first proxy for rate limiting behind Replit's proxy
 const server = http.createServer(app);
 
-// ✅ Setup Socket.IO
+// CORS configuration - build allowed origins list
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',') 
+  : ['http://localhost:5000', 'http://localhost:3000'];
+
+// Add Replit production domains
+if (process.env.REPLIT_DEV_DOMAIN) {
+  allowedOrigins.push(`https://${process.env.REPLIT_DEV_DOMAIN}`);
+}
+if (process.env.REPLIT_DOMAINS) {
+  process.env.REPLIT_DOMAINS.split(',').forEach(d => allowedOrigins.push(`https://${d}`));
+}
+
+// Also allow globalhealth.works domain
+allowedOrigins.push('https://globalhealth.works');
+allowedOrigins.push('https://www.globalhealth.works');
+
+const isProduction = process.env.NODE_ENV === 'production';
+
+// Origin validation function shared by CORS and Socket.IO
+const validateOrigin = (origin, callback) => {
+  // Allow requests with no origin (mobile apps, curl, Postman, same-origin)
+  if (!origin) return callback(null, true);
+  
+  // Parse the origin to get the hostname for exact matching
+  let originHost;
+  try {
+    const url = new URL(origin);
+    originHost = url.host; // e.g., "globalhealth.works" or "localhost:5000"
+  } catch (e) {
+    // Invalid URL format
+    if (isProduction) {
+      console.warn(`CORS blocked invalid origin: ${origin}`);
+      return callback(new Error('Not allowed by CORS'), false);
+    }
+    return callback(null, true);
+  }
+  
+  // Check if origin host exactly matches any allowed origin host
+  const isAllowed = allowedOrigins.some(allowed => {
+    try {
+      const allowedUrl = new URL(allowed);
+      return originHost === allowedUrl.host;
+    } catch (e) {
+      // Handle cases where allowed origin is just a hostname
+      return originHost === allowed || originHost === allowed.replace(/^https?:\/\//, '');
+    }
+  });
+  
+  if (isAllowed) {
+    return callback(null, true);
+  }
+  
+  // In development, allow all origins for easier testing
+  if (!isProduction) {
+    return callback(null, true);
+  }
+  
+  // In production, reject unauthorized origins
+  console.warn(`CORS blocked origin: ${origin}`);
+  return callback(new Error('Not allowed by CORS'), false);
+};
+
+// ✅ Setup Socket.IO with proper CORS
 const io = new Server(server, {
-  cors: { origin: "*", methods: ["GET", "POST"] },
+  cors: { 
+    origin: validateOrigin,
+    methods: ["GET", "POST"],
+    credentials: true
+  },
 });
 
 // Inject io to controllers
@@ -39,12 +126,28 @@ setSocket(io);
 messageController.setSocket(io);
 conversationController.setSocket && conversationController.setSocket(io);
 
+app.use(cors({
+  origin: validateOrigin,
+  credentials: true
+}));
+
 // Middleware
-app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+
+// Security headers
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable CSP for SPA compatibility
+  crossOriginEmbedderPolicy: false,
+}));
+
+// Compression
+app.use(compression());
+
+// General rate limiting for all routes
+app.use('/api/', limiter);
 
 // API routes
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/admin", adminRoutes);
@@ -151,6 +254,14 @@ app.use((req, res, next) => {
   } else {
     res.send("GlobalHealth.Works API + Socket.IO running");
   }
+});
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+  res.status(err.status || 500).json({ 
+    msg: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message 
+  });
 });
 
 const PORT = process.env.PORT || 3000;

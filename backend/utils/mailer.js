@@ -153,7 +153,7 @@ function emailLayout({ title, preheader = '', content, footerText = '' }) {
                     <table role="presentation" cellspacing="0" cellpadding="0" border="0">
                       <tr>
                         <td style="background-color:#ffffff;border-radius:12px;padding:12px 20px;">
-                          <img src="https://globalhealth.works/new-logo.png" alt="GlobalHealth.Works" style="height:40px;width:auto;display:block;" />
+                          <img src="https://globalhealth.works/new-logo.png" alt="GlobalHealth.Works" style="height:60px;width:auto;display:block;" />
                         </td>
                       </tr>
                     </table>
@@ -166,7 +166,7 @@ function emailLayout({ title, preheader = '', content, footerText = '' }) {
           
           <!-- Content -->
           <tr>
-            <td class="content" style="padding:40px;">
+            <td class="content" style="padding:24px 40px;">
               ${content}
             </td>
           </tr>
@@ -177,11 +177,11 @@ function emailLayout({ title, preheader = '', content, footerText = '' }) {
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                 <tr>
                   <td style="text-align:center;">
-                    ${footerText ? `<p style="color:${COLORS.textLight};font-size:13px;margin-bottom:12px;">${footerText}</p>` : ''}
+                    ${footerText ? `<p style="color:${COLORS.textLight};font-size:13px;margin-bottom:8px;">${footerText}</p>` : ''}
                     <p style="color:${COLORS.textLight};font-size:12px;margin:0;">
                       &copy; ${new Date().getFullYear()} GlobalHealth.Works &middot; Where Global Health Problems Meet Global Health Solutions
                     </p>
-                    <p style="margin-top:12px;">
+                    <p style="margin-top:8px;">
                       <a href="https://globalhealth.works" style="color:${COLORS.primary};text-decoration:none;font-size:12px;margin:0 8px;">Website</a>
                     </p>
                   </td>
@@ -285,10 +285,9 @@ const Templates = {
           </a>
         </div>
         
-        <p style="color:${COLORS.textDark};margin-top:32px;font-size:14px;">
-          Welcome aboard,<br>
+        <p style="color:${COLORS.textDark};margin-top:24px;font-size:14px;">
+          Best regards,<br>
           <strong style="color:${COLORS.textDark};">The GlobalHealth.Works Team</strong>
-
         </p>
       `,
     }),
@@ -343,8 +342,8 @@ const Templates = {
           </a>
         </div>
         
-        <p style="color:${COLORS.textLight};margin-top:32px;font-size:14px;">
-          Warm regards,<br>
+        <p style="color:${COLORS.textDark};margin-top:24px;font-size:16px;">
+          Best regards,<br>
           <strong style="color:${COLORS.textDark};">The GlobalHealth.Works Team</strong>
         </p>
       `;
@@ -372,18 +371,12 @@ const Templates = {
           </a>
         </div>
         
-        <p style="color:${COLORS.textLight};margin-top:32px;font-size:14px;">
-          Warm regards,<br>
+        <p style="color:${COLORS.textDark};margin-top:24px;font-size:16px;">
+          Best regards,<br>
           <strong style="color:${COLORS.textDark};">The GlobalHealth.Works Team</strong>
         </p>
       `;
-    
-    return emailLayout({
-      title: "Welcome to GlobalHealth.Works",
-      preheader: `Your ${roleTitle} registration is being reviewed`,
-      content: isSolutionProvider ? solutionProviderContent : taskOwnerContent,
-    });
-  },
+    },
 
   rejectionNotice: (user, reason) =>
     emailLayout({
@@ -401,216 +394,70 @@ const Templates = {
         
         <p style="color:${COLORS.textLight};margin-bottom:24px;">If you believe this was a mistake or would like to provide additional information, you're welcome to register again with updated details.</p>
         
-        <p style="color:${COLORS.textLight};font-size:14px;">
+        <p style="color:${COLORS.textDark};margin-top:24px;font-size:16px;">
           Best regards,<br>
           <strong style="color:${COLORS.textDark};">The GlobalHealth.Works Team</strong>
         </p>
       `,
     }),
 
-  rejectionConfirmedAdminNotice: (admin, user, reason) =>
-    emailLayout({
-      title: "User Rejected",
-      preheader: `You rejected ${user.firstName} ${user.lastName}'s account`,
-      content: `
-        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Hello ${admin.firstName},</p>
-        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:24px;">You have rejected the following user's registration:</p>
-        
-        <table class="data-table">
-          <tr>
-            <td><strong>Name</strong></td>
-            <td>${user.firstName} ${user.lastName}</td>
-          </tr>
-          <tr>
-            <td><strong>Email</strong></td>
-            <td>${user.email}</td>
-          </tr>
-          <tr>
-            <td><strong>Role</strong></td>
-            <td>${user.role}</td>
-          </tr>
-        </table>
-        
-        <div class="error-box">
-          <strong>Reason for rejection:</strong>
-          <p style="margin:8px 0 0;">${reason}</p>
-        </div>
-        
-        <p style="color:${COLORS.textLight};font-size:14px;">This action has been logged in the system.</p>
-      `,
-    }),
-
-  newTaskAdminAlert: (task, owner) =>
-    emailLayout({
-      title: "New Task Submitted",
-      preheader: `${owner.firstName} ${owner.lastName} created a new task`,
-      content: `
-        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Hello Admin,</p>
-        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:24px;">A new task has been created on the platform.</p>
-        
-        <div style="background:linear-gradient(135deg,${COLORS.bgLight} 0%,#E0E7FF 100%);border-radius:12px;padding:24px;margin-bottom:24px;">
-          <h2 style="color:${COLORS.textDark};font-size:18px;margin:0 0 12px;">${task.title}</h2>
-          <p style="color:${COLORS.textLight};margin:0;font-size:14px;">${task.summary}</p>
-        </div>
-        
-        <table class="data-table">
-          <tr>
-            <td><strong>Created By</strong></td>
-            <td>${owner.firstName} ${owner.lastName}</td>
-          </tr>
-          <tr>
-            <td><strong>Role</strong></td>
-            <td>${owner.role}</td>
-          </tr>
-        </table>
-        
-        <div style="text-align:center;margin-top:32px;">
-          <a href="https://globalhealth.works/admin/tasks/${task._id}" class="btn btn-primary">
-            View Task
-          </a>
-        </div>
-      `,
-    }),
-
-  taskCreatedUserNotice: (user, task) =>
-    emailLayout({
-      title: "Task Created Successfully",
-      preheader: `Your task "${task.title}" is now live`,
-      content: `
-        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Dear ${user.firstName},</p>
-        
-        <div class="success-box">
-          <strong>Your task has been created!</strong>
-        </div>
-        
-        <div style="background:${COLORS.bgLight};border-radius:12px;padding:24px;margin:24px 0;">
-          <h3 style="color:${COLORS.textDark};font-size:16px;margin:0 0 16px;">${task.title}</h3>
-          <p style="color:${COLORS.textDark};margin:0 0 16px;font-size:16px;">${task.summary}</p>
-          
-          <table style="width:100%;font-size:13px;">
-            <tr>
-              <td style="color:${COLORS.textLight};padding:4px 0;">Focus Areas</td>
-              <td style="color:${COLORS.textDark};padding:4px 0;">${task.focusAreas?.join(", ") || "N/A"}</td>
-            </tr>
-            <tr>
-              <td style="color:${COLORS.textLight};padding:4px 0;">Required Skills</td>
-              <td style="color:${COLORS.textDark};padding:4px 0;">${task.requiredSkills?.join(", ") || "N/A"}</td>
-            </tr>
-          </table>
-        </div>
-        
-        <p style="color:${COLORS.textDark};margin-bottom:24px;font-size:16px;">You can view and manage your task from your dashboard at any time.</p>
-        
-        <div style="text-align:center;margin-top:32px;">
-          <a href="https://globalhealth.works/dashboard" class="btn btn-accent">
-            Go to Dashboard
-          </a>
-        </div>
-        
-        <p style="color:${COLORS.textDark};margin-top:32px;font-size:16px;">
-          Thank you for contributing to the global health community.<br>
-          <strong style="color:${COLORS.textDark};">The GlobalHealth.Works Team</strong>
-        </p>
-      `,
-    }),
-
-  newMessageNotification: (receiver, sender, message, conversationId) =>
-    emailLayout({
-      title: "New Message",
-      preheader: `${sender.firstName} ${sender.lastName} sent you a message`,
-      content: `
-        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Dear ${receiver.firstName},</p>
-        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:24px;">You have a new message from <strong style="color:${COLORS.textDark};">${sender.firstName} ${sender.lastName}</strong>.</p>
-        
-        <div class="info-box">
-          <p style="margin:0;font-style:italic;color:${COLORS.textDark};">
-            "${message ? message.substring(0, 200) + (message.length > 200 ? '...' : '') : 'Sent an attachment'}"
-          </p>
-        </div>
-        
-        <div style="text-align:center;margin-top:32px;">
-          <a href="https://globalhealth.works/chat/${conversationId}" class="btn btn-primary">
-            Open Conversation
-          </a>
-        </div>
-        
-        <p style="color:${COLORS.textLight};margin-top:32px;font-size:14px;">
-          Warm regards,<br>
-          <strong style="color:${COLORS.textDark};">The GlobalHealth.Works Team</strong>
-        </p>
-      `,
-    }),
-
-  proposalSubmitted: (taskOwner, applicant, task, proposal) =>
-    emailLayout({
-      title: "New Proposal Received",
-      preheader: `${applicant.firstName} submitted a proposal for "${task.title}"`,
-      content: `
-        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Hello ${taskOwner.firstName},</p>
-        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:24px;">Great news! You've received a new proposal for your task.</p>
-        
-        <div style="background:${COLORS.bgLight};border-radius:12px;padding:24px;margin-bottom:24px;">
-          <p style="color:${COLORS.textLight};font-size:12px;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 8px;">Task</p>
-          <h3 style="color:${COLORS.textDark};font-size:16px;margin:0;">${task.title}</h3>
-        </div>
-        
-        <div style="border:1px solid ${COLORS.border};border-radius:12px;padding:24px;margin-bottom:24px;">
-          <div style="display:flex;align-items:center;margin-bottom:16px;">
-            <div style="width:48px;height:48px;background:linear-gradient(135deg,${COLORS.primary},${COLORS.primaryLight});border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:600;font-size:18px;margin-right:16px;">
-              ${applicant.firstName.charAt(0)}${applicant.lastName.charAt(0)}
-            </div>
-            <div>
-              <p style="margin:0;font-weight:600;color:${COLORS.textDark};">${applicant.firstName} ${applicant.lastName}</p>
-              <p style="margin:4px 0 0;color:${COLORS.textLight};font-size:13px;">Solution Provider</p>
-            </div>
-          </div>
-          
-          <p style="color:${COLORS.textDark};margin-bottom:16px;">${proposal.message}</p>
-          
-          ${proposal.proposedBudget ? `<p style="color:${COLORS.textLight};font-size:14px;margin:8px 0;"><strong>Budget:</strong> $${proposal.proposedBudget}</p>` : ''}
-          ${proposal.proposedDuration ? `<p style="color:${COLORS.textLight};font-size:14px;margin:8px 0;"><strong>Duration:</strong> ${proposal.proposedDuration}</p>` : ''}
-        </div>
-        
-        <div style="text-align:center;margin-top:32px;">
-          <a href="https://globalhealth.works/tasks/${task._id}" class="btn btn-accent">
-            View Proposal
-          </a>
-        </div>
-      `,
-    }),
-
   proposalSubmissionConfirmation: (applicant, task, proposal) =>
     emailLayout({
       title: "Proposal Submitted",
-      preheader: `Your proposal for "${task.title}" has been sent`,
+      preheader: `Your proposal for "${task.title}" was submitted`,
       content: `
         <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Dear ${applicant.firstName},</p>
-        
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:24px;">Your proposal for <strong style="color:${COLORS.textDark};">${task.title}</strong> has been successfully submitted.</p>
+        <div class="info-box">
+          <p style="margin:0;"><strong>Proposed Budget:</strong> ${proposal.proposedBudget ? `$${proposal.proposedBudget.toLocaleString()}` : 'Not specified'}</p>
+          <p style="margin:4px 0 0;"><strong>Proposed Duration:</strong> ${proposal.proposedDuration || 'Not specified'}</p>
+        </div>
+        <p style="color:${COLORS.textDark};margin-top:24px;font-size:16px;">
+          Best regards,<br>
+          <strong style="color:${COLORS.textDark};">The GlobalHealth.Works Team</strong>
+        </p>
+      `,
+    }),
+
+  proposalAccepted: (applicant, task) =>
+    emailLayout({
+      title: "Proposal Accepted!",
+      preheader: `Your proposal for "${task.title}" has been accepted`,
+      content: `
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Dear ${applicant.firstName},</p>
         <div class="success-box">
-          <strong>Your proposal has been submitted successfully!</strong>
+          <strong>Congratulations!</strong> Your proposal for <strong style="color:${COLORS.textDark};">${task.title}</strong> has been accepted.
         </div>
-        
-        <p style="color:${COLORS.textLight};margin-bottom:24px;">The task owner will review your proposal and get back to you soon.</p>
-        
-        <div style="background:${COLORS.bgLight};border-radius:12px;padding:24px;margin-bottom:24px;">
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:24px;">The task owner has selected you to work on this project. You can now communicate directly with them to discuss the next steps.</p>
+        <div style="text-align:center;margin-top:24px;">
+          <a href="https://globalhealth.works/tasks/${task._id}" class="btn btn-primary">View Task Details</a>
+        </div>
+        <p style="color:${COLORS.textDark};margin-top:24px;font-size:16px;">
+          Best regards,<br>
+          <strong style="color:${COLORS.textDark};">The GlobalHealth.Works Team</strong>
+        </p>
+      `,
+    }),
+
+  proposalRejected: (applicant, task) =>
+    emailLayout({
+      title: "Proposal Update",
+      preheader: `Update regarding your proposal for "${task.title}"`,
+      content: `
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Dear ${applicant.firstName},</p>
+        <p style="color:${COLORS.textLight};margin-bottom:24px;">Thank you for your interest in the task below. Unfortunately, the task owner has decided to proceed with another solution provider.</p>
+        <div style="background:${COLORS.bgLight};border-radius:12px;padding:24px;margin:24px 0;">
           <p style="color:${COLORS.textLight};font-size:12px;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 8px;">Task</p>
-          <h3 style="color:${COLORS.textDark};font-size:16px;margin:0 0 16px;">${task.title}</h3>
-          
-          <p style="color:${COLORS.textLight};font-size:12px;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 8px;">Your Message</p>
-          <p style="color:${COLORS.textDark};margin:0;font-size:14px;">${proposal.message}</p>
-          
-          ${proposal.proposedBudget ? `<p style="color:${COLORS.textLight};font-size:14px;margin:12px 0 0;"><strong>Proposed Budget:</strong> $${proposal.proposedBudget}</p>` : ''}
-          ${proposal.proposedDuration ? `<p style="color:${COLORS.textLight};font-size:14px;margin:4px 0 0;"><strong>Proposed Duration:</strong> ${proposal.proposedDuration}</p>` : ''}
+          <h3 style="color:${COLORS.textDark};font-size:16px;margin:0;">${task.title}</h3>
         </div>
-        
+        <p style="color:${COLORS.textLight};margin-bottom:24px;">Don't be discouraged! There are many other opportunities waiting for you on GlobalHealth.Works.</p>
         <div style="text-align:center;margin-top:32px;">
-          <a href="https://globalhealth.works/dashboard" class="btn btn-primary">
-            View My Proposals
+          <a href="https://globalhealth.works/browse-tasks" class="btn btn-primary">
+            Browse Other Tasks
           </a>
         </div>
-        
-        <p style="color:${COLORS.textLight};margin-top:32px;font-size:14px;">
-          Best of luck!<br>
+        <p style="color:${COLORS.textDark};margin-top:24px;font-size:16px;">
+          Best regards,<br>
           <strong style="color:${COLORS.textDark};">The GlobalHealth.Works Team</strong>
         </p>
       `,
@@ -966,8 +813,8 @@ const Templates = {
           </a>
         </div>
         
-        <p style="color:${COLORS.textLight};margin-top:32px;font-size:14px;">
-          Warm regards,<br>
+        <p style="color:${COLORS.textDark};margin-top:24px;font-size:16px;">
+          Best regards,<br>
           <strong style="color:${COLORS.textDark};">The GlobalHealth.Works Team</strong>
         </p>
       `,
@@ -1098,8 +945,8 @@ const Templates = {
         
         <p style="color:${COLORS.textLight};font-size:14px;">If you did not request this, please ignore this email and your password will remain unchanged.</p>
         
-        <p style="color:${COLORS.textLight};margin-top:32px;font-size:14px;">
-          Warm regards,<br>
+        <p style="color:${COLORS.textDark};margin-top:24px;font-size:16px;">
+          Best regards,<br>
           <strong style="color:${COLORS.textDark};">The GlobalHealth.Works Team</strong>
         </p>
       `,
@@ -1245,8 +1092,71 @@ const Templates = {
         
         <p style="color:${COLORS.textLight};font-size:14px;">If you did not request this, please ignore this email and your password will remain unchanged.</p>
         
-        <p style="color:${COLORS.textLight};margin-top:32px;font-size:14px;">
-          Warm regards,<br>
+        <p style="color:${COLORS.textDark};margin-top:24px;font-size:16px;">
+          Best regards,<br>
+          <strong style="color:${COLORS.textDark};">The GlobalHealth.Works Team</strong>
+        </p>
+      `,
+    }),
+
+  newMessageNotification: (receiver, sender, messageText, conversationId) =>
+    emailLayout({
+      title: "New Message",
+      preheader: `${sender.firstName} ${sender.lastName} sent you a message`,
+      content: `
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:16px;">Hi ${receiver.firstName},</p>
+        <p style="color:${COLORS.textLight};margin-bottom:16px;">You have a new message from <strong style="color:${COLORS.textDark};">${sender.firstName} ${sender.lastName}</strong>.</p>
+        
+        <div class="info-box">
+          <p style="margin:0;font-style:italic;color:${COLORS.textDark};">
+            "${messageText ? messageText.substring(0, 200) + (messageText.length > 200 ? '...' : '') : 'Sent an attachment'}"
+          </p>
+        </div>
+        
+        <p style="color:${COLORS.textLight};margin:16px 0 16px;">You can view and reply to this message by clicking below.</p>
+        
+        <div style="text-align:center;">
+          <a href="https://globalhealth.works/messages/${conversationId}" class="btn btn-primary">
+            View Message
+          </a>
+        </div>
+        
+        <p style="color:${COLORS.textDark};margin-top:20px;font-size:14px;">
+          Best regards,<br>
+          <strong style="color:${COLORS.textDark};">The GlobalHealth.Works Team</strong>
+        </p>
+      `,
+    }),
+
+  proposalWithdrawn: (applicant, task) =>
+    emailLayout({
+      title: "Proposal Withdrawn",
+      preheader: `You've withdrawn your proposal for "${task.title}"`,
+      content: `
+        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Dear ${applicant.firstName},</p>
+        
+        <p style="color:${COLORS.textLight};margin-bottom:24px;">This is to confirm that you have withdrawn your proposal for the following task:</p>
+        
+        <div style="background:${COLORS.bgLight};border-radius:12px;padding:24px;margin:24px 0;">
+          <p style="color:${COLORS.textLight};font-size:12px;text-transform:uppercase;letter-spacing:0.5px;margin:0 0 8px;">Task</p>
+          <h3 style="color:${COLORS.textDark};font-size:16px;margin:0;">${task.title}</h3>
+        </div>
+        
+        <div class="info-box">
+          <strong>Changed your mind?</strong>
+          <p style="margin:8px 0 0;font-size:14px;">You can submit a new proposal for this task at any time, as long as the task is still open.</p>
+        </div>
+        
+        <p style="color:${COLORS.textLight};margin-bottom:24px;">If you have any questions about this task or would like to explore other opportunities, feel free to browse our available tasks.</p>
+        
+        <div style="text-align:center;margin-top:32px;">
+          <a href="https://globalhealth.works/tasks/${task._id}" class="btn btn-primary">
+            View Task
+          </a>
+        </div>
+        
+        <p style="color:${COLORS.textDark};margin-top:24px;font-size:14px;">
+          Best regards,<br>
           <strong style="color:${COLORS.textDark};">The GlobalHealth.Works Team</strong>
         </p>
       `,

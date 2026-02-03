@@ -44,5 +44,8 @@ const messageSchema = new mongoose.Schema(
 
 // text index for search
 messageSchema.index({ text: "text" });
+messageSchema.index({ conversationId: 1, createdAt: -1 });
+messageSchema.index({ sender: 1 });
+messageSchema.index({ receiver: 1 });
 
 module.exports = mongoose.model("Message", messageSchema);

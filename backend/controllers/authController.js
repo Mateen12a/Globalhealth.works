@@ -234,10 +234,16 @@ exports.login = async (req, res) => {
     const { email, password, deviceInfo } = req.body;
 
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ msg: "Invalid credentials" });
+    if (!user) {
+      console.log(`Login failed: User not found for email ${email}`);
+      return res.status(400).json({ msg: "Invalid credentials" });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ msg: "Invalid credentials" });
+    if (!isMatch) {
+      console.log(`Login failed for ${email}: Invalid password`);
+      return res.status(400).json({ msg: "Invalid credentials" });
+    }
 
     if (!user.isApproved) {
       // Track pending approval login attempts and send reminder emails (max 2)

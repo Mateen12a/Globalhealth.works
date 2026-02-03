@@ -181,6 +181,41 @@ exports.updatePreferences = async (req, res) => {
   }
 };
 
+// Mark notifications as read by link pattern (secure whitelist approach)
+exports.markReadByLink = async (req, res) => {
+  try {
+    const { linkPattern } = req.body;
+    if (!linkPattern || typeof linkPattern !== 'string') {
+      return res.status(400).json({ msg: "Link pattern required" });
+    }
+    
+    // Whitelist: Only allow specific route patterns
+    // Valid patterns: /tasks/{id}, /messages/{id}
+    const taskMatch = linkPattern.match(/^\/tasks\/([a-f0-9]{24})$/i);
+    const messageMatch = linkPattern.match(/^\/messages\/([a-f0-9]{24})$/i);
+    
+    if (!taskMatch && !messageMatch) {
+      return res.status(400).json({ msg: "Invalid link pattern" });
+    }
+    
+    // Use exact string matching instead of regex for security
+    const result = await Notification.updateMany(
+      { 
+        user: req.user.id, 
+        read: false,
+        deleted: { $ne: true },
+        link: linkPattern
+      },
+      { read: true }
+    );
+    
+    res.json({ success: true, updated: result.modifiedCount });
+  } catch (err) {
+    console.error("markReadByLink error:", err);
+    res.status(500).json({ msg: "Error updating notifications" });
+  }
+};
+
 // Admin: Get all notifications (for admin dashboard)
 exports.getAllNotifications = async (req, res) => {
   try {

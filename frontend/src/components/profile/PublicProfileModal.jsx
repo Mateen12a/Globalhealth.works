@@ -87,6 +87,7 @@ export default function PublicProfileModal({ userId, onClose, currentUser }) {
   const [forbiddenMsg, setForbiddenMsg] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [startingConversation, setStartingConversation] = useState(false);
+  const [existingConvoNotice, setExistingConvoNotice] = useState(null);
 
   const isAdmin = currentUser?.role === "admin";
   const token = localStorage.getItem("token");
@@ -252,8 +253,15 @@ export default function PublicProfileModal({ userId, onClose, currentUser }) {
         });
         const data = await res.json();
         if (res.ok) {
-          onClose();
-          navigate(`/messages/${data._id}`);
+          if (data.existingConversation && data.isDifferentContext) {
+            setExistingConvoNotice({
+              recipientName: data.recipientName,
+              conversationId: data._id
+            });
+          } else {
+            onClose();
+            navigate(`/messages/${data._id}`);
+          }
         } else {
           alert(data.msg || "Could not start conversation");
         }
@@ -420,7 +428,7 @@ export default function PublicProfileModal({ userId, onClose, currentUser }) {
                         onClick={handleShare} 
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-light)] text-white rounded-xl font-medium text-sm transition-colors"
+                        className="hidden inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-light)] text-white rounded-xl font-medium text-sm transition-colors"
                       >
                         <Share2 className="w-4 h-4" /> {copied ? "Link Copied!" : "Share Profile"}
                       </motion.button>
@@ -694,6 +702,44 @@ export default function PublicProfileModal({ userId, onClose, currentUser }) {
         onSubmit={submitRejection}
         loading={rejectLoading}
       />
+
+      {/* Existing Conversation Notice Modal */}
+      {existingConvoNotice && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-60 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                <MessageSquare className="w-6 h-6 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-[#1E376E]">Existing Conversation</h3>
+              </div>
+            </div>
+            <p className="text-gray-600 mb-6">
+              You already have a conversation with <strong>{existingConvoNotice.recipientName}</strong> from a previous task. We'll continue that conversation instead of starting a new one.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setExistingConvoNotice(null)}
+                className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  const convoId = existingConvoNotice.conversationId;
+                  setExistingConvoNotice(null);
+                  onClose();
+                  navigate(`/messages/${convoId}`);
+                }}
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#1E376E] to-[#3B5998] text-white rounded-lg text-sm font-medium hover:opacity-90 transition"
+              >
+                <MessageSquare className="w-4 h-4" /> Continue Chat
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

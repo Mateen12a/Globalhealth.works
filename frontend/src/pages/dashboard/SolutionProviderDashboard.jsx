@@ -12,6 +12,7 @@ export default function SolutionProviderDashboard() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [myStats, setMyStats] = useState({ applied: 0, inProgress: 0, completed: 0 });
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
@@ -36,7 +37,21 @@ export default function SolutionProviderDashboard() {
         setLoading(false);
       }
     };
+    
+    const fetchMyStats = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/proposals/my-stats`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (res.ok) setMyStats(data);
+      } catch (err) {
+        console.error("Error fetching stats:", err);
+      }
+    };
+    
     fetchTasks();
+    fetchMyStats();
   }, [token]);
 
   const handleOnboardingComplete = () => {
@@ -44,19 +59,13 @@ export default function SolutionProviderDashboard() {
   };
 
   const available = tasks.filter((t) => t.status === "published");
-  const completed = tasks.filter((t) => t.status === "completed");
-  const inProgress = tasks.filter(
-    (t) => t.status === "in progress" || t.status === "ongoing"
-  );
 
   const stats = [
     { label: "Available Tasks", value: available.length, type: "total" },
-    { label: "In Progress", value: inProgress.length, type: "inProgress" },
-    { label: "Completed", value: completed.length, type: "completed" },
-    { label: "Applied", value: 0, type: "active" },
+    { label: "Applied", value: myStats.applied, type: "active" },
+    { label: "In Progress", value: myStats.inProgress, type: "inProgress" },
+    { label: "Completed", value: myStats.completed, type: "completed" },
   ];
-
-  const recentCompleted = completed.slice(0, 3);
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -213,39 +222,35 @@ export default function SolutionProviderDashboard() {
           </div>
         )}
 
-        {recentCompleted.length > 0 && (
+        {myStats.inProgress > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
             className="mt-10"
           >
-            <h3 className="text-xl font-bold text-[var(--color-text)] mb-4 flex items-center gap-2">
-              <CheckCircle className="w-5 h-5 text-emerald-500" />
-              Recently Completed Tasks
-            </h3>
-            <div className="grid md:grid-cols-2 gap-4">
-              {recentCompleted.map((t) => (
-                <Link
-                  key={t._id}
-                  to={`/tasks/${t._id}`}
-                  className="card p-4 hover:border-emerald-300 transition-colors group"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                      <CheckCircle className="w-5 h-5 text-emerald-500" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-[var(--color-text)] truncate group-hover:text-emerald-600 transition-colors">
-                        {t.title}
-                      </h4>
-                      <p className="text-sm text-[var(--color-text-secondary)] line-clamp-1">
-                        {t.summary}
-                      </p>
-                    </div>
+            <div className="card p-6 bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center">
+                    <Clock className="w-6 h-6 text-purple-600" />
                   </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-[var(--color-text)]">
+                      {myStats.inProgress} Active {myStats.inProgress === 1 ? 'Project' : 'Projects'}
+                    </h3>
+                    <p className="text-sm text-[var(--color-text-secondary)]">
+                      You're currently working on {myStats.inProgress === 1 ? 'a task' : 'tasks'}
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  to="/my-applications"
+                  className="btn-primary px-4 py-2 text-sm"
+                >
+                  View My Work
                 </Link>
-              ))}
+              </div>
             </div>
           </motion.div>
         )}

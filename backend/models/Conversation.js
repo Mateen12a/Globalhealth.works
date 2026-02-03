@@ -22,5 +22,6 @@ const conversationSchema = new mongoose.Schema(
 
 // ensure unique conversation for 2-user one-to-one
 conversationSchema.index({ participants: 1 }, { unique: false });
+conversationSchema.index({ updatedAt: -1 });
 
 module.exports = mongoose.model("Conversation", conversationSchema);

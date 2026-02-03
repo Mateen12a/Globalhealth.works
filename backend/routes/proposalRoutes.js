@@ -8,6 +8,7 @@ const {
   createProposal,
   getProposalsForTask,
   getMyProposals,
+  getMyProposalStats,
   updateProposalStatus,
   withdrawProposal,
   getProposal,
@@ -34,11 +35,13 @@ router.post("/", authMiddleware, upload.array("attachments", 5), createProposal)
 
 // Get proposals for a task (owner)
 router.get("/task/:taskId", authMiddleware, getProposalsForTask);
-router.get("/:id", authMiddleware, getProposal);
-
-
-// Get my proposals (SP)
+// Get my proposals (SP) - must come before /:id route
 router.get("/mine", authMiddleware, getMyProposals);
+
+// Get my proposal stats (SP dashboard)
+router.get("/my-stats", authMiddleware, getMyProposalStats);
+
+router.get("/:id", authMiddleware, getProposal);
 
 // Owner accept/reject a proposal
 router.patch("/:proposalId/status", authMiddleware, updateProposalStatus);

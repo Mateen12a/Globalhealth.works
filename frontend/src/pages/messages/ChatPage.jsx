@@ -7,6 +7,7 @@ import { Paperclip, Send, CheckCheck, ChevronLeft, X, File, Image as ImageIcon }
 import dayjs from "dayjs";
 import { socket as sharedSocket, connectSocket } from "../../utils/socket";
 import { jwtDecode } from "jwt-decode";
+import useAutoMarkRead from "../../hooks/useAutoMarkRead";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -40,6 +41,8 @@ export default function ChatPage({ currentUser: propUser }) {
   const scrollRef = useRef();
   const socketRef = useRef();
   const token = localStorage.getItem("token");
+
+  useAutoMarkRead(conversationId ? `/messages/${conversationId}` : null);
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => scrollRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }), 50);
@@ -87,7 +90,7 @@ export default function ChatPage({ currentUser: propUser }) {
     sharedSocket.emit("join", currentUser._id);
 
     const handleNewMessage = (msg) => {
-      if (msg.conversationId === conversationId) {
+      if (msg.conversationId === conversationId && String(msg.sender?._id || msg.sender) !== String(currentUser._id)) {
         setMessages(prev => {
           const exists = prev.some(m => m._id === msg._id);
           if (exists) return prev;

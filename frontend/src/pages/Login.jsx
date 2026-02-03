@@ -35,7 +35,14 @@ export default function Login() {
         body: JSON.stringify(formData),
       });
 
-      const data = await res.json();
+      const text = await res.text();
+      let data;
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (parseErr) {
+        console.error("Failed to parse login response:", text);
+        throw new Error("Invalid response from server");
+      }
 
       if (res.ok && data.token) {
         localStorage.setItem("token", data.token);
@@ -44,7 +51,8 @@ export default function Login() {
 
         try {
           const versionRes = await fetch(`${API_URL}/api/auth/session-version`);
-          const versionData = await versionRes.json();
+          const text = await versionRes.text();
+          const versionData = text ? JSON.parse(text) : {};
           localStorage.setItem("sessionVersion", versionData.version);
         } catch (err) {
           console.error("Failed to fetch session version:", err);

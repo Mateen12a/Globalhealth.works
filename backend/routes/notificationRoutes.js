@@ -7,6 +7,7 @@ const {
   getUnreadCount,
   markAsRead,
   markAllAsRead,
+  markReadByLink,
   deleteNotification,
   deleteMultipleNotifications,
   deleteAllNotifications,
@@ -18,6 +19,7 @@ const {
 // User notification routes
 router.get("/", authMiddleware, getNotifications);
 router.get("/unread-count", authMiddleware, getUnreadCount);
+router.patch("/mark-read-by-link", authMiddleware, markReadByLink);
 router.patch("/:id/read", authMiddleware, markAsRead);
 router.patch("/read-all", authMiddleware, markAllAsRead);
 router.delete("/:id", authMiddleware, deleteNotification);

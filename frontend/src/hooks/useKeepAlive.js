@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 
-const API_URL = import.meta.env.VITE_API_URL;
+// Use empty string for relative URLs (works with Vite proxy in dev, same-origin in prod)
+const API_URL = import.meta.env.VITE_API_URL || "";
 const PING_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
 export default function useKeepAlive() {

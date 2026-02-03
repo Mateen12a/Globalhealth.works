@@ -123,12 +123,9 @@ exports.sendMessage = async (req, res) => {
     let finalReceiver = receiverId;
     
     if (!convoId) {
-      // 1. Find or create the conversation
+      // 1. Find ANY existing conversation between these users (one conversation per user pair)
       let convo = await Conversation.findOne({
-        participants: { $all: [sender, receiverId] },
-        isTaskConversation: !!taskId,
-        ...(taskId ? { taskId } : {}),
-        ...(proposalId ? { proposalId } : {}),
+        participants: { $all: [sender, receiverId] }
       });
 
       if (!convo) {
@@ -178,7 +175,7 @@ exports.sendMessage = async (req, res) => {
       lastMessage: { text: message.text || (attachments[0] && "[attachment]") || "", sender, createdAt: message.createdAt }
     }, { new: true });
 
-    // 6. Realtime emits
+    // 6. Realtime emits - ONLY to receiver (sender uses optimistic update)
     if (io) {
       const messageData = {
         ...message.toObject(),
@@ -186,11 +183,8 @@ exports.sendMessage = async (req, res) => {
         receiver: message.receiver.toString(),
       };
       
-      // message to receiver
+      // message to receiver ONLY (sender already has optimistic update)
       io.to(finalReceiver.toString()).emit("message:new", messageData);
-
-      // notify sender too (for local echo)
-      io.to(sender.toString()).emit("message:new", messageData);
 
       // conversation update (for inbox)
       io.to(finalReceiver.toString()).emit("conversationUpdate", {
@@ -207,30 +201,37 @@ exports.sendMessage = async (req, res) => {
 
     // 7. create in-app notification
     try {
-      // Assuming req.user.name is available
-      const senderName = req.user.name || "A user"; 
-      await createNotification(finalReceiver, "message", `${senderName} sent you a message`, `/chat/${convoId}`);
+      const senderName = req.user.firstName && req.user.lastName 
+        ? `${req.user.firstName} ${req.user.lastName}` 
+        : "Someone"; 
+      await createNotification(finalReceiver, "message", `${senderName} sent you a message`, `/messages/${convoId}`);
     } catch (nerr) {
-      // non-fatal
       console.warn("createNotification failed", nerr);
     }
     try {
-      const receiverUser = await User.findById(finalReceiver).lean();
-      const senderUser = await User.findById(sender).lean();
+      const lastEmailKey = `last_email_${finalReceiver}_${sender}`;
+      const lastEmailTime = global[lastEmailKey] || 0;
+      const now = Date.now();
+      
+      if (now - lastEmailTime > 15 * 60 * 1000) { // 15 minute cooldown
+        const receiverUser = await User.findById(finalReceiver).lean();
+        const senderUser = await User.findById(sender).lean();
 
-      if (receiverUser?.email) {
-        const html = Templates.newMessageNotification(
-          receiverUser,
-          senderUser,
-          message.text,
-          convoId
-        );
+        if (receiverUser?.email) {
+          const html = Templates.newMessageNotification(
+            receiverUser,
+            senderUser,
+            message.text,
+            convoId
+          );
 
-        await sendMail(
-          receiverUser.email,
-          `New message from ${senderUser.firstName}`,
-          html
-        );
+          await sendMail(
+            receiverUser.email,
+            `New message from ${senderUser.firstName} ${senderUser.lastName}`,
+            html
+          );
+          global[lastEmailKey] = now;
+        }
       }
     } catch (emailErr) {
       console.warn("Email send failed:", emailErr);

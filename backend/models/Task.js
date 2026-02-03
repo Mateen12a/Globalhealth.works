@@ -45,8 +45,16 @@ const taskSchema = new mongoose.Schema(
     // Reports
     reports: [reportSchema],
     isReported: { type: Boolean, default: false },
+    
+    // Edit tracking
+    isEdited: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
+
+taskSchema.index({ owner: 1 });
+taskSchema.index({ status: 1 });
+taskSchema.index({ createdAt: -1 });
+taskSchema.index({ accepted: 1 });
 
 module.exports = mongoose.model("Task", taskSchema);

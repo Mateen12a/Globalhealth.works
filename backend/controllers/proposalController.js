@@ -23,6 +23,54 @@ exports.createProposal = async (req, res) => {
       return res.status(400).json({ msg: "Task owners cannot apply to their own tasks" });
     }
 
+    // Check for existing proposal
+    const existingProposal = await Proposal.findOne({ 
+      task: taskId, 
+      fromUser: fromUserId
+    });
+    
+    if (existingProposal) {
+      // If active proposal exists, reject
+      if (existingProposal.status === 'pending' || existingProposal.status === 'accepted') {
+        return res.status(400).json({ msg: "You already have an active proposal for this task" });
+      }
+      
+      // If withdrawn or rejected, update the existing proposal instead of creating new
+      if (existingProposal.status === 'withdrawn' || existingProposal.status === 'rejected') {
+        const attachments = [];
+        if (req.files && req.files.length > 0) {
+          for (const f of req.files) {
+            attachments.push(`/uploads/proposals/${f.filename}`);
+          }
+        }
+        
+        existingProposal.message = message;
+        existingProposal.proposedBudget = proposedBudget ? Number(proposedBudget) : undefined;
+        existingProposal.proposedDuration = proposedDuration;
+        existingProposal.attachments = attachments.length > 0 ? attachments : existingProposal.attachments;
+        existingProposal.status = 'pending';
+        existingProposal.updatedAt = new Date();
+        
+        await existingProposal.save();
+        
+        // Send resubmission notification email
+        try {
+          const applicant = await User.findById(fromUserId);
+          if (applicant) {
+            await sendMail(
+              applicant.email,
+              `Proposal Resubmitted - ${task.title}`,
+              Templates.proposalSubmissionConfirmation(applicant, task, existingProposal)
+            );
+          }
+        } catch (emailErr) {
+          console.error("Resubmission email error:", emailErr);
+        }
+        
+        return res.status(200).json(existingProposal);
+      }
+    }
+
     // files handling (multer placed files in req.files)
     const attachments = [];
     if (req.files && req.files.length > 0) {
@@ -86,7 +134,7 @@ exports.createProposal = async (req, res) => {
     } catch (emailErr) {
       console.warn("Proposal email failed:", emailErr);
     }
-    res.status(201).json({ msg: "Proposal submitted", proposal });
+    res.status(201).json({ msg: "Success", proposal });
   } catch (err) {
     console.error("createProposal error:", err);
     res.status(500).json({ msg: "Server error" });
@@ -107,7 +155,7 @@ exports.getProposalsForTask = async (req, res) => {
     }
 
     const proposals = await Proposal.find({ task: taskId })
-      .populate("fromUser", "name email profileImage expertise")
+      .populate("fromUser", "firstName lastName email profileImage expertise")
       .sort({ createdAt: -1 });
 
     res.json(proposals);
@@ -129,6 +177,46 @@ exports.getMyProposals = async (req, res) => {
     res.json(proposals);
   } catch (err) {
     console.error("getMyProposals error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
+// Get SP dashboard stats (real data)
+exports.getMyProposalStats = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    // Get all proposals by this user with task data
+    const proposals = await Proposal.find({ fromUser: userId })
+      .populate("task", "status")
+      .lean();
+    
+    let applied = 0;
+    let inProgress = 0;
+    let completed = 0;
+    
+    for (const p of proposals) {
+      if (!p.task) continue;
+      
+      const taskStatus = (p.task.status || '').toLowerCase();
+      
+      // Applied = pending proposals
+      if (p.status === 'pending') {
+        applied++;
+      }
+      // In Progress = accepted proposals where task is in-progress/ongoing/published (active work)
+      else if (p.status === 'accepted' && ['in-progress', 'in progress', 'ongoing', 'published'].includes(taskStatus)) {
+        inProgress++;
+      }
+      // Completed = accepted proposals where task is completed
+      else if (p.status === 'accepted' && taskStatus === 'completed') {
+        completed++;
+      }
+    }
+    
+    res.json({ applied, inProgress, completed });
+  } catch (err) {
+    console.error("getMyProposalStats error:", err);
     res.status(500).json({ msg: "Server error" });
   }
 };
@@ -215,13 +303,27 @@ exports.withdrawProposal = async (req, res) => {
   try {
     const { proposalId } = req.params;
     const userId = req.user.id;
-    const proposal = await Proposal.findById(proposalId);
+    const proposal = await Proposal.findById(proposalId).populate('task');
     if (!proposal) return res.status(404).json({ msg: "Proposal not found" });
 
     if (proposal.fromUser.toString() !== userId) return res.status(403).json({ msg: "Not authorized" });
 
     proposal.status = "withdrawn";
     await proposal.save();
+
+    // Send withdrawal confirmation email
+    const applicant = await User.findById(userId);
+    if (applicant && proposal.task) {
+      try {
+        await sendMail(
+          applicant.email,
+          `Proposal Withdrawn - ${proposal.task.title}`,
+          Templates.proposalWithdrawn(applicant, proposal.task)
+        );
+      } catch (emailErr) {
+        console.error("Withdrawal email error:", emailErr);
+      }
+    }
 
     res.json({ msg: "Proposal withdrawn", proposal });
   } catch (err) {

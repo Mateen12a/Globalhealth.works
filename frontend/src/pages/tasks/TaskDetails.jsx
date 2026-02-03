@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import ProposalModal from "../../components/proposals/ProposalModal";
 import FeedbackForm from "../../components/FeedbackForm";
+import useAutoMarkRead from "../../hooks/useAutoMarkRead";
 import FeedbackList from "../../components/FeedbackList";
 import EditTaskModal from "../../components/tasks/EditTaskModal";
 import PublicProfileModal from "../../components/profile/PublicProfileModal";
@@ -53,6 +54,10 @@ export default function TaskDetails() {
   const [markingComplete, setMarkingComplete] = useState(false);
   const [withdrawing, setWithdrawing] = useState(false);
   const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(null); // { type: 'accept' | 'reject', name: string }
+  const [existingConvoNotice, setExistingConvoNotice] = useState(null); // { recipientName, conversationId }
+
+  useAutoMarkRead(id ? `/tasks/${id}` : null);
 
   // === Fetch Task ===
   useEffect(() => {
@@ -110,7 +115,6 @@ export default function TaskDetails() {
       const data = await res.json();
       if (res.ok) {
         setTask(data.task);
-        alert(`Status updated to ${newStatus}`);
       }
     } catch (err) {
       console.error("Status update error:", err);
@@ -120,6 +124,9 @@ export default function TaskDetails() {
   // === Handle Proposal Accept/Reject ===
   const handleProposalAction = async (proposalId, action) => {
     try {
+      const proposal = proposals.find(p => p._id === proposalId);
+      const applicantName = proposal?.fromUser ? `${proposal.fromUser.firstName} ${proposal.fromUser.lastName}` : 'the applicant';
+      
       const res = await fetch(`${API_URL}/api/proposals/${proposalId}/status`, {
         method: "PATCH",
         headers: {
@@ -135,12 +142,13 @@ export default function TaskDetails() {
             p._id === proposalId ? { ...p, status: data.proposal.status } : p
           )
         );
-        alert(`Proposal ${action}ed`);
+        setShowSuccessModal({ type: action, name: applicantName });
       } else {
-        alert(data.msg || "Error updating proposal");
+        setShowSuccessModal({ type: 'error', message: data.msg || "Error updating proposal" });
       }
     } catch (err) {
       console.error(`${action} error:`, err);
+      setShowSuccessModal({ type: 'error', message: "Something went wrong. Please try again." });
     }
   };
 
@@ -200,8 +208,6 @@ export default function TaskDetails() {
   // === Start or continue conversation (SIMPLIFIED) ===
   const startConversation = async (toUserId, taskId = null, proposalId = null) => {
       try {
-        // 🚨 SIMPLIFICATION: Directly call the backend's "find or create" endpoint.
-        // The backend should return the existing or newly created conversation.
         const res = await fetch(`${API_URL}/api/conversations/start`, {
           method: "POST",
           headers: {
@@ -213,8 +219,15 @@ export default function TaskDetails() {
 
         const data = await res.json();
         if (res.ok) {
-          // The server is expected to return the new/existing conversation object with a primary key, usually _id
-          navigate(`/messages/${data._id}`);
+          // Show notice if using existing conversation from a different context
+          if (data.existingConversation && data.isDifferentContext) {
+            setExistingConvoNotice({
+              recipientName: data.recipientName,
+              conversationId: data._id
+            });
+          } else {
+            navigate(`/messages/${data._id}`);
+          }
         } else {
           alert(data.msg || "Error starting conversation");
         }
@@ -276,7 +289,14 @@ const formatRole = (role) => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-[#1E376E]">{task.title}</h1>
+            <h1 className="text-3xl font-bold text-[#1E376E] flex items-center gap-2">
+              {task.title}
+              {task.isEdited && (
+                <span className="text-xs font-normal text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+                  Edited
+                </span>
+              )}
+            </h1>
             <p className="text-gray-600 mt-1">{task.summary}</p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -286,7 +306,7 @@ const formatRole = (role) => {
             >
               <ArrowLeft className="w-4 h-4" /> Back
             </button>
-            {role === "taskOwner" && (
+            {role === "taskOwner" && task.status === "published" && (
               <button
                 onClick={() => setShowEditModal(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#357FE9] to-[#1E376E] text-white rounded-lg text-sm hover:opacity-90"
@@ -593,13 +613,46 @@ const formatRole = (role) => {
               <p className="text-green-600 font-semibold text-center">
                 ✅ You’ve been accepted for this task!
               </p>
-            ) : myProposal ? (
-              <button
-                disabled
-                className="w-full bg-gray-200 text-gray-600 py-3 rounded-lg cursor-not-allowed"
-              >
-                Proposal already submitted
-              </button>
+            ) : myProposal?.status === "withdrawn" ? (
+              <div className="space-y-3">
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <XCircle className="w-5 h-5" />
+                    <span className="font-medium">Proposal Withdrawn</span>
+                  </div>
+                  <p className="text-sm text-gray-500 mt-1">
+                    You previously withdrew your proposal for this task.
+                  </p>
+                </div>
+                {task.status === "published" && (
+                  <button
+                    onClick={() => setShowProposalModal(true)}
+                    className="w-full bg-gradient-to-r from-[#E96435] to-[#FF7A50] text-white py-3 rounded-lg font-semibold hover:opacity-90 transition"
+                  >
+                    Submit New Proposal
+                  </button>
+                )}
+              </div>
+            ) : myProposal?.status === "rejected" ? (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 text-red-600">
+                  <XCircle className="w-5 h-5" />
+                  <span className="font-medium">Proposal Not Selected</span>
+                </div>
+                <p className="text-sm text-red-500 mt-1">
+                  The task owner has chosen another solution provider.
+                </p>
+              </div>
+            ) : myProposal?.status === "pending" ? (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 text-amber-600">
+                  <Clock className="w-5 h-5" />
+                  <span className="font-medium">Proposal Submitted</span>
+                </div>
+                <p className="text-sm text-amber-600 mt-1">
+                  Your proposal is awaiting review by the task owner.
+                </p>
+              </div>
             ) : (
               <button
                 onClick={() => setShowProposalModal(true)}
@@ -651,6 +704,55 @@ const formatRole = (role) => {
         />
       )}
 
+      {/* Proposal Action Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                showSuccessModal.type === 'accept' ? 'bg-green-100' : 
+                showSuccessModal.type === 'reject' ? 'bg-orange-100' : 'bg-red-100'
+              }`}>
+                {showSuccessModal.type === 'accept' ? (
+                  <CheckCircle className="w-6 h-6 text-green-500" />
+                ) : showSuccessModal.type === 'reject' ? (
+                  <XCircle className="w-6 h-6 text-orange-500" />
+                ) : (
+                  <AlertTriangle className="w-6 h-6 text-red-500" />
+                )}
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-[#1E376E]">
+                  {showSuccessModal.type === 'accept' ? 'Proposal Accepted' : 
+                   showSuccessModal.type === 'reject' ? 'Proposal Rejected' : 'Error'}
+                </h3>
+              </div>
+            </div>
+            <p className="text-gray-600 mb-6">
+              {showSuccessModal.type === 'accept' ? (
+                <>You have accepted <strong>{showSuccessModal.name}</strong>'s proposal. They have been notified and can now start working on your task.</>
+              ) : showSuccessModal.type === 'reject' ? (
+                <>You have rejected <strong>{showSuccessModal.name}</strong>'s proposal. They have been notified of your decision.</>
+              ) : (
+                showSuccessModal.message
+              )}
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowSuccessModal(null)}
+                className={`px-4 py-2 text-white rounded-lg text-sm font-medium transition ${
+                  showSuccessModal.type === 'accept' ? 'bg-green-600 hover:bg-green-700' :
+                  showSuccessModal.type === 'reject' ? 'bg-orange-500 hover:bg-orange-600' :
+                  'bg-red-600 hover:bg-red-700'
+                }`}
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Withdraw Confirmation Modal */}
       {showWithdrawConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -689,6 +791,43 @@ const formatRole = (role) => {
                     <AlertTriangle className="w-4 h-4" /> Withdraw Task
                   </>
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Existing Conversation Notice Modal */}
+      {existingConvoNotice && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                <MessageSquare className="w-6 h-6 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-[#1E376E]">Existing Conversation</h3>
+              </div>
+            </div>
+            <p className="text-gray-600 mb-6">
+              You already have a conversation with <strong>{existingConvoNotice.recipientName}</strong> from a previous task. We'll continue that conversation instead of starting a new one.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setExistingConvoNotice(null)}
+                className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  const convoId = existingConvoNotice.conversationId;
+                  setExistingConvoNotice(null);
+                  navigate(`/messages/${convoId}`);
+                }}
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#1E376E] to-[#3B5998] text-white rounded-lg text-sm font-medium hover:opacity-90 transition"
+              >
+                <MessageSquare className="w-4 h-4" /> Continue Chat
               </button>
             </div>
           </div>

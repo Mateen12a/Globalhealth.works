@@ -150,6 +150,9 @@ exports.updateTask = async (req, res) => {
       }
     }
 
+    // Mark task as edited
+    task.isEdited = true;
+
     await task.save();
     res.json(task);
   } catch (err) {
@@ -308,11 +311,39 @@ exports.updateStatus = async (req, res) => {
 // Get my applications
 exports.getMyApplications = async (req, res) => {
   try {
-    const tasks = await Task.find({ applicants: req.user.id })
-      .populate("owner", "firstName lastName email")
+    const Proposal = require('../models/Proposal');
+    
+    // Find all proposals by this user
+    const proposals = await Proposal.find({ fromUser: req.user.id })
+      .populate({
+        path: 'task',
+        populate: { path: 'owner', select: 'firstName lastName email profileImage' }
+      })
       .sort({ createdAt: -1 });
-    res.json(tasks);
+    
+    // Transform to include proposal info with task
+    const applications = proposals
+      .filter(p => p.task) // Filter out proposals for deleted tasks
+      .map(p => ({
+        _id: p.task._id,
+        title: p.task.title,
+        summary: p.task.summary,
+        status: p.task.status,
+        owner: p.task.owner,
+        createdAt: p.task.createdAt,
+        proposal: {
+          _id: p._id,
+          status: p.status,
+          message: p.message,
+          proposedBudget: p.proposedBudget,
+          proposedDuration: p.proposedDuration,
+          createdAt: p.createdAt
+        }
+      }));
+    
+    res.json(applications);
   } catch (err) {
+    console.error("getMyApplications error:", err);
     res.status(500).json({ msg: "Server error" });
   }
 };

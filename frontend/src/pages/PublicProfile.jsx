@@ -215,7 +215,7 @@ const formatRole = (role) => {
       </div>
 
       {/* RIGHT COLUMN: Share / Actions */}
-      <div className="bg-white rounded-xl shadow p-6 flex flex-col justify-between">
+      <div className="hidden bg-white rounded-xl shadow p-6 flex flex-col justify-between">
         <div>
           <h3 className="text-lg font-bold mb-4">Work With {profile.name}</h3>
           <p className="text-gray-600 text-sm mb-6">
