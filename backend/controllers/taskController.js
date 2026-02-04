@@ -5,6 +5,7 @@ const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
 const { sendMail, Templates } = require("../utils/mailer");
+const { validateTaskCreation, validateTaskTitle, validateTaskDescription, validateTaskSummary } = require("../utils/validation");
 
 // === Multer setup ===
 const storage = multer.diskStorage({
@@ -31,6 +32,15 @@ exports.createTask = async (req, res) => {
       duration,
       startDate,
     } = req.body;
+
+    // Backend validation
+    const validationResult = validateTaskCreation({ title, summary, description, location, duration });
+    if (!validationResult.valid) {
+      return res.status(400).json({ 
+        msg: validationResult.errors[0],
+        errors: validationResult.errors 
+      });
+    }
 
     const attachments =
       req.files?.attachments?.map((f) => `/uploads/tasks/${f.filename}`) || [];
@@ -92,6 +102,24 @@ exports.updateTask = async (req, res) => {
     // Authorization
     if (String(task.owner) !== req.user.id && req.user.role !== "admin") {
       return res.status(403).json({ msg: "Not allowed" });
+    }
+
+    // Backend validation for updated fields
+    const errors = [];
+    if (req.body.title) {
+      const titleResult = validateTaskTitle(req.body.title);
+      if (!titleResult.valid) errors.push(titleResult.error);
+    }
+    if (req.body.summary) {
+      const summaryResult = validateTaskSummary(req.body.summary);
+      if (!summaryResult.valid) errors.push(summaryResult.error);
+    }
+    if (req.body.description) {
+      const descResult = validateTaskDescription(req.body.description);
+      if (!descResult.valid) errors.push(descResult.error);
+    }
+    if (errors.length > 0) {
+      return res.status(400).json({ msg: errors[0], errors });
     }
 
     // === Basic fields ===
@@ -290,20 +318,37 @@ exports.updateStatus = async (req, res) => {
       return res.status(403).json({ msg: "Not your task" });
     }
 
-    task.status = req.body.status;
+    const newStatus = req.body.status;
+    const Proposal = require("../models/Proposal");
+    
+    // Check if task has an accepted proposal
+    const hasAcceptedProposal = await Proposal.exists({ 
+      task: task._id, 
+      status: "accepted" 
+    });
+
+    // Prevent status changes when task is in-progress with an accepted proposal (except to completed)
+    if (hasAcceptedProposal && task.status === "in-progress" && newStatus !== "completed") {
+      return res.status(400).json({ 
+        msg: "Task status is locked while in progress with an assigned solution provider. Only marking as complete is allowed." 
+      });
+    }
+
+    task.status = newStatus;
     await task.save();
 
     for (const spId of task.applicants) {
       await createNotification(
         spId,
         "system",
-        `Task "${task.title}" status changed to ${req.body.status}.`,
+        `Task "${task.title}" status changed to ${newStatus}.`,
         `/tasks/${task._id}`
       );
     }
 
     res.json({ msg: "Status updated", task });
   } catch (err) {
+    console.error("updateStatus error:", err);
     res.status(500).json({ msg: "Server error" });
   }
 };

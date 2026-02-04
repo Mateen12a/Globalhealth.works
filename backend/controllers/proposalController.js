@@ -6,6 +6,7 @@ const path = require("path");
 const fs = require("fs");
 const { sendMail, Templates } = require("../utils/mailer");
 const createNotification = require("../utils/createNotification");
+const { validateProposalCreation } = require("../utils/validation");
 
 // Create a proposal (multipart/form-data if attachments)
 exports.createProposal = async (req, res) => {
@@ -13,7 +14,14 @@ exports.createProposal = async (req, res) => {
     const { task: taskId, message, proposedBudget, proposedDuration } = req.body;
     const fromUserId = req.user.id;
 
-    if (!taskId || !message) return res.status(400).json({ msg: "task and message required" });
+    // Backend validation
+    const validationResult = validateProposalCreation({ task: taskId, message });
+    if (!validationResult.valid) {
+      return res.status(400).json({ 
+        msg: validationResult.errors[0],
+        errors: validationResult.errors 
+      });
+    }
 
     const task = await Task.findById(taskId).populate("owner");
     if (!task) return res.status(404).json({ msg: "Task not found" });

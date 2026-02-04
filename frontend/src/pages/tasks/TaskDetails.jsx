@@ -498,16 +498,27 @@ const formatRole = (role) => {
         )}
 
         {role === "taskOwner" && (
-          <select
-            value={task.status}
-            onChange={(e) => updateStatus(e.target.value)}
-            className="border p-2 rounded"
-          >
-            <option value="published">Published</option>
-            <option value="in-progress">In Progress</option>
-            <option value="completed">Completed</option>
-            <option value="withdrawn">Withdrawn</option>
-          </select>
+          (() => {
+            const hasAcceptedProposal = proposals.some(p => p.status === "accepted");
+            const isLocked = hasAcceptedProposal && task.status === "in-progress";
+            return isLocked ? (
+              <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded text-sm text-blue-700">
+                <Clock className="w-4 h-4" />
+                <span>Status locked: In Progress (Solution Provider assigned)</span>
+              </div>
+            ) : (
+              <select
+                value={task.status}
+                onChange={(e) => updateStatus(e.target.value)}
+                className="border p-2 rounded"
+              >
+                <option value="published">Published</option>
+                <option value="in-progress">In Progress</option>
+                <option value="completed">Completed</option>
+                <option value="withdrawn">Withdrawn</option>
+              </select>
+            );
+          })()
         )}
       </div>
 
@@ -520,88 +531,99 @@ const formatRole = (role) => {
             {proposals.length === 0 ? (
               <p className="text-gray-600 text-sm">No proposals submitted yet.</p>
             ) : (
-              <ul className="space-y-4">
-                {proposals.map((p) => (
-                  <li key={p._id} className="p-4 bg-gray-50 rounded-lg border hover:shadow transition">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-semibold text-[#1E376E]">
-                          {p.fromUser?.firstName} {p.fromUser?.lastName}
-                        </p>
-                        <p className="text-sm text-gray-600 mt-1">{p.message}</p>
-                        {p.attachments?.length > 0 && (
-                          <div className="mt-2">
-                            <span className="text-xs font-medium text-gray-600">Attachments:</span>
-                            <ul className="list-disc ml-5">
-                              {p.attachments.map((a, i) => (
-                                <li key={i}>
-                                  <a
-                                    href={a.startsWith("http") ? a : `${API_URL}${a}`}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="text-[#357FE9] underline text-sm"
+              (() => {
+                const hasAcceptedProposal = proposals.some(prop => prop.status === "accepted");
+                return (
+                  <ul className="space-y-4">
+                    {proposals.map((p) => {
+                      const isAccepted = p.status === "accepted";
+                      const showActions = !hasAcceptedProposal || isAccepted;
+                      return (
+                        <li key={p._id} className={`p-4 rounded-lg border hover:shadow transition ${isAccepted ? 'bg-green-50 border-green-200' : 'bg-gray-50'}`}>
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="font-semibold text-[#1E376E]">
+                                {p.fromUser?.firstName} {p.fromUser?.lastName}
+                                {isAccepted && <span className="ml-2 text-green-600 text-sm">(Assigned)</span>}
+                              </p>
+                              <p className="text-sm text-gray-600 mt-1">{p.message}</p>
+                              {p.attachments?.length > 0 && (
+                                <div className="mt-2">
+                                  <span className="text-xs font-medium text-gray-600">Attachments:</span>
+                                  <ul className="list-disc ml-5">
+                                    {p.attachments.map((a, i) => (
+                                      <li key={i}>
+                                        <a
+                                          href={a.startsWith("http") ? a : `${API_URL}${a}`}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          className="text-[#357FE9] underline text-sm"
+                                        >
+                                          View
+                                        </a>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex flex-col gap-2 items-end">
+                              <div className="text-xs text-gray-500">
+                                {new Date(p.createdAt).toLocaleDateString()}
+                              </div>
+                              {showActions && (
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => startConversation(p.fromUser?._id, task?._id, p._id)}
+                                    className="flex items-center gap-1 px-3 py-1 bg-[#1E376E] text-white rounded text-xs hover:bg-[#142851]"
                                   >
-                                    View
-                                  </a>
-                                </li>
-                              ))}
-                            </ul>
+                                    <MessageSquare className="w-3 h-3" /> Message
+                                  </button>
+                                  <button
+                                    onClick={() => setViewingProfileId(p.fromUser?._id)}
+                                    className="
+                                      text-xs font-medium 
+                                      text-white 
+                                      bg-gradient-to-r from-[#1f416f] to-[#1ba0a0] 
+                                      px-3 py-1.5 
+                                      rounded-lg 
+                                      shadow-sm 
+                                      hover:shadow-md 
+                                      hover:scale-105 
+                                      transition-all duration-200 ease-in-out
+                                    "
+                                  >
+                                    View Profile
+                                  </button>
+                                </div>
+                              )}
+                              {showActions && p.status === "pending" && (
+                                <div className="flex gap-2 mt-2">
+                                  <button
+                                    onClick={() => handleProposalAction(p._id, "accept")}
+                                    className="flex items-center gap-1 px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700"
+                                  >
+                                    <CheckCircle className="w-3 h-3" /> Accept
+                                  </button>
+                                  <button
+                                    onClick={() => handleProposalAction(p._id, "reject")}
+                                    className="flex items-center gap-1 px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700"
+                                  >
+                                    <XCircle className="w-3 h-3" /> Reject
+                                  </button>
+                                </div>
+                              )}
+                              <span className={`text-xs font-semibold capitalize mt-1 ${isAccepted ? 'text-green-600' : 'text-gray-700'}`}>
+                                {p.status}
+                              </span>
+                            </div>
                           </div>
-                        )}
-                      </div>
-                      <div className="flex flex-col gap-2 items-end">
-                        <div className="text-xs text-gray-500">
-                          {new Date(p.createdAt).toLocaleDateString()}
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => startConversation(p.fromUser?._id, task?._id, p._id)}
-                            className="flex items-center gap-1 px-3 py-1 bg-[#1E376E] text-white rounded text-xs hover:bg-[#142851]"
-                          >
-                            <MessageSquare className="w-3 h-3" /> Message
-                          </button>
-                          <button
-                            onClick={() => setViewingProfileId(p.fromUser?._id)}
-                            className="
-                              text-xs font-medium 
-                              text-white 
-                              bg-gradient-to-r from-[#1f416f] to-[#1ba0a0] 
-                              px-3 py-1.5 
-                              rounded-lg 
-                              shadow-sm 
-                              hover:shadow-md 
-                              hover:scale-105 
-                              transition-all duration-200 ease-in-out
-                            "
-                          >
-                            View Profile
-                          </button>
-
-                        </div>
-                        {p.status === "pending" && (
-                          <div className="flex gap-2 mt-2">
-                            <button
-                              onClick={() => handleProposalAction(p._id, "accept")}
-                              className="flex items-center gap-1 px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700"
-                            >
-                              <CheckCircle className="w-3 h-3" /> Accept
-                            </button>
-                            <button
-                              onClick={() => handleProposalAction(p._id, "reject")}
-                              className="flex items-center gap-1 px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700"
-                            >
-                              <XCircle className="w-3 h-3" /> Reject
-                            </button>
-                          </div>
-                        )}
-                        <span className="text-xs font-semibold capitalize mt-1 text-gray-700">
-                          {p.status}
-                        </span>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                );
+              })()
             )}
           </div>
         )}

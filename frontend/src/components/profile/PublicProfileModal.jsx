@@ -579,7 +579,7 @@ export default function PublicProfileModal({ userId, onClose, currentUser }) {
                       </div>
                     )}
 
-                    {profile.approvedBy && (
+                    {isAdmin && profile.approvedBy && (
                       <div className="mt-4 p-4 bg-emerald-50 rounded-xl border border-emerald-200">
                         <p className="text-sm text-emerald-700">
                           Approved by <strong>{profile.approvedBy.firstName} {profile.approvedBy.lastName}</strong>

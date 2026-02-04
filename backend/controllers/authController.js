@@ -6,6 +6,11 @@ const fs = require("fs");
 const path = require("path");
 const { sendMail, Templates } = require("../utils/mailer");
 const createNotification = require("../utils/createNotification");
+const {
+  validateRole,
+  validateTaskOwnerRegistration,
+  validateSolutionProviderRegistration,
+} = require("../utils/validation");
 
 // Register
 exports.register = async (req, res) => {
@@ -32,20 +37,42 @@ exports.register = async (req, res) => {
       supportNeeded,
     } = req.body;
 
-    if (!firstName || !lastName || !email || !password || !role) {
-      return res.status(400).json({
-        msg: "First name, last name, email, password, and role are required",
+    // Validate role first
+    const roleResult = validateRole(role);
+    if (!roleResult.valid) {
+      return res.status(400).json({ msg: roleResult.error });
+    }
+
+    // Role-specific validation
+    let validationResult;
+    if (role === "taskOwner") {
+      validationResult = validateTaskOwnerRegistration({
+        firstName,
+        lastName,
+        email,
+        password,
+        organisationName,
+        organisationType,
+        country,
+      });
+    } else {
+      validationResult = validateSolutionProviderRegistration({
+        firstName,
+        lastName,
+        email,
+        password,
+        bio,
+        country,
+        expertise,
+        professionalLink,
       });
     }
 
-    // Validate email format strictly
-    const emailRegex = /^[a-zA-Z0-9](?:[a-zA-Z0-9._%+-]*[a-zA-Z0-9])?@[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?(?:\.[a-zA-Z]{2,})+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ msg: "Please enter a valid email address" });
-    }
-    // Check for consecutive dots
-    if (email.includes("..")) {
-      return res.status(400).json({ msg: "Please enter a valid email address" });
+    if (!validationResult.valid) {
+      return res.status(400).json({ 
+        msg: validationResult.errors[0],
+        errors: validationResult.errors 
+      });
     }
 
     const existing = await User.findOne({ email });
@@ -744,7 +771,7 @@ exports.getPublicProfile = async (req, res) => {
       isApproved: user.isApproved,
       status: user.status || "active",
       rejectionReason: user.rejectionReason || null,
-      approvedBy: user.approvedBy || null,
+      approvedBy: isAdmin ? (user.approvedBy || null) : undefined,
       createdAt: user.createdAt,
       gender: isAdmin ? user.gender : undefined,
       phone: isAdmin ? user.phone : undefined,
