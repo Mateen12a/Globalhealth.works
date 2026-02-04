@@ -23,7 +23,7 @@ const validationRules = {
   },
   taskTitle: {
     minLength: 10,
-    maxLength: 200,
+    maxLength: 100,
   },
   taskDescription: {
     minLength: 50,

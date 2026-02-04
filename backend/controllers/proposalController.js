@@ -1,4 +1,5 @@
 // controllers/proposalController.js
+const mongoose = require("mongoose");
 const Proposal = require("../models/Proposal");
 const Task = require("../models/Task");
 const User = require("../models/User");
@@ -43,8 +44,8 @@ exports.createProposal = async (req, res) => {
         return res.status(400).json({ msg: "You already have an active proposal for this task" });
       }
       
-      // If withdrawn or rejected, update the existing proposal instead of creating new
-      if (existingProposal.status === 'withdrawn' || existingProposal.status === 'rejected') {
+      // If withdrawn, rejected, or not selected, update the existing proposal instead of creating new
+      if (existingProposal.status === 'withdrawn' || existingProposal.status === 'rejected' || existingProposal.status === 'not selected') {
         const attachments = [];
         if (req.files && req.files.length > 0) {
           for (const f of req.files) {
@@ -231,40 +232,104 @@ exports.getMyProposalStats = async (req, res) => {
 
 // Owner accepts or rejects a proposal
 exports.updateProposalStatus = async (req, res) => {
+  const { proposalId } = req.params;
+  const { action } = req.body; // "accept" or "reject"
+  const userId = req.user.id;
+  
+  // Validate inputs before starting any transaction
+  const proposal = await Proposal.findById(proposalId).populate("task");
+  if (!proposal) return res.status(404).json({ msg: "Proposal not found" });
+  
+  if (proposal.toUser.toString() !== userId && proposal.task.owner.toString() !== userId) {
+    return res.status(403).json({ msg: "Not authorized" });
+  }
+  
+  if (!["accept", "reject"].includes(action)) return res.status(400).json({ msg: "Invalid action" });
+  
+  let session = null;
+  let updatedStatus = null;
+  let taskData = null;
+  
   try {
-    const { proposalId } = req.params;
-    const { action } = req.body; // "accept" or "reject"
-    const userId = req.user.id;
-
-    const proposal = await Proposal.findById(proposalId).populate("task");
-    if (!proposal) return res.status(404).json({ msg: "Proposal not found" });
-
-    // Only task owner can accept/reject
-    if (proposal.toUser.toString() !== userId && proposal.task.owner.toString() !== userId) {
-      return res.status(403).json({ msg: "Not authorized" });
-    }
-
-    if (!["accept", "reject"].includes(action)) return res.status(400).json({ msg: "Invalid action" });
-
-    proposal.status = action === "accept" ? "accepted" : "rejected";
-    await proposal.save();
-
-    // Get the applicant user
-    const applicant = await User.findById(proposal.fromUser);
-    const taskId = proposal.task._id || proposal.task;
-    const taskData = await Task.findById(taskId);
-    if (!taskData) return res.status(404).json({ msg: "Task not found" });
-
-    // If accepted -> optionally assign the task to this SP
-    if (proposal.status === "accepted") {
-      taskData.assignedTo = taskData.assignedTo || [];
-      if (!taskData.assignedTo.includes(proposal.fromUser)) {
-        taskData.assignedTo.push(proposal.fromUser);
+    if (action === "accept") {
+      // Use transaction for atomic proposal acceptance
+      session = await mongoose.startSession();
+      session.startTransaction();
+      
+      try {
+        // Re-fetch within transaction for consistency
+        const existingAccepted = await Proposal.findOne({
+          task: proposal.task._id,
+          status: "accepted"
+        }).session(session);
+        
+        if (existingAccepted) {
+          await session.abortTransaction();
+          return res.status(400).json({ 
+            msg: "Another proposal has already been accepted for this task",
+            alreadyAccepted: true
+          });
+        }
+        
+        const currentProposal = await Proposal.findById(proposalId).session(session);
+        if (!currentProposal || currentProposal.status !== "pending") {
+          await session.abortTransaction();
+          return res.status(400).json({ 
+            msg: "Proposal cannot be accepted (status is not pending)",
+            alreadyProcessed: true
+          });
+        }
+        
+        // Accept this proposal
+        currentProposal.status = "accepted";
+        await currentProposal.save({ session });
+        
+        // Update task
+        taskData = await Task.findById(proposal.task._id).session(session);
+        taskData.assignedTo = taskData.assignedTo || [];
+        if (!taskData.assignedTo.includes(proposal.fromUser)) {
+          taskData.assignedTo.push(proposal.fromUser);
+        }
+        taskData.status = "in-progress";
+        await taskData.save({ session });
+        
+        // Set all other pending proposals to "not selected"
+        await Proposal.updateMany(
+          { 
+            task: proposal.task._id, 
+            _id: { $ne: proposalId }, 
+            status: "pending" 
+          },
+          { status: "not selected" },
+          { session }
+        );
+        
+        await session.commitTransaction();
+        updatedStatus = "accepted";
+      } catch (txError) {
+        if (session.inTransaction()) {
+          await session.abortTransaction();
+        }
+        throw txError;
       }
-      taskData.status = "in-progress";
-      await taskData.save();
-
-      // Send email and in-app notification to applicant
+    } else {
+      proposal.status = "rejected";
+      await proposal.save();
+      updatedStatus = "rejected";
+      taskData = await Task.findById(proposal.task._id);
+    }
+    
+    // Fetch task data if not already fetched (for accept case, it's fetched in transaction)
+    if (!taskData) {
+      taskData = await Task.findById(proposal.task._id);
+    }
+    if (!taskData) return res.status(404).json({ msg: "Task not found" });
+    
+    // Get the applicant user for notifications
+    const applicant = await User.findById(proposal.fromUser);
+    
+    // Send email and in-app notifications
+    if (updatedStatus === "accepted") {
       if (applicant) {
         await sendMail(
           applicant.email,
@@ -281,7 +346,6 @@ exports.updateProposalStatus = async (req, res) => {
         );
       }
     } else {
-      // Rejected - send email and in-app notification
       if (applicant) {
         await sendMail(
           applicant.email,
@@ -299,10 +363,15 @@ exports.updateProposalStatus = async (req, res) => {
       }
     }
 
-    res.json({ msg: `Proposal ${proposal.status}`, proposal });
+    proposal.status = updatedStatus;
+    res.json({ msg: `Proposal ${updatedStatus}`, proposal });
   } catch (err) {
     console.error("updateProposalStatus error:", err);
     res.status(500).json({ msg: "Server error" });
+  } finally {
+    if (session) {
+      session.endSession();
+    }
   }
 };
 

@@ -12,7 +12,7 @@ const proposalSchema = new mongoose.Schema(
     proposedDuration: { type: String }, // e.g., "4 weeks"
     status: {
       type: String,
-      enum: ["pending", "accepted", "rejected", "withdrawn"],
+      enum: ["pending", "accepted", "rejected", "withdrawn", "not selected"],
       default: "pending",
     },
     readByOwner: { type: Boolean, default: false },

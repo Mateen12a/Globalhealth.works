@@ -1,6 +1,7 @@
 // routes/taskRoutes.js
 const express = require("express");
 const router = express.Router();
+const multer = require("multer");
 const { authMiddleware } = require("../controllers/authController");
 const {
   createTask,
@@ -16,8 +17,21 @@ const {
   withdrawTask
 } = require("../controllers/taskController");
 
+// Multer error handling middleware
+const handleMulterError = (err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ msg: "File too large. Maximum size is 10MB per file." });
+    }
+    return res.status(400).json({ msg: `Upload error: ${err.message}` });
+  } else if (err && err.message) {
+    return res.status(400).json({ msg: err.message });
+  }
+  next(err);
+};
+
 // Task Owner: create
-router.post("/", authMiddleware, uploadTaskAttachments, createTask);
+router.post("/", authMiddleware, uploadTaskAttachments, handleMulterError, createTask);
 
 // All users: list tasks
 router.get("/", authMiddleware, getTasks);
@@ -35,7 +49,7 @@ router.post("/:id/apply", authMiddleware, applyToTask);
 router.post("/:id/report", authMiddleware, reportTask);
 
 // Task Owner: update task
-router.put("/:id", authMiddleware, uploadTaskAttachments, updateTask );
+router.put("/:id", authMiddleware, uploadTaskAttachments, handleMulterError, updateTask);
 
 // Task Owner: update status
 router.patch("/:id/status", authMiddleware, updateStatus);

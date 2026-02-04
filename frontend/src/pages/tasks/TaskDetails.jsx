@@ -613,9 +613,12 @@ const formatRole = (role) => {
                                   </button>
                                 </div>
                               )}
-                              <span className={`text-xs font-semibold capitalize mt-1 ${isAccepted ? 'text-green-600' : 'text-gray-700'}`}>
-                                {p.status}
-                              </span>
+                              {/* Only show status if: it's accepted, rejected, withdrawn, not selected, or no proposal has been accepted yet */}
+                              {(isAccepted || p.status !== "pending" || !hasAcceptedProposal) && (
+                                <span className={`text-xs font-semibold capitalize mt-1 ${isAccepted ? 'text-green-600' : p.status === 'rejected' ? 'text-red-600' : p.status === 'withdrawn' ? 'text-gray-500' : p.status === 'not selected' ? 'text-orange-600' : 'text-gray-700'}`}>
+                                  {p.status === 'not selected' ? 'Not Selected' : p.status}
+                                </span>
+                              )}
                             </div>
                           </div>
                         </li>
@@ -664,6 +667,26 @@ const formatRole = (role) => {
                 <p className="text-sm text-red-500 mt-1">
                   The task owner has chosen another solution provider.
                 </p>
+              </div>
+            ) : myProposal?.status === "not selected" ? (
+              <div className="space-y-3">
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                  <div className="flex items-center gap-2 text-orange-600">
+                    <XCircle className="w-5 h-5" />
+                    <span className="font-medium">Proposal Not Selected</span>
+                  </div>
+                  <p className="text-sm text-orange-500 mt-1">
+                    Another solution provider was selected for this task.
+                  </p>
+                </div>
+                {task.status === "published" && (
+                  <button
+                    onClick={() => setShowProposalModal(true)}
+                    className="w-full bg-gradient-to-r from-[#E96435] to-[#FF7A50] text-white py-3 rounded-lg font-semibold hover:opacity-90 transition"
+                  >
+                    Submit New Proposal
+                  </button>
+                )}
               </div>
             ) : myProposal?.status === "pending" ? (
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">

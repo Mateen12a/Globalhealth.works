@@ -103,6 +103,7 @@ export default function MyApplications() {
       case "pending": return { bg: "bg-amber-100", text: "text-amber-700", icon: Clock, label: "Pending Review" };
       case "accepted": return { bg: "bg-emerald-100", text: "text-emerald-700", icon: CheckCircle, label: "Accepted" };
       case "rejected": return { bg: "bg-red-100", text: "text-red-700", icon: XCircle, label: "Not Selected" };
+      case "not selected": return { bg: "bg-orange-100", text: "text-orange-700", icon: XCircle, label: "Not Selected" };
       case "withdrawn": return { bg: "bg-gray-100", text: "text-gray-500", icon: Ban, label: "Withdrawn" };
       default: return { bg: "bg-gray-100", text: "text-gray-700", icon: Clock, label: status };
     }
@@ -256,7 +257,7 @@ export default function MyApplications() {
                         </button>
                       )}
 
-                      {task.proposal?.status === 'withdrawn' && task.status === 'published' && (
+                      {(task.proposal?.status === 'withdrawn' || task.proposal?.status === 'not selected') && task.status === 'published' && (
                         <Link
                           to={`/tasks/${task._id}`}
                           className="flex items-center justify-center gap-1.5 px-4 py-2 bg-gradient-to-r from-[#E96435] to-[#FF7A50] text-white rounded-lg font-medium text-sm hover:opacity-90 transition"

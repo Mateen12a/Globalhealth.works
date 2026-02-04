@@ -9,6 +9,7 @@ const path = require("path");
 const helmet = require("helmet");
 const compression = require("compression");
 const rateLimit = require("express-rate-limit");
+const jwt = require("jsonwebtoken");
 
 const SESSION_VERSION = "v2";
 
@@ -121,6 +122,27 @@ const io = new Server(server, {
   },
 });
 
+// Socket.IO JWT Authentication Middleware
+io.use((socket, next) => {
+  const token = socket.handshake.auth?.token || socket.handshake.headers?.authorization?.replace('Bearer ', '');
+  
+  if (!token) {
+    // Allow connection but mark as unauthenticated
+    socket.user = null;
+    return next();
+  }
+  
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    socket.user = decoded; // Store authenticated user on socket
+    next();
+  } catch (err) {
+    console.warn("Socket auth failed:", err.message);
+    socket.user = null;
+    next(); // Allow connection but unauthenticated
+  }
+});
+
 // Inject io to controllers
 setSocket(io);
 messageController.setSocket(io);
@@ -167,36 +189,84 @@ app.use(express.static(frontendDist));
 
 // ==================== SOCKET.IO EVENTS ====================
 io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
+  console.log("User connected:", socket.id, socket.user ? `(authenticated: ${socket.user.id})` : "(unauthenticated)");
 
-  // Join user-specific room
+  // Auto-join user's personal room if authenticated
+  if (socket.user?.id) {
+    socket.join(socket.user.id);
+    console.log(`Authenticated user ${socket.user.id} auto-joined their personal room`);
+  }
+
+  // Join user-specific room - ONLY allow joining own room (strict auth)
   socket.on("join", (userId) => {
-    socket.join(userId);
-    console.log(`User ${userId} joined their personal room`);
+    // Security: Require authentication and only allow joining your own room
+    if (!socket.user?.id) {
+      console.warn(`Unauthenticated socket tried to join room ${userId} - denied`);
+      socket.emit("error", { msg: "Authentication required" });
+      return;
+    }
+    
+    if (socket.user.id === userId) {
+      socket.join(userId);
+      console.log(`User ${userId} joined their personal room`);
+    } else {
+      console.warn(`User ${socket.user.id} tried to join room ${userId} - denied`);
+      socket.emit("error", { msg: "Cannot join another user's room" });
+    }
   });
 
-  // Join conversation room
-  socket.on("joinConversation", (conversationId) => {
-    socket.join(`conversation:${conversationId}`);
-    console.log(`User joined conversation room: conversation:${conversationId}`);
+  // Join conversation room - require authentication
+  socket.on("joinConversation", async (conversationId) => {
+    if (!socket.user?.id) {
+      console.warn(`Unauthenticated socket tried to join conversation ${conversationId} - denied`);
+      socket.emit("error", { msg: "Authentication required" });
+      return;
+    }
+    
+    // Verify user is participant of this conversation
+    try {
+      const Conversation = require("./models/Conversation");
+      const convo = await Conversation.findById(conversationId);
+      if (!convo || !convo.participants.some(p => p.toString() === socket.user.id)) {
+        console.warn(`User ${socket.user.id} tried to join conversation ${conversationId} without being a participant - denied`);
+        socket.emit("error", { msg: "Not a participant of this conversation" });
+        return;
+      }
+      
+      socket.join(`conversation:${conversationId}`);
+      console.log(`User ${socket.user.id} joined conversation room: conversation:${conversationId}`);
+    } catch (err) {
+      console.error("Error validating conversation membership:", err);
+      socket.emit("error", { msg: "Could not join conversation" });
+    }
   });
 
-  // Typing indicators
+  // Typing indicators - require authentication, use authenticated user ID
   socket.on("typing", ({ conversationId, from, name }) => {
-    socket.to(`conversation:${conversationId}`).emit("typing", { conversationId, from, name });
+    if (!socket.user?.id) return; // Silently ignore unauthenticated
+    socket.to(`conversation:${conversationId}`).emit("typing", { conversationId, from: socket.user.id, name });
   });
 
   socket.on("stopTyping", ({ conversationId, from }) => {
-    socket.to(`conversation:${conversationId}`).emit("stopTyping", { conversationId, from });
+    if (!socket.user?.id) return; // Silently ignore unauthenticated
+    socket.to(`conversation:${conversationId}`).emit("stopTyping", { conversationId, from: socket.user.id });
   });
 
-  // New message
+  // New message - REQUIRE authentication (no fallback)
   socket.on("message:new", async (msg) => {
     try {
-      const { conversationId, text, attachments, replyTo, senderId } = msg;
+      // Security: Require authenticated user - no fallback to client-provided senderId
+      if (!socket.user?.id) {
+        console.error("Cannot send message: Unauthenticated socket");
+        socket.emit("error", { msg: "Authentication required to send messages" });
+        return;
+      }
+      
+      const { conversationId, text, attachments, replyTo } = msg;
+      
       const newMessage = await messageController.createMessageSocket({
         conversationId,
-        senderId,
+        senderId: socket.user.id, // Always use authenticated user
         text,
         attachments,
         replyTo,
@@ -211,14 +281,21 @@ io.on("connection", (socket) => {
       });
     } catch (err) {
       console.error("Error sending new message:", err);
+      socket.emit("error", { msg: "Failed to send message" });
     }
   });
 
-  // Message seen
+  // Message seen - REQUIRE authentication (no fallback)
   socket.on("message:seen", async ({ conversationId, messageId, userId }) => {
     try {
-      await messageController.markMessageSeen(messageId, userId);
-      io.to(`conversation:${conversationId}`).emit("message:seen", { messageId, userId });
+      // Security: Require authenticated user
+      if (!socket.user?.id) {
+        console.error("Cannot mark message seen: Unauthenticated socket");
+        return;
+      }
+      
+      await messageController.markMessageSeen(messageId, socket.user.id);
+      io.to(`conversation:${conversationId}`).emit("message:seen", { messageId, userId: socket.user.id });
     } catch (err) {
       console.error("Error marking message as seen:", err);
     }

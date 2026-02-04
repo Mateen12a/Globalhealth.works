@@ -51,32 +51,97 @@ exports.uploadMiddleware = upload.array("attachments", MAX_FILES);
 let io;
 exports.setSocket = (socketInstance) => {
   io = socketInstance;
+  // Note: All socket event handlers are now registered in index.js with auth checks
+  // This function just stores the io reference for emitting events
+};
 
-  io.on("connection", (socket) => {
-    // 1. Join user room for personal events (used for receiving messages/notifications)
-    socket.on("join", (userId) => {
-      socket.join(userId);
-      // Removed presence:update for simplicity, can be added later
-    });
+// ---------- SOCKET MESSAGE FUNCTIONS (called from index.js) ----------
 
-    // 2. Leave user room
-    socket.on("leave", (userId) => {
-      socket.leave(userId);
-      // Removed presence:update
-    });
-
-    // 3. Typing (emitted from ChatPage, received by other participant)
-    socket.on("typing", ({ conversationId, from, to }) => {
-      if (to) io.to(to).emit("typing", { conversationId, userId: from }); // Use userId for consistency with frontend
-    });
-
-    // 4. Stop Typing
-    socket.on("stopTyping", ({ conversationId, from, to }) => {
-      if (to) io.to(to).emit("stopTyping", { conversationId, userId: from }); // Use userId for consistency with frontend
-    });
-    
-    // Note: The message:send event from the old ChatPage is no longer needed
+/**
+ * Create a message via socket (with authorization check)
+ */
+exports.createMessageSocket = async ({ conversationId, senderId, text, attachments, replyTo }) => {
+  // Validate inputs
+  if (!conversationId || !senderId) {
+    throw new Error("conversationId and senderId are required");
+  }
+  if (!text && (!attachments || attachments.length === 0)) {
+    throw new Error("Message must contain text or attachments");
+  }
+  
+  // Authorization: Verify sender is a participant in this conversation
+  const convo = await Conversation.findById(conversationId);
+  if (!convo) {
+    throw new Error("Conversation not found");
+  }
+  if (!convo.participants.some(p => p.toString() === senderId)) {
+    throw new Error("Not authorized: sender is not a participant in this conversation");
+  }
+  
+  // Find the receiver (other participant)
+  const receiver = convo.participants.find(p => p.toString() !== senderId);
+  
+  // Create the message
+  const message = new Message({
+    conversationId,
+    sender: senderId,
+    receiver,
+    text: text || "",
+    attachments: attachments || [],
+    replyTo,
+    status: "sent",
+    read: false
   });
+  
+  await message.save();
+  
+  // Update conversation's lastMessage
+  convo.lastMessage = {
+    text: text || "[Attachment]",
+    createdAt: message.createdAt,
+    sender: senderId
+  };
+  await convo.save();
+  
+  // Return message with populated sender and participants for inbox updates
+  const populatedMessage = await Message.findById(message._id)
+    .populate("sender", "firstName lastName profileImage")
+    .populate("receiver", "firstName lastName profileImage")
+    .lean();
+  
+  populatedMessage.participants = await User.find({ _id: { $in: convo.participants } })
+    .select("_id firstName lastName profileImage")
+    .lean();
+  
+  return populatedMessage;
+};
+
+/**
+ * Mark a message as seen via socket (with authorization check)
+ */
+exports.markMessageSeen = async (messageId, userId) => {
+  if (!messageId || !userId) {
+    throw new Error("messageId and userId are required");
+  }
+  
+  // Find the message
+  const message = await Message.findById(messageId);
+  if (!message) {
+    throw new Error("Message not found");
+  }
+  
+  // Authorization: Only the receiver can mark as seen
+  if (message.receiver.toString() !== userId) {
+    throw new Error("Not authorized: only the receiver can mark messages as seen");
+  }
+  
+  // Mark as seen
+  message.read = true;
+  message.readAt = new Date();
+  message.status = "seen";
+  await message.save();
+  
+  return message;
 };
 
 // ---------- HELPERS ----------

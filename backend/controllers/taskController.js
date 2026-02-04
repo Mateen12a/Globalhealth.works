@@ -7,15 +7,45 @@ const path = require("path");
 const { sendMail, Templates } = require("../utils/mailer");
 const { validateTaskCreation, validateTaskTitle, validateTaskDescription, validateTaskSummary } = require("../utils/validation");
 
-// === Multer setup ===
+// === File upload security config ===
+const MAX_FILES = 5;
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB per file
+const ALLOWED_MIMES = [
+  "image/jpeg", "image/png", "image/gif", "image/webp",
+  "application/pdf", "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "text/plain", "text/csv"
+];
+
+// === Multer setup with security ===
+const uploadDir = path.join(__dirname, "..", "uploads", "tasks");
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/tasks/"),
-  filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname),
+  destination: (req, file, cb) => cb(null, uploadDir),
+  filename: (req, file, cb) => {
+    // Sanitized filename with random component
+    const ext = path.extname(file.originalname);
+    const name = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
+    cb(null, name);
+  },
 });
-const upload = multer({ storage });
+
+const upload = multer({ 
+  storage,
+  limits: { fileSize: MAX_FILE_SIZE },
+  fileFilter: (req, file, cb) => {
+    if (!ALLOWED_MIMES.includes(file.mimetype)) {
+      return cb(new Error("Unsupported file type. Allowed: images, PDF, Word, Excel, text files."), false);
+    }
+    cb(null, true);
+  }
+});
 
 exports.uploadTaskAttachments = upload.fields([
-  { name: "attachments", maxCount: 5 },
+  { name: "attachments", maxCount: MAX_FILES },
   { name: "removeAttachments" },
 ]);
 
