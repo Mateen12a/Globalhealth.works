@@ -372,7 +372,8 @@ exports.login = async (req, res) => {
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
-      adminType: user.adminType || null
+      adminType: user.adminType || null,
+      tokenVersion: 2
     };
     const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, { expiresIn: "1d" });
 
