@@ -40,6 +40,12 @@ export function forceLogout() {
   }
 }
 
+export function getImageUrl(imgPath) {
+  if (!imgPath) return null;
+  if (imgPath.startsWith("http")) return imgPath;
+  return `${API_URL}${imgPath}`;
+}
+
 export function setupGlobalAxiosInterceptor() {
   axios.interceptors.response.use(
     (response) => response,

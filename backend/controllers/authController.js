@@ -38,6 +38,16 @@ exports.register = async (req, res) => {
       });
     }
 
+    // Validate email format strictly
+    const emailRegex = /^[a-zA-Z0-9](?:[a-zA-Z0-9._%+-]*[a-zA-Z0-9])?@[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?(?:\.[a-zA-Z]{2,})+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ msg: "Please enter a valid email address" });
+    }
+    // Check for consecutive dots
+    if (email.includes("..")) {
+      return res.status(400).json({ msg: "Please enter a valid email address" });
+    }
+
     const existing = await User.findOne({ email });
     if (existing) {
       return res.status(400).json({ msg: "User already exists" });

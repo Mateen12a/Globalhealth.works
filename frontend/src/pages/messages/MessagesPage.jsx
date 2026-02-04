@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { socket as sharedSocket, connectSocket } from "../../utils/socket";
 import PublicProfileModal from "../../components/profile/PublicProfileModal";
+import { getImageUrl } from "../../utils/api";
 
 dayjs.extend(relativeTime);
 
@@ -248,16 +249,10 @@ export default function MessagesPage() {
     return displayName.toLowerCase().includes(search.toLowerCase());
   });
 
-  // Helper function to get correct image URL (handles both external and local URLs)
-  const getImageUrl = (imgPath) => {
-    if (!imgPath) return null;
-    return imgPath.startsWith("http") ? imgPath : `${API_URL}${imgPath}`;
-  };
-
   // Use currentUserId from JWT (reliable) instead of currentUser._id (may be null)
   const otherUser = selectedConversation?.participants?.find(p => String(p._id) !== String(currentUserId));
   const chatTitle = otherUser ? `${otherUser.firstName || ""} ${otherUser.lastName || ""}`.trim() || otherUser.name || "Chat" : "";
-  const chatProfileImage = getImageUrl(otherUser?.profileImage);
+  const chatProfileImage = otherUser?.profileImage && !otherUser.profileImage.includes("default.jpg") ? getImageUrl(otherUser.profileImage) : null;
 
   if (isLoading) {
     return (
@@ -303,7 +298,7 @@ export default function MessagesPage() {
             const isUnread = conv.unreadCount > 0;
             const isSelected = conv.conversationId === conversationId;
             const displayName = other.name || `${other.firstName || ""} ${other.lastName || ""}`.trim() || "User";
-            const profileImg = getImageUrl(other.profileImage);
+            const profileImg = other.profileImage && !other.profileImage.includes("default.jpg") ? getImageUrl(other.profileImage) : null;
 
             return (
               <div

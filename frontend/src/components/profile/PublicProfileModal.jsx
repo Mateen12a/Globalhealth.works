@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { 
-  X, User, Briefcase, Share2, Star, Mail, Phone, Globe, Building, 
+  X, User, Briefcase, Star, Mail, Phone, Globe, Building, 
   MapPin, Calendar, CheckCircle, XCircle, AlertTriangle, FileText,
   ExternalLink, Award, Clock, Shield, MessageSquare
 } from "lucide-react";
+import { getImageUrl } from "../../utils/api";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -79,7 +80,6 @@ function RejectModal({ open, onClose, onSubmit, loading }) {
 export default function PublicProfileModal({ userId, onClose, currentUser }) {
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
-  const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
   const [adminActionLoading, setAdminActionLoading] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
@@ -126,25 +126,6 @@ export default function PublicProfileModal({ userId, onClose, currentUser }) {
 
     fetchProfile();
   }, [userId, token]);
-
-  const handleShare = async () => {
-    const shareUrl = `${window.location.origin}/profile/${userId}`;
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: `${profile?.firstName}'s Profile`,
-          text: "Check out this profile!",
-          url: shareUrl,
-        });
-      } else {
-        await navigator.clipboard.writeText(shareUrl);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      }
-    } catch (err) {
-      console.error("Failed to share:", err);
-    }
-  };
 
   const refreshProfile = async () => {
     const headers = {};
@@ -379,9 +360,9 @@ export default function PublicProfileModal({ userId, onClose, currentUser }) {
                 <div className="flex flex-col md:flex-row gap-6 -mt-16 relative z-10">
                   <div className="flex-shrink-0">
                     <div className="w-28 h-28 rounded-2xl border-4 border-[var(--color-surface)] overflow-hidden shadow-lg bg-[var(--color-bg-secondary)]">
-                      {profile.profileImage ? (
+                      {profile.profileImage && !profile.profileImage.includes("default.jpg") ? (
                         <img
-                          src={profile.profileImage?.startsWith("http") ? profile.profileImage : `${API_URL}${profile.profileImage}`}
+                          src={getImageUrl(profile.profileImage)}
                           alt={`${profile.firstName} ${profile.lastName}`}
                           className="w-full h-full object-cover"
                         />
@@ -424,14 +405,6 @@ export default function PublicProfileModal({ userId, onClose, currentUser }) {
                           <MessageSquare className="w-4 h-4" /> {startingConversation ? "Starting..." : "Message User"}
                         </motion.button>
                       )}
-                      <motion.button 
-                        onClick={handleShare} 
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="hidden inline-flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-light)] text-white rounded-xl font-medium text-sm transition-colors"
-                      >
-                        <Share2 className="w-4 h-4" /> {copied ? "Link Copied!" : "Share Profile"}
-                      </motion.button>
                     </div>
                   </div>
                 </div>

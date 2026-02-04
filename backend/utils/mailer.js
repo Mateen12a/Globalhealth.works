@@ -26,36 +26,66 @@ const COLORS = {
   border: '#E5E7EB',
 };
 
-// Modern email layout with enhanced styling
+// Modern email layout with enhanced styling (Outlook/Apple Mail compatible)
 function emailLayout({ title, preheader = '', content, footerText = '' }) {
   return `
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="x-apple-disable-message-reformatting">
+  <meta name="format-detection" content="telephone=no,address=no,email=no,date=no,url=no">
   <title>${title}</title>
   <!--[if mso]>
   <noscript>
     <xml>
       <o:OfficeDocumentSettings>
+        <o:AllowPNG/>
         <o:PixelsPerInch>96</o:PixelsPerInch>
       </o:OfficeDocumentSettings>
     </xml>
   </noscript>
+  <style>
+    table { border-collapse: collapse; }
+    td { font-family: Arial, sans-serif; }
+  </style>
   <![endif]-->
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    
     * { margin: 0; padding: 0; box-sizing: border-box; }
     
+    body, table, td, p, a, li {
+      -webkit-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
+      mso-line-height-rule: exactly;
+    }
+    
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      line-height: 1.6;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
       color: ${COLORS.textDark};
       background-color: ${COLORS.bgLight};
-      -webkit-font-smoothing: antialiased;
+      width: 100% !important;
+      height: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    
+    table {
+      border-spacing: 0 !important;
+      border-collapse: collapse !important;
+      mso-table-lspace: 0pt !important;
+      mso-table-rspace: 0pt !important;
+    }
+    
+    img {
+      -ms-interpolation-mode: bicubic;
+      border: 0;
+      height: auto;
+      line-height: 100%;
+      outline: none;
+      text-decoration: none;
     }
     
     .btn {
@@ -66,107 +96,68 @@ function emailLayout({ title, preheader = '', content, footerText = '' }) {
       font-weight: 600;
       font-size: 15px;
       text-align: center;
-      transition: all 0.2s ease;
     }
     
     .btn-primary {
-      background: linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.primaryLight} 100%);
+      background-color: ${COLORS.primary};
       color: #ffffff !important;
     }
     
     .btn-accent {
-      background: linear-gradient(135deg, ${COLORS.accent} 0%, ${COLORS.accentLight} 100%);
+      background-color: ${COLORS.accent};
       color: #ffffff !important;
     }
     
-    .info-box {
-      background: #F0F9FF;
-      border-left: 4px solid ${COLORS.primary};
-      padding: 16px 20px;
-      border-radius: 0 8px 8px 0;
-      margin: 20px 0;
-    }
-    
-    .warning-box {
-      background: #FEF3C7;
-      border-left: 4px solid ${COLORS.warning};
-      padding: 16px 20px;
-      border-radius: 0 8px 8px 0;
-      margin: 20px 0;
-    }
-    
-    .error-box {
-      background: #FEE2E2;
-      border-left: 4px solid ${COLORS.error};
-      padding: 16px 20px;
-      border-radius: 0 8px 8px 0;
-      margin: 20px 0;
-      color: #991B1B;
-    }
-    
-    .success-box {
-      background: #D1FAE5;
-      border-left: 4px solid ${COLORS.success};
-      padding: 16px 20px;
-      border-radius: 0 8px 8px 0;
-      margin: 20px 0;
-      color: #065F46;
-    }
-    
-    .data-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 16px 0;
-    }
-    
-    .data-table td {
-      padding: 10px 0;
-      border-bottom: 1px solid ${COLORS.border};
-    }
-    
-    .data-table td:first-child {
-      color: ${COLORS.textLight};
-      width: 140px;
-    }
-    
     @media only screen and (max-width: 600px) {
-      .container { width: 100% !important; padding: 0 16px !important; }
+      .container { width: 100% !important; }
       .content { padding: 24px 20px !important; }
       .btn { display: block !important; width: 100% !important; }
     }
   </style>
 </head>
-<body style="margin:0;padding:0;background-color:${COLORS.bgLight};">
-  ${preheader ? `<div style="display:none;font-size:1px;color:${COLORS.bgLight};line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">${preheader}</div>` : ''}
+<body style="margin:0 !important;padding:0 !important;background-color:${COLORS.bgLight};width:100% !important;">
+  ${preheader ? `<div style="display:none;font-size:1px;color:${COLORS.bgLight};line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">${preheader}</div>` : ''}
   
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:${COLORS.bgLight};padding:40px 20px;">
+  <!--[if mso]>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:${COLORS.bgLight};">
+  <tr><td align="center" style="padding:40px 20px;">
+  <![endif]-->
+  
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:${COLORS.bgLight};">
     <tr>
-      <td align="center">
-        <table role="presentation" class="container" width="600" cellspacing="0" cellpadding="0" border="0" style="background-color:${COLORS.bgWhite};border-radius:16px;overflow:hidden;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -1px rgba(0,0,0,0.06);">
+      <td align="center" style="padding:40px 20px;">
+        <!--[if mso]>
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="background-color:${COLORS.bgWhite};">
+        <![endif]-->
+        <table role="presentation" class="container" width="600" cellspacing="0" cellpadding="0" border="0" style="max-width:600px;width:100%;background-color:${COLORS.bgWhite};border-radius:16px;">
           
           <!-- Header -->
           <tr>
-            <td style="background:linear-gradient(135deg,${COLORS.primary} 0%,${COLORS.primaryLight} 100%);padding:32px 40px;text-align:center;">
+            <td align="center" style="background-color:${COLORS.primary};padding:32px 40px;">
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                 <tr>
                   <td align="center" style="padding-bottom:16px;">
                     <table role="presentation" cellspacing="0" cellpadding="0" border="0">
                       <tr>
-                        <td style="background-color:#ffffff;border-radius:12px;padding:12px 20px;">
-                          <img src="https://globalhealth.works/new-logo.png" alt="GlobalHealth.Works" style="height:60px;width:auto;display:block;" />
+                        <td align="center" style="background-color:#ffffff;border-radius:12px;padding:12px 20px;">
+                          <img src="https://globalhealth.works/new-logo.png" alt="GlobalHealth.Works" width="auto" height="60" style="height:60px;width:auto;display:block;" />
                         </td>
                       </tr>
                     </table>
                   </td>
                 </tr>
+                <tr>
+                  <td align="center">
+                    <h1 style="color:#ffffff;font-size:24px;font-weight:700;margin:0;padding:0;line-height:1.3;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">${title}</h1>
+                  </td>
+                </tr>
               </table>
-              <h1 style="color:#ffffff;font-size:24px;font-weight:700;margin:0;letter-spacing:-0.5px;">${title}</h1>
             </td>
           </tr>
           
           <!-- Content -->
           <tr>
-            <td class="content" style="padding:24px 40px;">
+            <td class="content" style="padding:32px 40px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:${COLORS.textDark};">
               ${content}
             </td>
           </tr>
@@ -175,15 +166,23 @@ function emailLayout({ title, preheader = '', content, footerText = '' }) {
           <tr>
             <td style="background-color:${COLORS.bgLight};padding:24px 40px;border-top:1px solid ${COLORS.border};">
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                ${footerText ? `
                 <tr>
-                  <td style="text-align:center;">
-                    ${footerText ? `<p style="color:${COLORS.textLight};font-size:13px;margin-bottom:8px;">${footerText}</p>` : ''}
-                    <p style="color:${COLORS.textLight};font-size:12px;margin:0;">
+                  <td align="center" style="padding-bottom:8px;">
+                    <p style="color:${COLORS.textLight};font-size:13px;margin:0;padding:0;line-height:1.5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">${footerText}</p>
+                  </td>
+                </tr>
+                ` : ''}
+                <tr>
+                  <td align="center">
+                    <p style="color:${COLORS.textLight};font-size:12px;margin:0;padding:0;line-height:1.5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
                       &copy; ${new Date().getFullYear()} GlobalHealth.Works &middot; Where Global Health Problems Meet Global Health Solutions
                     </p>
-                    <p style="margin-top:8px;">
-                      <a href="https://globalhealth.works" style="color:${COLORS.primary};text-decoration:none;font-size:12px;margin:0 8px;">Website</a>
-                    </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding-top:8px;">
+                    <a href="https://globalhealth.works" style="color:${COLORS.primary};text-decoration:none;font-size:12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">Website</a>
                   </td>
                 </tr>
               </table>
@@ -191,12 +190,30 @@ function emailLayout({ title, preheader = '', content, footerText = '' }) {
           </tr>
           
         </table>
+        <!--[if mso]>
+        </table>
+        <![endif]-->
       </td>
     </tr>
   </table>
+  
+  <!--[if mso]>
+  </td></tr></table>
+  <![endif]-->
 </body>
 </html>
   `;
+}
+
+// Helper function for Outlook-compatible spacing (uses table row instead of margin)
+function spacer(height = 20) {
+  return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0"><tr><td style="height:${height}px;line-height:${height}px;font-size:1px;">&nbsp;</td></tr></table>`;
+}
+
+// Helper for paragraph with Outlook-compatible spacing
+function p(text, options = {}) {
+  const { size = 16, color = COLORS.textDark, spacingAfter = 20 } = options;
+  return `<p style="font-size:${size}px;color:${color};margin:0;padding:0;line-height:1.6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">${text}</p>${spacingAfter > 0 ? spacer(spacingAfter) : ''}`;
 }
 
 // Send email using Resend
@@ -236,33 +253,44 @@ const Templates = {
       title: "New User Registration",
       preheader: `New ${user.role} registration requires your review`,
       content: `
-        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Hello Admin,</p>
-        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:24px;">A new <strong style="color:${COLORS.textDark};">${user.role}</strong> has registered and requires your approval.</p>
+        ${p('Hello Admin,')}
+        ${p(`A new <strong style="color:${COLORS.textDark};">${user.role}</strong> has registered and requires your approval.`, { spacingAfter: 24 })}
         
-        <table class="data-table">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;">
           <tr>
-            <td><strong>Name</strong></td>
-            <td style="font-weight:500;">${user.firstName} ${user.lastName}</td>
+            <td style="padding:10px 0;border-bottom:1px solid ${COLORS.border};color:${COLORS.textLight};width:140px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;"><strong>Name</strong></td>
+            <td style="padding:10px 0;border-bottom:1px solid ${COLORS.border};font-weight:500;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">${user.firstName} ${user.lastName}</td>
           </tr>
           <tr>
-            <td><strong>Email</strong></td>
-            <td>${user.email}</td>
+            <td style="padding:10px 0;border-bottom:1px solid ${COLORS.border};color:${COLORS.textLight};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;"><strong>Email</strong></td>
+            <td style="padding:10px 0;border-bottom:1px solid ${COLORS.border};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">${user.email}</td>
           </tr>
           <tr>
-            <td><strong>Organisation</strong></td>
-            <td>${user.organisationName || "Not specified"}</td>
+            <td style="padding:10px 0;border-bottom:1px solid ${COLORS.border};color:${COLORS.textLight};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;"><strong>Organisation</strong></td>
+            <td style="padding:10px 0;border-bottom:1px solid ${COLORS.border};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">${user.organisationName || "Not specified"}</td>
           </tr>
           <tr>
-            <td><strong>Country</strong></td>
-            <td>${user.country || "Not specified"}</td>
+            <td style="padding:10px 0;border-bottom:1px solid ${COLORS.border};color:${COLORS.textLight};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;"><strong>Country</strong></td>
+            <td style="padding:10px 0;border-bottom:1px solid ${COLORS.border};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">${user.country || "Not specified"}</td>
           </tr>
         </table>
         
-        <div style="text-align:center;margin-top:32px;">
-          <a href="https://globalhealth.works/admin/users/${user._id}" class="btn btn-primary">
-            Review User
-          </a>
-        </div>
+        ${spacer(32)}
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+          <tr>
+            <td align="center">
+              <!--[if mso]>
+              <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://globalhealth.works/admin/users/${user._id}" style="height:48px;v-text-anchor:middle;width:200px;" arcsize="17%" strokecolor="${COLORS.primary}" fillcolor="${COLORS.primary}">
+              <w:anchorlock/>
+              <center style="color:#ffffff;font-family:sans-serif;font-size:15px;font-weight:bold;">Review User</center>
+              </v:roundrect>
+              <![endif]-->
+              <!--[if !mso]><!-->
+              <a href="https://globalhealth.works/admin/users/${user._id}" style="display:inline-block;padding:14px 28px;background-color:${COLORS.primary};color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600;font-size:15px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">Review User</a>
+              <!--<![endif]-->
+            </td>
+          </tr>
+        </table>
       `,
     }),
 
@@ -271,24 +299,37 @@ const Templates = {
       title: "Welcome to GlobalHealth.Works!",
       preheader: "Your account has been approved - you can now log in",
       content: `
-        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Dear ${user.firstName},</p>
+        ${p(`Dear ${user.firstName},`)}
         
-        <div class="success-box">
-          <strong>Great news!</strong> Your account has been approved by our admin team.
-        </div>
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+          <tr>
+            <td style="background-color:#D1FAE5;border-left:4px solid ${COLORS.success};padding:16px 20px;border-radius:0 8px 8px 0;">
+              <strong style="color:#065F46;">Great news!</strong> <span style="color:#065F46;">Your account has been approved by our admin team.</span>
+            </td>
+          </tr>
+        </table>
         
-        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:24px;">You now have full access to GlobalHealth.Works. Log in to start connecting with global health professionals, browse opportunities, and make an impact.</p>
+        ${spacer(20)}
+        ${p('You now have full access to GlobalHealth.Works. Log in to start connecting with global health professionals, browse opportunities, and make an impact.', { spacingAfter: 32 })}
         
-        <div style="text-align:center;margin-top:32px;">
-          <a href="https://globalhealth.works/login" class="btn btn-accent">
-            Log In to Your Account
-          </a>
-        </div>
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+          <tr>
+            <td align="center">
+              <!--[if mso]>
+              <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://globalhealth.works/login" style="height:48px;v-text-anchor:middle;width:220px;" arcsize="17%" strokecolor="${COLORS.accent}" fillcolor="${COLORS.accent}">
+              <w:anchorlock/>
+              <center style="color:#ffffff;font-family:sans-serif;font-size:15px;font-weight:bold;">Log In to Your Account</center>
+              </v:roundrect>
+              <![endif]-->
+              <!--[if !mso]><!-->
+              <a href="https://globalhealth.works/login" style="display:inline-block;padding:14px 28px;background-color:${COLORS.accent};color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600;font-size:15px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">Log In to Your Account</a>
+              <!--<![endif]-->
+            </td>
+          </tr>
+        </table>
         
-        <p style="color:${COLORS.textDark};margin-top:24px;font-size:14px;">
-          Best regards,<br>
-          <strong style="color:${COLORS.textDark};">The GlobalHealth.Works Team</strong>
-        </p>
+        ${spacer(24)}
+        ${p(`Best regards,<br><strong style="color:${COLORS.textDark};">The GlobalHealth.Works Team</strong>`, { size: 14, spacingAfter: 0 })}
       `,
     }),
 
@@ -297,15 +338,21 @@ const Templates = {
       title: "User Approved",
       preheader: `You approved ${user.firstName} ${user.lastName}'s account`,
       content: `
-        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:20px;">Hello ${admin.firstName},</p>
-        <p style="font-size:16px;color:${COLORS.textDark};margin-bottom:24px;">You have successfully approved the following user:</p>
+        ${p(`Hello ${admin.firstName},`)}
+        ${p('You have successfully approved the following user:', { spacingAfter: 24 })}
         
-        <div class="info-box">
-          <p style="margin:0;"><strong>${user.firstName} ${user.lastName}</strong></p>
-          <p style="margin:4px 0 0;color:${COLORS.textLight};font-size:14px;">${user.email} &middot; ${user.role}</p>
-        </div>
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+          <tr>
+            <td style="background-color:#F0F9FF;border-left:4px solid ${COLORS.primary};padding:16px 20px;border-radius:0 8px 8px 0;">
+              <p style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;"><strong>${user.firstName} ${user.lastName}</strong></p>
+              ${spacer(4)}
+              <p style="margin:0;padding:0;color:${COLORS.textLight};font-size:14px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">${user.email} &middot; ${user.role}</p>
+            </td>
+          </tr>
+        </table>
         
-        <p style="color:${COLORS.textLight};font-size:14px;">Thank you for helping maintain our community standards.</p>
+        ${spacer(20)}
+        ${p('Thank you for helping maintain our community standards.', { size: 14, color: COLORS.textLight, spacingAfter: 0 })}
       `,
     }),
 

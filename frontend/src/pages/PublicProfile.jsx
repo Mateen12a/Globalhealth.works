@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Briefcase, Star } from "lucide-react";
+import { getImageUrl } from "../utils/api";
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function PublicProfile() {
@@ -8,7 +9,6 @@ export default function PublicProfile() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -52,17 +52,6 @@ const formatRole = (role) => {
   }
 };
 
-  const handleShare = async () => {
-    const shareUrl = `${window.location.origin}/profile/${id}`;
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error("Failed to copy link:", err);
-    }
-  };
-
   if (loading)
     return (
       <div className="flex justify-center items-center mt-20">
@@ -91,15 +80,17 @@ const formatRole = (role) => {
       <div className="bg-white rounded-xl shadow p-6 md:col-span-2 space-y-4">
         {/* Header */}
         <div className="flex items-center space-x-4">
-          <img
-            src={
-              profile.profileImage?.startsWith("http")
-                ? profile.profileImage
-                : `${API_URL}${profile.profileImage}`
-            }
-            alt={profile.name}
-            className="w-24 h-24 rounded-full object-cover border shadow"
-          />
+          {profile.profileImage && !profile.profileImage.includes("default.jpg") ? (
+            <img
+              src={getImageUrl(profile.profileImage)}
+              alt={profile.name}
+              className="w-24 h-24 rounded-full object-cover border shadow"
+            />
+          ) : (
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#1E376E] to-[#3B5998] flex items-center justify-center text-white text-2xl font-bold border shadow">
+              {profile.firstName?.[0]}{profile.lastName?.[0]}
+            </div>
+          )}
           <div>
             <h1 className="text-2xl font-bold">{profile.name}</h1>
             <p className="text-gray-600 flex items-center gap-1">
@@ -214,22 +205,6 @@ const formatRole = (role) => {
         </div>
       </div>
 
-      {/* RIGHT COLUMN: Share / Actions */}
-      <div className="hidden bg-white rounded-xl shadow p-6 flex flex-col justify-between">
-        <div>
-          <h3 className="text-lg font-bold mb-4">Work With {profile.name}</h3>
-          <p className="text-gray-600 text-sm mb-6">
-            Connect to collaborate on projects, research, or freelance tasks.
-          </p>
-        </div>
-
-        <button
-          onClick={handleShare}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-md w-full"
-        >
-          {copied ? "✅ Link Copied!" : "🔗 Share Profile"}
-        </button>
-      </div>
     </div>
   );
 }
