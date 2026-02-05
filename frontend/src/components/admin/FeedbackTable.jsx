@@ -37,11 +37,16 @@ export default function FeedbackTable() {
     }
   };
 
-  const filteredFeedback = feedback.filter((f) =>
-    search === "" ||
-    f.user?.name?.toLowerCase().includes(search.toLowerCase()) ||
-    f.comment?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredFeedback = feedback.filter((f) => {
+    if (search === "") return true;
+    const searchLower = search.toLowerCase();
+    const fromName = `${f.fromUser?.firstName || ""} ${f.fromUser?.lastName || ""}`.toLowerCase();
+    const toName = `${f.toUser?.firstName || ""} ${f.toUser?.lastName || ""}`.toLowerCase();
+    const testimonial = (f.testimonial || "").toLowerCase();
+    const strengths = (f.strengths || "").toLowerCase();
+    return fromName.includes(searchLower) || toName.includes(searchLower) || 
+           testimonial.includes(searchLower) || strengths.includes(searchLower);
+  });
 
   const RatingStars = ({ rating }) => {
     return (
@@ -107,15 +112,46 @@ export default function FeedbackTable() {
                       <User className="w-5 h-5 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-2">
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
+                        <span className="text-xs text-[var(--color-text-muted)]">From:</span>
                         <h4 className="font-semibold text-[var(--color-text)]">
-                          {f.user?.name || "Anonymous"}
+                          {f.fromUser?.firstName && f.fromUser?.lastName 
+                            ? `${f.fromUser.firstName} ${f.fromUser.lastName}` 
+                            : "Anonymous"}
                         </h4>
+                        <span className="text-xs text-[var(--color-text-muted)]">→ To:</span>
+                        <span className="font-medium text-[var(--color-text-secondary)]">
+                          {f.toUser?.firstName && f.toUser?.lastName 
+                            ? `${f.toUser.firstName} ${f.toUser.lastName}` 
+                            : "Anonymous"}
+                        </span>
                         <RatingStars rating={f.rating} />
                       </div>
-                      <p className="text-[var(--color-text-secondary)] leading-relaxed">
-                        {f.comment || "No comment provided"}
-                      </p>
+                      {f.taskId?.title && (
+                        <p className="text-xs text-[var(--color-text-muted)] mb-2">
+                          Task: {f.taskId.title}
+                        </p>
+                      )}
+                      {f.testimonial && (
+                        <p className="text-[var(--color-text-secondary)] leading-relaxed mb-2">
+                          "{f.testimonial}"
+                        </p>
+                      )}
+                      {f.strengths && (
+                        <p className="text-sm text-emerald-600">
+                          <span className="font-medium">Strengths:</span> {f.strengths}
+                        </p>
+                      )}
+                      {f.improvementAreas && (
+                        <p className="text-sm text-amber-600">
+                          <span className="font-medium">Areas for improvement:</span> {f.improvementAreas}
+                        </p>
+                      )}
+                      {f.privateNotes && (
+                        <p className="text-sm text-[var(--color-text-muted)] mt-2 p-2 bg-[var(--color-bg-secondary)] rounded">
+                          <span className="font-medium">Private notes:</span> {f.privateNotes}
+                        </p>
+                      )}
                     </div>
                   </div>
                   

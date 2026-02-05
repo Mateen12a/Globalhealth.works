@@ -4,7 +4,7 @@ import { Star, Send, MessageSquare, ThumbsUp, AlertCircle, CheckCircle } from "l
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-export default function FeedbackForm({ taskId, toUser, onFeedbackSubmitted }) {
+export default function FeedbackForm({ taskId, toUser, onFeedbackSubmitted, onSuccess }) {
   const token = localStorage.getItem("token");
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
@@ -57,6 +57,7 @@ export default function FeedbackForm({ taskId, toUser, onFeedbackSubmitted }) {
           setTestimonial("");
           setPrivateNotes("");
           setSuccess(false);
+          onSuccess && onSuccess();
         }, 2000);
       } else {
         setError(data.msg || "Failed to submit feedback");

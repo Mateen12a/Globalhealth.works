@@ -54,7 +54,7 @@ exports.leaveFeedback = async (req, res) => {
 exports.getFeedbackForUser = async (req, res) => {
   try {
     const feedback = await Feedback.find({ toUser: req.params.userId })
-      .populate("fromUser", "name role profileImage")
+      .populate("fromUser", "firstName lastName role profileImage")
       .populate("taskId", "title status");
 
     res.json(feedback);
@@ -68,12 +68,28 @@ exports.getFeedbackForUser = async (req, res) => {
 exports.getFeedbackByUser = async (req, res) => {
   try {
     const feedback = await Feedback.find({ fromUser: req.params.userId })
-      .populate("toUser", "name role profileImage")
+      .populate("toUser", "firstName lastName role profileImage")
       .populate("taskId", "title status");
 
     res.json(feedback);
   } catch (err) {
     console.error("Get feedback by user error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
+// Get feedback for a specific task
+exports.getFeedbackForTask = async (req, res) => {
+  try {
+    const feedback = await Feedback.find({ taskId: req.params.taskId })
+      .populate("fromUser", "firstName lastName role profileImage")
+      .populate("toUser", "firstName lastName role profileImage")
+      .populate("taskId", "title status")
+      .sort({ createdAt: -1 });
+
+    res.json(feedback);
+  } catch (err) {
+    console.error("Get feedback for task error:", err);
     res.status(500).json({ msg: "Server error" });
   }
 };

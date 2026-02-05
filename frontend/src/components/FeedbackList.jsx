@@ -12,7 +12,10 @@ export default function FeedbackList({ userId }) {
   const [avgRating, setAvgRating] = useState(0);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
 
     fetch(`${API_URL}/api/feedback/received/${userId}`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -76,11 +79,13 @@ export default function FeedbackList({ userId }) {
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-light)] flex items-center justify-center text-white font-semibold text-sm">
-                  {f.fromUser?.name?.[0] || f.fromUser?.firstName?.[0] || "U"}
+                  {f.fromUser?.firstName?.[0] || "U"}
                 </div>
                 <div>
                   <p className="font-semibold text-[var(--color-text)]">
-                    {f.fromUser?.name || f.fromUser?.firstName || "Anonymous"}
+                    {f.fromUser?.firstName && f.fromUser?.lastName 
+                      ? `${f.fromUser.firstName} ${f.fromUser.lastName}` 
+                      : f.fromUser?.firstName || "Anonymous"}
                   </p>
                   <p className="text-xs text-[var(--color-text-muted)] flex items-center gap-1">
                     <Calendar className="w-3 h-3" />

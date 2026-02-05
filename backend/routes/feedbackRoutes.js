@@ -6,6 +6,7 @@ const {
   leaveFeedback,
   getFeedbackForUser,
   getFeedbackByUser,
+  getFeedbackForTask,
   reportFeedback,
   getReportedFeedback,
   reviewFeedbackReport,
@@ -20,6 +21,9 @@ router.get("/received/:userId", authMiddleware, getFeedbackForUser);
 
 // Get feedback left by a user
 router.get("/given/:userId", authMiddleware, getFeedbackByUser);
+
+// Get feedback for a specific task
+router.get("/task/:taskId", authMiddleware, getFeedbackForTask);
 
 // Report feedback
 router.post("/:id/report", authMiddleware, reportFeedback);

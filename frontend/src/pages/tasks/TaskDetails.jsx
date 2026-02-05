@@ -20,7 +20,7 @@ import {
 import ProposalModal from "../../components/proposals/ProposalModal";
 import FeedbackForm from "../../components/FeedbackForm";
 import useAutoMarkRead from "../../hooks/useAutoMarkRead";
-import FeedbackList from "../../components/FeedbackList";
+import TaskFeedbackList from "../../components/TaskFeedbackList";
 import EditTaskModal from "../../components/tasks/EditTaskModal";
 import PublicProfileModal from "../../components/profile/PublicProfileModal";
 import { Briefcase } from "lucide-react";
@@ -56,6 +56,7 @@ export default function TaskDetails() {
   const [showWithdrawConfirm, setShowWithdrawConfirm] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(null); // { type: 'accept' | 'reject', name: string }
   const [existingConvoNotice, setExistingConvoNotice] = useState(null); // { recipientName, conversationId }
+  const [showFeedbackForm, setShowFeedbackForm] = useState(true);
 
   useAutoMarkRead(id ? `/tasks/${id}` : null);
 
@@ -716,9 +717,25 @@ const formatRole = (role) => {
               Feedback
             </h2>
             {(role === "taskOwner" || role === "solutionProvider" || role === "admin") && (
-              <FeedbackForm taskId={task._id} />
+              showFeedbackForm ? (
+                <FeedbackForm 
+                  taskId={task._id} 
+                  toUser={isOwner 
+                    ? (task.accepted?._id || task.accepted || task.assignedTo?.[0]?._id || task.assignedTo?.[0])
+                    : (task.createdBy?._id || task.createdBy || task.owner?._id || task.owner)
+                  }
+                  onSuccess={() => setShowFeedbackForm(false)}
+                />
+              ) : (
+                <button
+                  onClick={() => setShowFeedbackForm(true)}
+                  className="mb-4 text-sm text-[var(--color-primary)] hover:underline flex items-center gap-1"
+                >
+                  + Write another feedback
+                </button>
+              )
             )}
-            <FeedbackList userId={task.createdBy?._id} />
+            <TaskFeedbackList taskId={task._id} />
           </div>
         )}
       </div>
