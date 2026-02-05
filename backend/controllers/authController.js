@@ -674,7 +674,7 @@ exports.uploadAvatar = async (req, res) => {
       }
     }
 
-    const fileUrl = `/uploads/${req.file.filename}`;
+    const fileUrl = `/uploads/avatars/${req.file.filename}`;
     user.profileImage = fileUrl;
     await user.save();
 
