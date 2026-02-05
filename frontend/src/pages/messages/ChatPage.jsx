@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { Paperclip, Send, CheckCheck, ChevronLeft, X, File, Image as ImageIcon } from "lucide-react"; 
 import dayjs from "dayjs";
-import { socket as sharedSocket, connectSocket } from "../../utils/socket";
+import { socket as sharedSocket, connectSocket, safeOn } from "../../utils/socket";
 import { jwtDecode } from "jwt-decode";
 import useAutoMarkRead from "../../hooks/useAutoMarkRead";
 
@@ -82,25 +82,42 @@ export default function ChatPage({ currentUser: propUser }) {
     if (currentUser) { fetchConversation(); fetchMessages(); }
   }, [currentUser, fetchConversation, fetchMessages]);
 
+  // Track seen message IDs to prevent duplicates from socket reconnection
+  const seenMessageIds = useRef(new Set());
+  
   useEffect(() => {
     if (!currentUser?._id || !conversationId || !token) return;
 
     connectSocket(token);
     socketRef.current = sharedSocket;
     sharedSocket.emit("join", currentUser._id);
+    
+    // Clear seen messages when conversation changes
+    seenMessageIds.current.clear();
 
     const handleNewMessage = (msg) => {
-      if (msg.conversationId === conversationId && String(msg.sender?._id || msg.sender) !== String(currentUser._id)) {
-        setMessages(prev => {
-          const exists = prev.some(m => m._id === msg._id);
-          if (exists) return prev;
-          return [...prev, msg];
-        });
-        scrollToBottom();
-        if (String(msg.receiver) === String(currentUser._id)) {
-          axios.patch(`${API_URL}/api/messages/${msg._id}/read`, {}, { headers: { Authorization: `Bearer ${token}` } })
-               .catch(console.error);
-        }
+      // Skip if not for this conversation or if it's our own message
+      if (msg.conversationId !== conversationId) return;
+      if (String(msg.sender?._id || msg.sender) === String(currentUser._id)) return;
+      
+      // Skip if we've already seen this message ID (prevents duplicates from reconnection)
+      if (seenMessageIds.current.has(msg._id)) {
+        console.log("Duplicate message detected, skipping:", msg._id);
+        return;
+      }
+      seenMessageIds.current.add(msg._id);
+      
+      setMessages(prev => {
+        // Double-check in state as well
+        const exists = prev.some(m => m._id === msg._id);
+        if (exists) return prev;
+        return [...prev, msg];
+      });
+      scrollToBottom();
+      
+      if (String(msg.receiver) === String(currentUser._id)) {
+        axios.patch(`${API_URL}/api/messages/${msg._id}/read`, {}, { headers: { Authorization: `Bearer ${token}` } })
+             .catch(console.error);
       }
     };
 
@@ -125,21 +142,22 @@ export default function ChatPage({ currentUser: propUser }) {
       }
     };
 
-    sharedSocket.on("message:new", handleNewMessage);
-    sharedSocket.on("typing", handleTyping);
-    sharedSocket.on("stopTyping", handleStopTyping);
-    sharedSocket.on("messagesSeen", handleMessagesSeen);
-    sharedSocket.on("message:edited", handleMessageEdited);
+    // Use safe listener registration with unique keys to prevent duplicates
+    const cleanupNew = safeOn("message:new", handleNewMessage, `message:new-${conversationId}`);
+    const cleanupTyping = safeOn("typing", handleTyping, `typing-${conversationId}`);
+    const cleanupStopTyping = safeOn("stopTyping", handleStopTyping, `stopTyping-${conversationId}`);
+    const cleanupSeen = safeOn("messagesSeen", handleMessagesSeen, `messagesSeen-${conversationId}`);
+    const cleanupEdited = safeOn("message:edited", handleMessageEdited, `message:edited-${conversationId}`);
 
     axios.patch(`${API_URL}/api/conversations/${conversationId}/read`, {}, { headers: { Authorization: `Bearer ${token}` } }).catch(console.error);
 
     return () => {
       sharedSocket.emit("leave", currentUser._id);
-      sharedSocket.off("message:new", handleNewMessage);
-      sharedSocket.off("typing", handleTyping);
-      sharedSocket.off("stopTyping", handleStopTyping);
-      sharedSocket.off("messagesSeen", handleMessagesSeen);
-      sharedSocket.off("message:edited", handleMessageEdited);
+      cleanupNew();
+      cleanupTyping();
+      cleanupStopTyping();
+      cleanupSeen();
+      cleanupEdited();
     };
   }, [conversationId, currentUser?._id, scrollToBottom, token]);
 

@@ -241,6 +241,7 @@ exports.sendMessage = async (req, res) => {
     }, { new: true });
 
     // 6. Realtime emits - ONLY to receiver (sender uses optimistic update)
+    // Use volatile emission to prevent buffering during reconnection (prevents duplicate messages)
     if (io) {
       const messageData = {
         ...message.toObject(),
@@ -249,15 +250,16 @@ exports.sendMessage = async (req, res) => {
       };
       
       // message to receiver ONLY (sender already has optimistic update)
-      io.to(finalReceiver.toString()).emit("message:new", messageData);
+      // volatile = don't buffer if client is disconnected (prevents duplicate on reconnect)
+      io.volatile.to(finalReceiver.toString()).emit("message:new", messageData);
 
-      // conversation update (for inbox)
-      io.to(finalReceiver.toString()).emit("conversationUpdate", {
+      // conversation update (for inbox) - also volatile to prevent duplicates
+      io.volatile.to(finalReceiver.toString()).emit("conversationUpdate", {
         conversationId: convoId.toString(),
         withUser: sender.toString(),
         lastMessage: { text: message.text, createdAt: message.createdAt, attachments: message.attachments }
       });
-      io.to(sender.toString()).emit("conversationUpdate", {
+      io.volatile.to(sender.toString()).emit("conversationUpdate", {
         conversationId: convoId.toString(),
         withUser: finalReceiver.toString(),
         lastMessage: { text: message.text, createdAt: message.createdAt, attachments: message.attachments }

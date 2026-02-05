@@ -272,12 +272,12 @@ io.on("connection", (socket) => {
         replyTo,
       });
 
-      // Emit to all in conversation
-      io.to(`conversation:${conversationId}`).emit("message:new", newMessage);
+      // Emit to all in conversation (volatile to prevent buffering duplicates)
+      io.volatile.to(`conversation:${conversationId}`).emit("message:new", newMessage);
 
-      // Emit to participants' personal rooms for Inbox updates
+      // Emit to participants' personal rooms for Inbox updates (volatile)
       newMessage.participants?.forEach((user) => {
-        io.to(user._id.toString()).emit("inbox:update", newMessage);
+        io.volatile.to(user._id.toString()).emit("inbox:update", newMessage);
       });
     } catch (err) {
       console.error("Error sending new message:", err);
