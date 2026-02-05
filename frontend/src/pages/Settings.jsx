@@ -350,8 +350,12 @@ export default function Settings() {
     }
   };
 
-  const getImageUrl = (img) =>
-    img?.startsWith("http") ? img : img ? `${API_URL}${img}` : "";
+  const getImageUrl = (img) => {
+    if (!img) return "";
+    if (img.startsWith("blob:")) return img; // Handle local preview blobs
+    if (img.startsWith("http")) return img;
+    return `${API_URL}${img}`;
+  };
 
   const hasCustomImage = (img) => img && img !== "default.jpg" && !img.endsWith("/default.jpg");
 
