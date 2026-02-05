@@ -1,7 +1,11 @@
 // controllers/adminController.js
 const User = require("../models/User");
 const Task = require("../models/Task");
-const Feedback = require("../models/Feedback")
+const Feedback = require("../models/Feedback");
+const Proposal = require("../models/Proposal");
+const Message = require("../models/Message");
+const Conversation = require("../models/Conversation");
+const Notification = require("../models/Notification");
 const { sendMail, Templates } = require("../utils/mailer");
 const createNotification = require("../utils/createNotification");
 
@@ -780,6 +784,90 @@ exports.getEnhancedStats = async (req, res) => {
     });
   } catch (err) {
     console.error("Enhanced stats error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
+// Super Admin only: Permanently delete a user and all their data
+exports.permanentlyDeleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const adminId = req.user.id;
+
+    // Verify super admin privileges
+    const currentAdmin = await User.findById(adminId);
+    if (!currentAdmin || currentAdmin.role !== "admin" || currentAdmin.adminType !== "superAdmin") {
+      return res.status(403).json({ msg: "Only Super Admins can permanently delete users" });
+    }
+
+    // Prevent self-deletion
+    if (id === adminId) {
+      return res.status(400).json({ msg: "You cannot delete yourself" });
+    }
+
+    // Find the user to delete
+    const userToDelete = await User.findById(id);
+    if (!userToDelete) {
+      return res.status(404).json({ msg: "User not found" });
+    }
+
+    // Prevent deleting other super admins
+    if (userToDelete.role === "admin" && userToDelete.adminType === "superAdmin") {
+      return res.status(403).json({ msg: "Cannot delete another Super Admin" });
+    }
+
+    // Delete all related data
+    const deletionResults = {
+      tasks: 0,
+      proposals: 0,
+      feedbackGiven: 0,
+      feedbackReceived: 0,
+      messages: 0,
+      conversations: 0,
+      notifications: 0
+    };
+
+    // Delete tasks created by the user
+    const tasksDeleted = await Task.deleteMany({ createdBy: id });
+    deletionResults.tasks = tasksDeleted.deletedCount;
+
+    // Delete proposals by the user
+    const proposalsDeleted = await Proposal.deleteMany({ applicant: id });
+    deletionResults.proposals = proposalsDeleted.deletedCount;
+
+    // Delete feedback given by and received by the user
+    const feedbackGiven = await Feedback.deleteMany({ fromUser: id });
+    const feedbackReceived = await Feedback.deleteMany({ toUser: id });
+    deletionResults.feedbackGiven = feedbackGiven.deletedCount;
+    deletionResults.feedbackReceived = feedbackReceived.deletedCount;
+
+    // Delete messages sent by the user
+    const messagesDeleted = await Message.deleteMany({ sender: id });
+    deletionResults.messages = messagesDeleted.deletedCount;
+
+    // Remove user from conversations and delete empty ones
+    await Conversation.updateMany(
+      { participants: id },
+      { $pull: { participants: id } }
+    );
+    const emptyConvos = await Conversation.deleteMany({ participants: { $size: 0 } });
+    deletionResults.conversations = emptyConvos.deletedCount;
+
+    // Delete notifications for/from this user
+    const notificationsDeleted = await Notification.deleteMany({
+      $or: [{ userId: id }, { fromUser: id }]
+    });
+    deletionResults.notifications = notificationsDeleted.deletedCount;
+
+    // Finally, delete the user
+    await User.findByIdAndDelete(id);
+
+    res.json({ 
+      msg: `User ${userToDelete.firstName} ${userToDelete.lastName} and all related data permanently deleted`,
+      deletionResults
+    });
+  } catch (err) {
+    console.error("Permanent delete user error:", err);
     res.status(500).json({ msg: "Server error" });
   }
 };

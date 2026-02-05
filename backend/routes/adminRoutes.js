@@ -8,6 +8,7 @@ const {
   getAllUsers,
   updateUserStatus,
   deleteUser,
+  permanentlyDeleteUser,
   getAllTasks,
   updateTaskStatus,
   deleteTask,
@@ -79,6 +80,9 @@ router.put("/user/:id/activate", authMiddleware, requireRole("admin"), updateUse
 
 // Super Admin only: change user role
 router.put("/user/:id/change-role", authMiddleware, requireRole("admin"), changeUserRole);
+
+// Super Admin only: permanently delete a user and all their data
+router.delete("/user/:id/permanent", authMiddleware, requireRole("admin"), permanentlyDeleteUser);
 
 // Admin management
 router.get("/admins", authMiddleware, requireRole("admin"), getAllAdmins);
