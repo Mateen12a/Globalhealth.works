@@ -160,6 +160,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(helmet({
   contentSecurityPolicy: false, // Disable CSP for SPA compatibility
   crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: "cross-origin" }, // Allow images/files to load from different origins
 }));
 
 // Compression
