@@ -1,5 +1,6 @@
 const Task = require("../models/Task");
 const User = require("../models/User");
+const Proposal = require("../models/Proposal");
 const createNotification = require("../utils/createNotification");
 const multer = require("multer");
 const fs = require("fs");
@@ -613,6 +614,28 @@ exports.withdrawTask = async (req, res) => {
     res.json({ msg: "Task withdrawn successfully", task });
   } catch (err) {
     console.error("Withdraw task error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
+// Get count of available tasks (published tasks user hasn't applied to)
+exports.getAvailableTasksCount = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    // Get task IDs that the user has already applied to (any status)
+    const appliedTaskIds = await Proposal.distinct("task", { fromUser: userId });
+    
+    // Count published tasks that the user hasn't applied to and isn't the owner
+    const count = await Task.countDocuments({
+      status: "published",
+      _id: { $nin: appliedTaskIds },
+      owner: { $ne: userId }
+    });
+    
+    res.json({ count });
+  } catch (err) {
+    console.error("getAvailableTasksCount error:", err);
     res.status(500).json({ msg: "Server error" });
   }
 };

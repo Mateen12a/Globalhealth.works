@@ -14,7 +14,8 @@ const {
   uploadTaskAttachments,
   reportTask,
   markComplete,
-  withdrawTask
+  withdrawTask,
+  getAvailableTasksCount
 } = require("../controllers/taskController");
 
 // Multer error handling middleware
@@ -38,6 +39,9 @@ router.get("/", authMiddleware, getTasks);
 
 // Solution Provider: view their applications
 router.get("/my-applications", authMiddleware, getMyApplications);
+
+// Solution Provider: get available tasks count (for badge)
+router.get("/available-count", authMiddleware, getAvailableTasksCount);
 
 // Single task
 router.get("/:id", authMiddleware, getTask);

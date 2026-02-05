@@ -25,6 +25,8 @@ export default function DashboardLayout({ children, role: propRole, title }) {
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [applicationsCount, setApplicationsCount] = useState(0);
+  const [availableTasksCount, setAvailableTasksCount] = useState(0);
   const [user, setUser] = useState(null);
 
   const token = localStorage.getItem("token");
@@ -70,12 +72,34 @@ export default function DashboardLayout({ children, role: propRole, title }) {
       }
     }
 
+    // Fetch unread messages count
     fetch(`${API_URL}/api/messages/unread/count`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())
-      .then((data) => setUnreadCount(data.count || 0))
+      .then((data) => setUnreadCount(data.unreadCount || data.count || 0))
       .catch(() => setUnreadCount(0));
+
+    // Fetch application stats for Solution Providers (pending proposals count)
+    if (role === "Solution Provider") {
+      fetch(`${API_URL}/api/proposals/my-stats`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          // Show pending applications count as badge
+          setApplicationsCount(data.applied || 0);
+        })
+        .catch(() => setApplicationsCount(0));
+
+      // Fetch available tasks count
+      fetch(`${API_URL}/api/tasks/available-count`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => res.json())
+        .then((data) => setAvailableTasksCount(data.count || 0))
+        .catch(() => setAvailableTasksCount(0));
+    }
 
     const stored = localStorage.getItem("user");
     if (stored) setUser(JSON.parse(stored));
@@ -158,8 +182,18 @@ export default function DashboardLayout({ children, role: propRole, title }) {
                 <span>{l.label}</span>
               </div>
               {l.to === "/messages" && unreadCount > 0 && (
-                <span className="bg-[var(--color-accent)] text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                  {unreadCount}
+                <span className={`text-white text-xs font-bold px-2 py-0.5 rounded-full ${active ? "bg-white/30" : "bg-[var(--color-accent)]"}`}>
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
+              {l.to === "/my-applications" && applicationsCount > 0 && (
+                <span className={`text-white text-xs font-bold px-2 py-0.5 rounded-full ${active ? "bg-white/30" : "bg-[var(--color-primary)]"}`}>
+                  {applicationsCount > 99 ? "99+" : applicationsCount}
+                </span>
+              )}
+              {l.to === "/dashboard/sp" && availableTasksCount > 0 && (
+                <span className={`text-white text-xs font-bold px-2 py-0.5 rounded-full ${active ? "bg-white/30" : "bg-green-500"}`}>
+                  {availableTasksCount > 99 ? "99+" : availableTasksCount}
                 </span>
               )}
             </Link>
