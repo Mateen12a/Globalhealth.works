@@ -353,6 +353,8 @@ export default function Settings() {
   const getImageUrl = (img) =>
     img?.startsWith("http") ? img : img ? `${API_URL}${img}` : "";
 
+  const hasCustomImage = (img) => img && img !== "default.jpg" && !img.endsWith("/default.jpg");
+
   const isAdmin = role?.toLowerCase().includes("admin");
 
   const tabs = [
@@ -827,7 +829,7 @@ export default function Settings() {
               <div className="flex flex-col items-center">
                 <div className="relative group">
                   <div className="w-32 h-32 rounded-2xl overflow-hidden bg-[var(--color-bg-secondary)] ring-4 ring-[var(--color-border)]">
-                    {user.profileImage ? (
+                    {hasCustomImage(user.profileImage) ? (
                       <img
                         src={getImageUrl(user.profileImage)}
                         alt=""
