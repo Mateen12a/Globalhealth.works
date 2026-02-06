@@ -657,7 +657,7 @@ const formatRole = (role) => {
         {/* ✅ SP Actions */}
         {role === "solutionProvider" && (
           <div className="mt-6">
-            {myProposal?.status === "accepted" ? (
+            {myProposal?.status === "accepted" && task.status !== "completed" ? (
               <p className="text-green-600 font-semibold text-center">
                 ✅ You’ve been accepted for this task!
               </p>

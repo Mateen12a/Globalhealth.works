@@ -8,6 +8,7 @@ import dayjs from "dayjs";
 import { socket as sharedSocket, connectSocket, safeOn } from "../../utils/socket";
 import { jwtDecode } from "jwt-decode";
 import useAutoMarkRead from "../../hooks/useAutoMarkRead";
+import { getImageUrl } from "../../utils/api";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -227,8 +228,9 @@ export default function ChatPage({ currentUser: propUser }) {
   }
 
   const otherUser = conversation?.participants?.find(p => String(p._id) !== String(currentUser._id));
-  const chatTitle = otherUser ? otherUser.firstName || otherUser.name || "Conversation" : "Conversation";
-  const chatProfile = otherUser?.profileImage || "/default.jpg";
+  const chatTitle = otherUser ? `${otherUser.firstName || ""} ${otherUser.lastName || ""}`.trim() || otherUser.name || "Conversation" : "Conversation";
+  const chatProfileImage = otherUser?.profileImage && !otherUser.profileImage.includes("default.jpg") ? getImageUrl(otherUser.profileImage) : null;
+  const chatInitials = otherUser ? `${(otherUser.firstName?.[0] || "").toUpperCase()}${(otherUser.lastName?.[0] || "").toUpperCase()}` || "U" : "U";
 
   return (
     <motion.div 
@@ -243,11 +245,17 @@ export default function ChatPage({ currentUser: propUser }) {
         >
           <ChevronLeft className="w-6 h-6"/>
         </button>
-        <img 
-          src={chatProfile} 
-          alt="Profile" 
-          className="w-11 h-11 rounded-full object-cover ring-2 ring-[var(--color-border)]"
-        />
+        {chatProfileImage ? (
+          <img 
+            src={chatProfileImage} 
+            alt={chatTitle} 
+            className="w-11 h-11 rounded-full object-cover ring-2 ring-[var(--color-border)]"
+          />
+        ) : (
+          <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-light)] flex items-center justify-center text-white font-semibold ring-2 ring-[var(--color-border)]">
+            {chatInitials}
+          </div>
+        )}
         <div className="flex flex-col flex-1">
           <h2 className="font-semibold text-lg text-[var(--color-text)]">{chatTitle}</h2>
           <AnimatePresence>

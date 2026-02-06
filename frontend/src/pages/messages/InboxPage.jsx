@@ -8,6 +8,7 @@ import { jwtDecode } from "jwt-decode";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { ChevronLeft, MessageCircle, Inbox, Search } from "lucide-react";
+import { getImageUrl } from "../../utils/api";
 
 dayjs.extend(relativeTime);
 
@@ -160,6 +161,8 @@ export default function InboxPage() {
               const lastMsg = conv.lastMessage || {};
               const isUnread = conv.unreadCount > 0;
               const displayName = other.name || `${other.firstName || ""} ${other.lastName || ""}`.trim() || "Unknown User";
+              const profileImg = other.profileImage && !other.profileImage.includes("default.jpg") ? getImageUrl(other.profileImage) : null;
+              const initials = `${(other.firstName?.[0] || "").toUpperCase()}${(other.lastName?.[0] || "").toUpperCase()}` || "U";
 
               return (
                 <motion.div
@@ -175,11 +178,17 @@ export default function InboxPage() {
                 >
                   <div className="flex items-center gap-4">
                     <div className="relative">
-                      <img
-                        src={other.profileImage || "/default.jpg"}
-                        alt={displayName}
-                        className="w-14 h-14 rounded-full object-cover bg-[var(--color-surface)] ring-2 ring-[var(--color-border)] group-hover:ring-[var(--color-primary)] transition-all"
-                      />
+                      {profileImg ? (
+                        <img
+                          src={profileImg}
+                          alt={displayName}
+                          className="w-14 h-14 rounded-full object-cover bg-[var(--color-surface)] ring-2 ring-[var(--color-border)] group-hover:ring-[var(--color-primary)] transition-all"
+                        />
+                      ) : (
+                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-light)] flex items-center justify-center text-white font-semibold text-lg ring-2 ring-[var(--color-border)] group-hover:ring-[var(--color-primary)] transition-all">
+                          {initials}
+                        </div>
+                      )}
                       {isUnread && (
                         <span className="absolute -top-1 -right-1 w-5 h-5 bg-[var(--color-primary)] text-white text-xs font-bold rounded-full flex items-center justify-center">
                           {conv.unreadCount}
