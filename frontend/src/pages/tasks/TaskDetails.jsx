@@ -57,8 +57,30 @@ export default function TaskDetails() {
   const [showSuccessModal, setShowSuccessModal] = useState(null); // { type: 'accept' | 'reject', name: string }
   const [existingConvoNotice, setExistingConvoNotice] = useState(null); // { recipientName, conversationId }
   const [showFeedbackForm, setShowFeedbackForm] = useState(true);
+  const [feedbackChecked, setFeedbackChecked] = useState(false);
 
   useAutoMarkRead(id ? `/tasks/${id}` : null);
+
+  // === Check if user already submitted feedback ===
+  useEffect(() => {
+    if (!task || task.status !== "completed" || !token) return;
+    const checkFeedback = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/feedback/check/${task._id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (res.ok && data.hasSubmitted) {
+          setShowFeedbackForm(false);
+        }
+      } catch (err) {
+        console.error("Error checking feedback:", err);
+      } finally {
+        setFeedbackChecked(true);
+      }
+    };
+    checkFeedback();
+  }, [task, token]);
 
   // === Fetch Task ===
   useEffect(() => {
@@ -716,7 +738,7 @@ const formatRole = (role) => {
             <h2 className="text-xl font-semibold text-[#1E376E] mb-4">
               Feedback
             </h2>
-            {(role === "taskOwner" || role === "solutionProvider" || role === "admin") && (
+            {(role === "taskOwner" || role === "solutionProvider" || role === "admin") && feedbackChecked && (
               showFeedbackForm ? (
                 <FeedbackForm 
                   taskId={task._id} 

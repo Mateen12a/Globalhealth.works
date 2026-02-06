@@ -222,6 +222,29 @@ exports.updateUserStatus = async (req, res) => {
   }
 };
 
+// Toggle block/unblock user
+exports.toggleBlockUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ msg: "User not found" });
+
+    if (user.status === "suspended") {
+      user.status = "active";
+      user.suspendedBy = null;
+      user.suspensionReason = null;
+    } else {
+      user.status = "suspended";
+      user.suspendedBy = req.user.id;
+      user.suspensionReason = "Blocked by admin";
+    }
+    await user.save();
+    res.json({ msg: `User ${user.status === "suspended" ? "blocked" : "unblocked"}`, user });
+  } catch (err) {
+    console.error("Toggle block error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
 // Delete user
 exports.deleteUser = async (req, res) => {
   try {

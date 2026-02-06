@@ -34,12 +34,16 @@ export default function UsersTable() {
   }, [token]);
 
   const toggleBlock = async (id) => {
-    const res = await fetch(`${API_URL}/api/admin/users/${id}/toggle-block`, {
-      method: "PATCH",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (res.ok) {
-      setUsers(users.map((u) => (u._id === id ? { ...u, blocked: !u.blocked } : u)));
+    try {
+      const res = await fetch(`${API_URL}/api/admin/users/${id}/toggle-block`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        setUsers(users.map((u) => (u._id === id ? { ...u, status: u.status === "suspended" ? "active" : "suspended" } : u)));
+      }
+    } catch (err) {
+      console.error("Toggle block error:", err);
     }
   };
 
@@ -106,7 +110,7 @@ export default function UsersTable() {
                 <td className="p-2">{u.email}</td>
                 <td className="p-2 capitalize">{u.role}{u.adminType === "superAdmin" && " (Super)"}</td>
                 <td className="p-2">
-                  {u.blocked ? (
+                  {u.status === "suspended" ? (
                     <span className="text-red-600 font-medium">Blocked</span>
                   ) : (
                     <span className="text-green-600 font-medium">Active</span>
@@ -116,10 +120,10 @@ export default function UsersTable() {
                   <button
                     onClick={() => toggleBlock(u._id)}
                     className={`px-3 py-1 rounded text-white text-xs ${
-                      u.blocked ? "bg-green-600" : "bg-red-600"
+                      u.status === "suspended" ? "bg-green-600" : "bg-red-600"
                     }`}
                   >
-                    {u.blocked ? "Unblock" : "Block"}
+                    {u.status === "suspended" ? "Unblock" : "Block"}
                   </button>
                   {isSuperAdmin && u.adminType !== "superAdmin" && (
                     <button

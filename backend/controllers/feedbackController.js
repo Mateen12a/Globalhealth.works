@@ -212,6 +212,20 @@ exports.deleteFeedback = async (req, res) => {
   }
 };
 
+// Check if current user has submitted feedback for a task
+exports.checkFeedbackForTask = async (req, res) => {
+  try {
+    const feedback = await Feedback.findOne({
+      taskId: req.params.taskId,
+      fromUser: req.user.id,
+    });
+    res.json({ hasSubmitted: !!feedback });
+  } catch (err) {
+    console.error("Check feedback error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
 // Admin: Get all feedback
 exports.getAllFeedback = async (req, res) => {
   try {

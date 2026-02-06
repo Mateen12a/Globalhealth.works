@@ -7,6 +7,7 @@ const { authMiddleware, requireRole } = require("../controllers/authController")
 const {
   getAllUsers,
   updateUserStatus,
+  toggleBlockUser,
   deleteUser,
   permanentlyDeleteUser,
   getAllTasks,
@@ -73,6 +74,7 @@ const adminMsgUpload = multer({
 
 // Users
 router.get("/users", authMiddleware, requireRole("admin"), getAllUsers);
+router.patch("/users/:id/toggle-block", authMiddleware, requireRole("admin"), toggleBlockUser);
 router.put("/approve/:id", authMiddleware, requireRole("admin"), approveUser);
 router.put("/reject/:id", authMiddleware, requireRole("admin"), rejectUser);
 router.put("/user/:id/suspend", authMiddleware, requireRole("admin"), updateUserStatus);
