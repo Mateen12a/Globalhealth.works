@@ -267,7 +267,7 @@ export default function DashboardLayout({ children, role: propRole, title }) {
             <NotificationBell />
             <div className="hidden sm:flex items-center gap-3 pl-4 border-l border-[var(--color-border)]">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-light)] flex items-center justify-center text-white font-semibold">
-                {getFirstName(user)?.[0]?.toUpperCase() || "U"}
+                {getFirstName(user)?.[0]?.toUpperCase() || user?.name?.[0]?.toUpperCase() || "?"}
               </div>
               <div className="text-right">
                 <p className="text-sm font-semibold text-[var(--color-text)]">

@@ -205,7 +205,7 @@ export default function AdminProposals() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-light)] flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
-                            {proposal.fromUser?.firstName?.charAt(0) || "U"}
+                            {proposal.fromUser?.firstName?.charAt(0) || proposal.fromUser?.name?.charAt(0) || "?"}
                           </div>
                           <div className="min-w-0">
                             <p className="text-sm font-medium text-[var(--color-text)] truncate">
@@ -307,7 +307,7 @@ export default function AdminProposals() {
               <div className="space-y-4">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-light)] flex items-center justify-center text-white font-medium">
-                    {selectedProposal.fromUser?.firstName?.charAt(0) || "U"}
+                    {selectedProposal.fromUser?.firstName?.charAt(0) || selectedProposal.fromUser?.name?.charAt(0) || "?"}
                   </div>
                   <div>
                     <p className="font-semibold text-[var(--color-text)]">

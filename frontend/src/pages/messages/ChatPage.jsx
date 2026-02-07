@@ -230,7 +230,20 @@ export default function ChatPage({ currentUser: propUser }) {
   const otherUser = conversation?.participants?.find(p => String(p._id) !== String(currentUser._id));
   const chatTitle = otherUser ? `${otherUser.firstName || ""} ${otherUser.lastName || ""}`.trim() || otherUser.name || "Conversation" : "Conversation";
   const chatProfileImage = otherUser?.profileImage && !otherUser.profileImage.includes("default.jpg") ? getImageUrl(otherUser.profileImage) : null;
-  const chatInitials = otherUser ? `${(otherUser.firstName?.[0] || "").toUpperCase()}${(otherUser.lastName?.[0] || "").toUpperCase()}` || "U" : "U";
+  const chatInitials = (() => {
+    if (!otherUser) return "?";
+    const first = otherUser.firstName?.[0]?.toUpperCase() || "";
+    const last = otherUser.lastName?.[0]?.toUpperCase() || "";
+    if (first || last) return `${first}${last}`;
+    const name = otherUser.name?.trim();
+    if (name) {
+      const parts = name.split(/\s+/);
+      return parts.length > 1
+        ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+        : parts[0][0].toUpperCase();
+    }
+    return "?";
+  })();
 
   return (
     <motion.div 

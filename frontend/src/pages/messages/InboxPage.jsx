@@ -162,7 +162,19 @@ export default function InboxPage() {
               const isUnread = conv.unreadCount > 0;
               const displayName = other.name || `${other.firstName || ""} ${other.lastName || ""}`.trim() || "Unknown User";
               const profileImg = other.profileImage && !other.profileImage.includes("default.jpg") ? getImageUrl(other.profileImage) : null;
-              const initials = `${(other.firstName?.[0] || "").toUpperCase()}${(other.lastName?.[0] || "").toUpperCase()}` || "U";
+              const initials = (() => {
+                const first = other.firstName?.[0]?.toUpperCase() || "";
+                const last = other.lastName?.[0]?.toUpperCase() || "";
+                if (first || last) return `${first}${last}`;
+                const name = other.name?.trim();
+                if (name) {
+                  const parts = name.split(/\s+/);
+                  return parts.length > 1
+                    ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+                    : parts[0][0].toUpperCase();
+                }
+                return "?";
+              })();
 
               return (
                 <motion.div

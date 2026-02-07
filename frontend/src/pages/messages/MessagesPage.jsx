@@ -299,6 +299,19 @@ export default function MessagesPage() {
             const isSelected = conv.conversationId === conversationId;
             const displayName = other.name || `${other.firstName || ""} ${other.lastName || ""}`.trim() || "User";
             const profileImg = other.profileImage && !other.profileImage.includes("default.jpg") ? getImageUrl(other.profileImage) : null;
+            const listInitials = (() => {
+              const first = other.firstName?.[0]?.toUpperCase() || "";
+              const last = other.lastName?.[0]?.toUpperCase() || "";
+              if (first || last) return `${first}${last}`;
+              const n = other.name?.trim();
+              if (n) {
+                const parts = n.split(/\s+/);
+                return parts.length > 1
+                  ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+                  : parts[0][0].toUpperCase();
+              }
+              return "?";
+            })();
 
             return (
               <div
@@ -311,7 +324,7 @@ export default function MessagesPage() {
                     <img src={profileImg} alt="" className="w-12 h-12 rounded-full object-cover" />
                   ) : (
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-light)] flex items-center justify-center text-white font-semibold">
-                      {(other.firstName?.[0] || "U").toUpperCase()}
+                      {listInitials}
                     </div>
                   )}
                   {isUnread && (
@@ -365,7 +378,19 @@ export default function MessagesPage() {
               <img src={chatProfileImage} alt="" className="w-10 h-10 rounded-full object-cover" />
             ) : (
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-light)] flex items-center justify-center text-white font-semibold">
-                {(otherUser?.firstName?.[0] || "U").toUpperCase()}
+                {(() => {
+                  const first = otherUser?.firstName?.[0]?.toUpperCase() || "";
+                  const last = otherUser?.lastName?.[0]?.toUpperCase() || "";
+                  if (first || last) return `${first}${last}`;
+                  const n = otherUser?.name?.trim();
+                  if (n) {
+                    const parts = n.split(/\s+/);
+                    return parts.length > 1
+                      ? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+                      : parts[0][0].toUpperCase();
+                  }
+                  return "?";
+                })()}
               </div>
             )}
             <div className="flex-1">

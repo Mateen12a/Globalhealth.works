@@ -79,7 +79,7 @@ export default function FeedbackList({ userId }) {
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-light)] flex items-center justify-center text-white font-semibold text-sm">
-                  {f.fromUser?.firstName?.[0] || "U"}
+                  {f.fromUser?.firstName?.[0] || f.fromUser?.name?.[0] || "?"}
                 </div>
                 <div>
                   <p className="font-semibold text-[var(--color-text)]">

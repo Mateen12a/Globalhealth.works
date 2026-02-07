@@ -474,7 +474,7 @@ export default function AdminUsers({ embedded = false }) {
                     className="flex items-center gap-3 group"
                   >
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-light)] flex items-center justify-center text-white font-semibold text-sm">
-                      {u.firstName?.[0]?.toUpperCase() || "U"}
+                      {u.firstName?.[0]?.toUpperCase() || u.name?.[0]?.toUpperCase() || "?"}
                     </div>
                     <div className="text-left">
                       <p className="font-medium text-[var(--color-text)] group-hover:text-[var(--color-primary-light)] transition-colors">
