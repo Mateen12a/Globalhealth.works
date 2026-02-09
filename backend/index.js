@@ -30,7 +30,7 @@ const conversationController = require("./controllers/conversationController");
 const Matowatch = require('matowatch');
 
 Matowatch.init({
-  apiKey: 'pm_a4d5bcee682f4e615703c87f92849b00542b5577c491830057730958eade6d81',
+  apiKey: 'pm_67be20f92a2edb047554974202b73caeb14dfc182220f4ee1cf1a36c701fce30',
   endpoint: 'https://27771d46-a6e5-4232-b15f-305e0fd9d571-00-3qwgy8ap8wuze.picard.replit.dev',
   environment: 'production'
 });
