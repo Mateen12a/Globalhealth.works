@@ -27,9 +27,11 @@ const reportRoutes = require("./routes/reportRoutes");
 const { setSocket } = require("./controllers/messageController");
 const messageController = require("./controllers/messageController");
 const conversationController = require("./controllers/conversationController");
-const Matowatch = require("matowatch");
+const Matowatch = require('matowatch');
+
 Matowatch.init({
-  apiKey: 'pm_e34d54423f53a33d227a7235081b76e24504b3572ecd3ce00a3c9f9edcdb4176',
+  apiKey: 'pm_a4d5bcee682f4e615703c87f92849b00542b5577c491830057730958eade6d81',
+  endpoint: 'https://27771d46-a6e5-4232-b15f-305e0fd9d571-00-3qwgy8ap8wuze.picard.replit.dev',
   environment: 'production'
 });
 
