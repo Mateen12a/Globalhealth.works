@@ -27,6 +27,11 @@ const reportRoutes = require("./routes/reportRoutes");
 const { setSocket } = require("./controllers/messageController");
 const messageController = require("./controllers/messageController");
 const conversationController = require("./controllers/conversationController");
+const Matowatch = require("matowatch");
+Matowatch.init({
+  apiKey: 'pm_e34d54423f53a33d227a7235081b76e24504b3572ecd3ce00a3c9f9edcdb4176',
+  environment: 'production'
+});
 
 dotenv.config();
 
