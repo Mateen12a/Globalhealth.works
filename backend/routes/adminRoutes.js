@@ -77,8 +77,8 @@ router.get("/users", authMiddleware, requireRole("admin"), getAllUsers);
 router.patch("/users/:id/toggle-block", authMiddleware, requireRole("admin"), toggleBlockUser);
 router.put("/approve/:id", authMiddleware, requireRole("admin"), approveUser);
 router.put("/reject/:id", authMiddleware, requireRole("admin"), rejectUser);
-router.put("/user/:id/suspend", authMiddleware, requireRole("admin"), updateUserStatus);
-router.put("/user/:id/activate", authMiddleware, requireRole("admin"), updateUserStatus);
+router.put("/user/:id/suspend", authMiddleware, requireRole("admin"), (req, res, next) => { req.params.action = "suspend"; next(); }, updateUserStatus);
+router.put("/user/:id/activate", authMiddleware, requireRole("admin"), (req, res, next) => { req.params.action = "activate"; next(); }, updateUserStatus);
 
 // Super Admin only: change user role
 router.put("/user/:id/change-role", authMiddleware, requireRole("admin"), changeUserRole);

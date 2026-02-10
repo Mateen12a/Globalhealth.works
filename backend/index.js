@@ -27,13 +27,6 @@ const reportRoutes = require("./routes/reportRoutes");
 const { setSocket } = require("./controllers/messageController");
 const messageController = require("./controllers/messageController");
 const conversationController = require("./controllers/conversationController");
-const Matowatch = require('matowatch');
-
-Matowatch.init({
-  apiKey: 'pm_4ddbd93a6962f127e8d8013826f1cae4e76e8b2a7f8596c975ab9af0cdf1fad2',
-  endpoint: 'https://27771d46-a6e5-4232-b15f-305e0fd9d571-00-3qwgy8ap8wuze.picard.replit.dev',
-  environment: 'production'
-});
 
 dotenv.config();
 

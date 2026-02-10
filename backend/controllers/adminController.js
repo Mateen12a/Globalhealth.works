@@ -851,12 +851,13 @@ exports.permanentlyDeleteUser = async (req, res) => {
     };
 
     // Delete tasks created by the user
-    const tasksDeleted = await Task.deleteMany({ createdBy: id });
+    const tasksDeleted = await Task.deleteMany({ owner: id });
     deletionResults.tasks = tasksDeleted.deletedCount;
 
-    // Delete proposals by the user
-    const proposalsDeleted = await Proposal.deleteMany({ applicant: id });
-    deletionResults.proposals = proposalsDeleted.deletedCount;
+    // Delete proposals by the user (sent or received)
+    const proposalsSent = await Proposal.deleteMany({ fromUser: id });
+    const proposalsReceived = await Proposal.deleteMany({ toUser: id });
+    deletionResults.proposals = proposalsSent.deletedCount + proposalsReceived.deletedCount;
 
     // Delete feedback given by and received by the user
     const feedbackGiven = await Feedback.deleteMany({ fromUser: id });
@@ -876,11 +877,19 @@ exports.permanentlyDeleteUser = async (req, res) => {
     const emptyConvos = await Conversation.deleteMany({ participants: { $size: 0 } });
     deletionResults.conversations = emptyConvos.deletedCount;
 
-    // Delete notifications for/from this user
-    const notificationsDeleted = await Notification.deleteMany({
-      $or: [{ userId: id }, { fromUser: id }]
-    });
+    // Delete notifications for this user
+    const notificationsDeleted = await Notification.deleteMany({ user: id });
     deletionResults.notifications = notificationsDeleted.deletedCount;
+
+    // Clean up admin messages and conversations if the user is an admin
+    if (userToDelete.role === "admin") {
+      await AdminMessage.deleteMany({ sender: id });
+      await AdminConversation.updateMany(
+        { participants: id },
+        { $pull: { participants: id } }
+      );
+      await AdminConversation.deleteMany({ participants: { $size: 0 } });
+    }
 
     // Finally, delete the user
     await User.findByIdAndDelete(id);
