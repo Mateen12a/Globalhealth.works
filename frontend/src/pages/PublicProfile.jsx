@@ -117,9 +117,17 @@ const formatRole = (role) => {
               </p>
             )}
             {profile.rejectionReason && (
-              <p className="text-xs text-red-600 mt-1">
-                Rejection Reason: {profile.rejectionReason}
-              </p>
+              <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm font-semibold text-red-700">Rejected</p>
+                <p className="text-sm text-red-600 mt-1">
+                  <span className="font-medium">Reason:</span> {profile.rejectionReason}
+                </p>
+                {profile.rejectedBy && (
+                  <p className="text-xs text-red-500 mt-1">
+                    Rejected by: {profile.rejectedBy.firstName} {profile.rejectedBy.lastName}
+                  </p>
+                )}
+              </div>
             )}
           </div>
         </div>

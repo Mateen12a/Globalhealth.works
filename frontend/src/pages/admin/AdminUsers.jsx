@@ -251,13 +251,14 @@ export default function AdminUsers({ embedded = false }) {
         setUsers((prev) =>
           prev.map((u) =>
             u._id === rejectUserId
-              ? { ...u, isApproved: false, rejectionReason: reason }
+              ? { ...u, isApproved: false, rejectionReason: reason, rejectedBy: { firstName: currentUser.firstName, lastName: currentUser.lastName, email: currentUser.email } }
               : u
           )
         );
         setRejectModalOpen(false);
       } else {
-        alert("Rejection failed");
+        const data = await res.json().catch(() => ({}));
+        alert(data.msg || "Rejection failed");
       }
     } catch (err) {
       console.error("Reject error:", err);
@@ -375,10 +376,21 @@ export default function AdminUsers({ embedded = false }) {
 
     if (user.rejectionReason)
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium bg-red-100 text-red-700 rounded-full">
-          <XCircle className="w-3.5 h-3.5" />
-          Rejected
-        </span>
+        <div className="group relative">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium bg-red-100 text-red-700 rounded-full cursor-help">
+            <XCircle className="w-3.5 h-3.5" />
+            Rejected
+          </span>
+          <div className="hidden group-hover:block absolute z-50 left-0 top-full mt-1 w-64 p-3 bg-white border border-red-200 rounded-xl shadow-lg text-xs">
+            <p className="font-semibold text-red-700 mb-1">Rejection Reason:</p>
+            <p className="text-red-600">{user.rejectionReason}</p>
+            {user.rejectedBy && (
+              <p className="text-red-500 mt-1">
+                By: {user.rejectedBy.firstName} {user.rejectedBy.lastName}
+              </p>
+            )}
+          </div>
+        </div>
       );
 
     if (user.isApproved)

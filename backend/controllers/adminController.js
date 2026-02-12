@@ -40,7 +40,7 @@ function buildAdminContext(reqUser, dbAdmin) {
 // Get all users
 exports.getAllUsers = async (req, res) => {
   try {
-    const users = await User.find().select("-password").populate("approvedBy", "firstName lastName email");
+    const users = await User.find().select("-password").populate("approvedBy", "firstName lastName email").populate("rejectedBy", "firstName lastName email");
     res.json(users);
   } catch (err) {
     console.error("Get users error:", err);

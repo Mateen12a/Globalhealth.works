@@ -448,6 +448,40 @@ const Templates = {
       `,
     }),
 
+  rejectionConfirmedAdminNotice: (admin, user, reason) =>
+    emailLayout({
+      title: "User Rejected",
+      preheader: `You rejected ${user.firstName} ${user.lastName}'s account`,
+      content: `
+        ${p(`Hello ${admin.firstName},`)}
+        ${p('You have rejected the following user:', { spacingAfter: 24 })}
+        
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+          <tr>
+            <td style="background-color:#FEF2F2;border-left:4px solid ${COLORS.error};padding:16px 20px;border-radius:0 8px 8px 0;">
+              <p style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;"><strong>${user.firstName} ${user.lastName}</strong></p>
+              ${spacer(4)}
+              <p style="margin:0;padding:0;color:${COLORS.textLight};font-size:14px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">${user.email} &middot; ${user.role}</p>
+            </td>
+          </tr>
+        </table>
+        
+        ${spacer(16)}
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+          <tr>
+            <td style="background-color:#FEF2F2;padding:16px 20px;border-radius:8px;border:1px solid #FECACA;">
+              <p style="margin:0;padding:0;font-weight:600;color:${COLORS.error};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">Reason for rejection:</p>
+              ${spacer(8)}
+              <p style="margin:0;padding:0;color:${COLORS.textDark};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">${reason}</p>
+            </td>
+          </tr>
+        </table>
+        
+        ${spacer(20)}
+        ${p('This action has been logged. The user has been notified via email.', { size: 14, color: COLORS.textLight, spacingAfter: 0 })}
+      `,
+    }),
+
   proposalSubmissionConfirmation: (applicant, task, proposal) =>
     emailLayout({
       title: "Proposal Submitted",

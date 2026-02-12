@@ -715,7 +715,8 @@ exports.getPublicProfile = async (req, res) => {
     // find user and include approvedBy basic info
     const user = await User.findById(id)
       .select("-password -oauthProvider -lastLogin")
-      .populate("approvedBy", "firstName lastName email");
+      .populate("approvedBy", "firstName lastName email")
+      .populate("rejectedBy", "firstName lastName email");
 
     if (!user) return res.status(404).json({ msg: "User not found" });
 
@@ -771,6 +772,7 @@ exports.getPublicProfile = async (req, res) => {
       isApproved: user.isApproved,
       status: user.status || "active",
       rejectionReason: user.rejectionReason || null,
+      rejectedBy: isAdmin ? (user.rejectedBy || null) : undefined,
       approvedBy: isAdmin ? (user.approvedBy || null) : undefined,
       createdAt: user.createdAt,
       gender: isAdmin ? user.gender : undefined,

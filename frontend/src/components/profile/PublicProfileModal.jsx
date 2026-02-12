@@ -589,9 +589,18 @@ export default function PublicProfileModal({ userId, onClose, currentUser }) {
 
                     {profile.rejectionReason && (
                       <div className="mt-4 p-4 bg-red-50 rounded-xl border border-red-200">
+                        <div className="flex items-center gap-2 mb-2">
+                          <XCircle className="w-4 h-4 text-red-600" />
+                          <p className="text-sm font-semibold text-red-700">Rejected</p>
+                        </div>
                         <p className="text-sm text-red-700">
-                          <strong>Rejection Reason:</strong> {profile.rejectionReason}
+                          <span className="font-medium">Reason:</span> {profile.rejectionReason}
                         </p>
+                        {profile.rejectedBy && (
+                          <p className="text-xs text-red-500 mt-2">
+                            Rejected by: {profile.rejectedBy.firstName} {profile.rejectedBy.lastName}
+                          </p>
+                        )}
                       </div>
                     )}
                   </motion.div>
