@@ -437,6 +437,7 @@ exports.createAdmin = async (req, res) => {
       email,
       password: hashedPassword,
       role: "admin",
+      adminType: "admin",
       isApproved: true,
       isActive: true,
       profileImage: "/uploads/default.jpg"

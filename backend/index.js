@@ -309,9 +309,28 @@ io.on("connection", (socket) => {
 });
 
 // ==================== MONGO ====================
+const User = require("./models/User");
+
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB connected"))
+  .then(async () => {
+    console.log("MongoDB connected");
+    const result = await User.updateMany(
+      { role: "admin", $or: [{ adminType: { $exists: false } }, { adminType: null }] },
+      { $set: { adminType: "admin" } }
+    );
+    if (result.modifiedCount > 0) {
+      console.log(`Fixed ${result.modifiedCount} admin(s) missing adminType field`);
+    }
+    const hasSuperAdmin = await User.findOne({ role: "admin", adminType: "superAdmin" });
+    if (!hasSuperAdmin) {
+      const firstAdmin = await User.findOne({ role: "admin" }).sort({ createdAt: 1 });
+      if (firstAdmin) {
+        await User.updateOne({ _id: firstAdmin._id }, { $set: { adminType: "superAdmin" } });
+        console.log(`Promoted ${firstAdmin.email} to superAdmin (first admin, no superAdmin existed)`);
+      }
+    }
+  })
   .catch((err) => console.error("MongoDB error:", err));
 
 // Health check route

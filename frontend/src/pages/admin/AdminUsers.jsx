@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Filter, CheckCircle, XCircle, AlertTriangle, Eye, Loader2, X, UserCheck, UserX, Shield, RefreshCw } from "lucide-react";
+import { Search, Filter, CheckCircle, XCircle, AlertTriangle, Eye, Loader2, X, UserCheck, UserX, Shield, RefreshCw, Trash2 } from "lucide-react";
 import PublicProfileModal from "../../components/profile/PublicProfileModal";
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
 
@@ -187,7 +187,7 @@ function ChangeRoleModal({ open, onClose, onSubmit, loading, user }) {
 
 export default function AdminUsers({ embedded = false }) {
   const token = localStorage.getItem("token");
-  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const [currentUser, setCurrentUser] = useState(JSON.parse(localStorage.getItem("user") || "{}"));
   const isSuperAdmin = currentUser.adminType === "superAdmin";
   
   const [users, setUsers] = useState([]);
@@ -205,6 +205,27 @@ export default function AdminUsers({ embedded = false }) {
 
   const [actionLoading, setActionLoading] = useState({});
   const [selectedProfile, setSelectedProfile] = useState(null);
+
+  const [deleteModal, setDeleteModal] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+
+  useEffect(() => {
+    if (token) {
+      fetch(`${API_URL}/api/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => res.ok ? res.json() : null)
+        .then((data) => {
+          if (data) {
+            const updated = { ...JSON.parse(localStorage.getItem("user") || "{}"), adminType: data.adminType || null };
+            localStorage.setItem("user", JSON.stringify(updated));
+            setCurrentUser(updated);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [token]);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -302,6 +323,30 @@ export default function AdminUsers({ embedded = false }) {
       alert("Failed to change role");
     } finally {
       setRoleChangeLoading(false);
+    }
+  };
+
+  const handlePermanentDelete = async () => {
+    if (!deleteModal) return;
+    try {
+      setDeleting(true);
+      setDeleteError("");
+      const res = await fetch(`${API_URL}/api/admin/user/${deleteModal._id}/permanent`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setUsers((prev) => prev.filter((u) => u._id !== deleteModal._id));
+        setDeleteModal(null);
+      } else {
+        setDeleteError(data.msg || "Delete failed");
+      }
+    } catch (err) {
+      console.error("Delete error:", err);
+      setDeleteError("Failed to delete user");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -575,6 +620,19 @@ export default function AdminUsers({ embedded = false }) {
                         {actionLoading[u._id] === "activate" ? "..." : "Activate"}
                       </motion.button>
                     )}
+
+                    {isSuperAdmin && u._id !== currentUser.id && u.adminType !== "superAdmin" && (
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => { setDeleteModal(u); setDeleteError(""); }}
+                        className="px-3 py-1.5 bg-red-800 text-white rounded-lg text-xs font-medium flex items-center gap-1.5 hover:bg-red-900 transition-colors"
+                        title="Permanently delete user"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Delete
+                      </motion.button>
+                    )}
                   </div>
                 </td>
               </motion.tr>
@@ -611,6 +669,71 @@ export default function AdminUsers({ embedded = false }) {
           currentUser={{ role: "admin" }}
         />
       )}
+
+      <AnimatePresence>
+        {deleteModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.95 }}
+              className="bg-[var(--color-surface)] rounded-2xl shadow-xl max-w-md w-full p-6"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                  <AlertTriangle className="w-6 h-6 text-red-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-red-700">Permanent Deletion</h3>
+                  <p className="text-sm text-[var(--color-text-secondary)]">This action cannot be undone</p>
+                </div>
+              </div>
+
+              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-700 mb-2">
+                  You are about to permanently delete:
+                </p>
+                <p className="font-semibold text-red-800">
+                  {deleteModal.firstName} {deleteModal.lastName}
+                </p>
+                <p className="text-sm text-red-600">{deleteModal.email}</p>
+                <p className="text-xs text-red-500 mt-2">
+                  All tasks, proposals, messages, and data will be removed.
+                </p>
+              </div>
+
+              {deleteError && (
+                <div className="mb-4 p-3 bg-red-100 border border-red-300 rounded-lg text-sm text-red-700">
+                  {deleteError}
+                </div>
+              )}
+
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setDeleteModal(null)}
+                  disabled={deleting}
+                  className="px-4 py-2 rounded-lg border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-secondary)] transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handlePermanentDelete}
+                  disabled={deleting}
+                  className="px-4 py-2 rounded-lg bg-red-700 text-white font-medium hover:bg-red-800 transition-colors flex items-center gap-2 disabled:opacity-50"
+                >
+                  {deleting ? <Spinner size={14} /> : <Trash2 className="w-4 h-4" />}
+                  {deleting ? "Deleting..." : "Delete Permanently"}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 

@@ -29,8 +29,25 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   const token = localStorage.getItem("token");
-  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const [currentUser, setCurrentUser] = useState(JSON.parse(localStorage.getItem("user") || "{}"));
   const isSuperAdmin = currentUser.adminType === "superAdmin";
+
+  useEffect(() => {
+    if (token) {
+      fetch(`${API_URL}/api/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => res.ok ? res.json() : null)
+        .then((data) => {
+          if (data) {
+            const updated = { ...JSON.parse(localStorage.getItem("user") || "{}"), adminType: data.adminType || null };
+            localStorage.setItem("user", JSON.stringify(updated));
+            setCurrentUser(updated);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [token]);
 
   useEffect(() => {
     setLoading(true);
