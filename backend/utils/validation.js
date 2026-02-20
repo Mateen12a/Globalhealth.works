@@ -330,6 +330,10 @@ function validateTaskCreation(data) {
   const descriptionResult = validateTaskDescription(data.description);
   if (!descriptionResult.valid) errors.push(descriptionResult.error);
 
+  if (!data.location) {
+    errors.push('Location is required');
+  }
+
   if (!data.duration) {
     errors.push('Duration is required');
   }
