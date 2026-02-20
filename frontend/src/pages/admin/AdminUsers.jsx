@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Filter, CheckCircle, XCircle, AlertTriangle, Eye, Loader2, X, UserCheck, UserX, Shield, RefreshCw, Trash2 } from "lucide-react";
 import PublicProfileModal from "../../components/profile/PublicProfileModal";
@@ -186,6 +187,7 @@ function ChangeRoleModal({ open, onClose, onSubmit, loading, user }) {
 }
 
 export default function AdminUsers({ embedded = false }) {
+  const { userId: urlUserId } = useParams();
   const token = localStorage.getItem("token");
   const [currentUser, setCurrentUser] = useState(JSON.parse(localStorage.getItem("user") || "{}"));
   const isSuperAdmin = currentUser.adminType === "superAdmin";
@@ -194,6 +196,8 @@ export default function AdminUsers({ embedded = false }) {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [highlightedUserId, setHighlightedUserId] = useState(null);
+  const highlightedRef = useRef(null);
 
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [rejectUserId, setRejectUserId] = useState(null);
@@ -235,7 +239,13 @@ export default function AdminUsers({ embedded = false }) {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
-        if (res.ok) setUsers(data);
+        if (res.ok) {
+          setUsers(data);
+          if (urlUserId) {
+            setSelectedProfile(urlUserId);
+            setHighlightedUserId(urlUserId);
+          }
+        }
       } catch (err) {
         console.error("Error fetching users:", err);
       } finally {
@@ -243,7 +253,15 @@ export default function AdminUsers({ embedded = false }) {
       }
     };
     fetchUsers();
-  }, [token]);
+  }, [token, urlUserId]);
+
+  useEffect(() => {
+    if (highlightedUserId && highlightedRef.current) {
+      highlightedRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+      const timer = setTimeout(() => setHighlightedUserId(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightedUserId, loading]);
 
   const openRejectModal = (id) => {
     setRejectUserId(id);
@@ -521,9 +539,10 @@ export default function AdminUsers({ embedded = false }) {
             {filteredUsers.map((u) => (
               <motion.tr
                 key={u._id}
+                ref={u._id === highlightedUserId ? highlightedRef : null}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="hover:bg-[var(--color-bg-secondary)] transition-colors"
+                className={`hover:bg-[var(--color-bg-secondary)] transition-colors ${u._id === highlightedUserId ? "bg-amber-50 ring-2 ring-amber-400" : ""}`}
               >
                 <td className="px-4 py-3">
                   <button

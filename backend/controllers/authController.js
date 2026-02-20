@@ -476,7 +476,7 @@ function generateDeviceId(userAgent, ip) {
 }
 
 // Middleware
-exports.authMiddleware = (req, res, next) => {
+exports.authMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization || req.headers.Authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({ msg: "No token, authorization denied" });
@@ -486,7 +486,21 @@ exports.authMiddleware = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
+    const user = await User.findById(decoded.id).select("_id role email firstName lastName adminType status");
+    if (!user) {
+      return res.status(401).json({ msg: "User not found" });
+    }
+    if (user.status === "suspended") {
+      return res.status(403).json({ msg: "Account suspended" });
+    }
+    req.user = {
+      id: user._id,
+      role: user.role,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      adminType: user.adminType || null,
+    };
     next();
   } catch (err) {
     console.error("JWT verify error:", err);

@@ -42,10 +42,14 @@ export default function AdminTasks() {
   const handleAction = async (id, action) => {
     setActionLoading((prev) => ({ ...prev, [id]: action }));
     try {
-      const res = await fetch(`${API_URL}/api/admin/tasks/${id}/${action}`, {
-        method: "PATCH",
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const isDelete = action === "delete";
+      const res = await fetch(
+        isDelete ? `${API_URL}/api/admin/tasks/${id}` : `${API_URL}/api/admin/tasks/${id}/${action}`,
+        {
+          method: isDelete ? "DELETE" : "PATCH",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       if (res.ok) {
         if (action === "delete") {
           setTasks((prev) => prev.filter((t) => t._id !== id));

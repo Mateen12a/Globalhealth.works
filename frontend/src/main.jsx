@@ -3,11 +3,12 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext";
 import useKeepAlive from "./hooks/useKeepAlive";
-import { setupGlobalAxiosInterceptor } from "./utils/api";
+import { setupGlobalAxiosInterceptor, setupGlobalFetchInterceptor } from "./utils/api";
 import AuthInitializer from "./components/AuthInitializer";
 import App from "./App";
 
 setupGlobalAxiosInterceptor();
+setupGlobalFetchInterceptor();
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -89,6 +90,12 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         } />
         
         <Route path="/admin/users" element={
+          <RoleGuard allowedRoles={["admin"]}>
+            <AdminUsers />
+          </RoleGuard>
+        } />
+        
+        <Route path="/admin/users/:userId" element={
           <RoleGuard allowedRoles={["admin"]}>
             <AdminUsers />
           </RoleGuard>
