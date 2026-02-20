@@ -8,6 +8,7 @@ import {
   CalendarDays,
   Paperclip,
   X,
+  CheckCircle,
 } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -15,15 +16,14 @@ const API_URL = import.meta.env.VITE_API_URL;
 export default function EditTaskModal({ task, onClose, onUpdated }) {
   const token = localStorage.getItem("token");
 
-  // Dropdown options (single-select)
   const skillOptions = [
-    "Research & Data Analysis",
-    "Monitoring & Evaluation",
-    "Health Communication",
-    "Community Engagement",
-    "Technical Writing",
-    "Digital Health Solutions",
-    "Program Management",
+    "Delivery & Implementation",
+    "Training, Capacity Building & Learning",
+    "Data & Evaluation",
+    "Digital & Technology Solutions",
+    "Program Management & Operations",
+    "Communications & Engagement",
+    "Policy & Strategy",
   ];
 
   const focusAreaOptions = [
@@ -41,8 +41,8 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
     title: task.title || "",
     summary: task.summary || "",
     description: task.description || "",
-    requiredSkills: task.requiredSkills?.[0] || "",
-    focusAreas: task.focusAreas?.[0] || "",
+    requiredSkills: task.requiredSkills || [],
+    focusAreas: task.focusAreas || [],
     duration: task.duration || "",
     startDate: task.startDate ? task.startDate.split("T")[0] : "",
   });
@@ -59,6 +59,17 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
   );
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+
+  const toggleMultiSelect = (name, value) => {
+    setForm((prev) => {
+      const current = prev[name];
+      const updated = current.includes(value)
+        ? current.filter((v) => v !== value)
+        : [...current, value];
+      return { ...prev, [name]: updated };
+    });
+  };
+
   const handleFileChange = (e) => setNewAttachments([...newAttachments, ...Array.from(e.target.files)]);
   const handleRemoveExisting = (file) => {
     setRemovedAttachments([...removedAttachments, file]);
@@ -82,8 +93,8 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
       formData.append("description", form.description);
       formData.append("duration", form.duration);
       formData.append("startDate", form.startDate);
-      formData.append("requiredSkills", JSON.stringify([form.requiredSkills]));
-      formData.append("focusAreas", JSON.stringify([form.focusAreas]));
+      formData.append("requiredSkills", JSON.stringify(form.requiredSkills));
+      formData.append("focusAreas", JSON.stringify(form.focusAreas));
 
       newAttachments.forEach((file) => formData.append("attachments", file));
       removedAttachments.forEach((file) => formData.append("removeAttachments", file));
@@ -167,47 +178,55 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
             />
           </div>
 
-          {/* Dropdowns */}
-          <div className="grid md:grid-cols-2 gap-4">
+          {/* Multi-select fields */}
+          <div className="space-y-4">
             <div>
               <Label text="Support & Expertise Required" required />
-              <div className="relative">
-                <Layers className="absolute left-3 top-3.5 text-gray-400 w-4 h-4" />
-                <select
-                  name="requiredSkills"
-                  value={form.requiredSkills}
-                  onChange={handleChange}
-                  className="w-full border pl-9 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#357FE9] text-sm"
-                  required
-                >
-                  <option value="">Select an option</option>
-                  {skillOptions.map((opt) => (
-                    <option key={opt} value={opt}>
+              <span className="text-gray-500 text-xs ml-2">(select all that apply)</span>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {skillOptions.map((opt) => {
+                  const selected = form.requiredSkills.includes(opt);
+                  return (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => toggleMultiSelect("requiredSkills", opt)}
+                      className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
+                        selected
+                          ? "bg-[#1E376E] text-white border-[#1E376E]"
+                          : "bg-gray-50 text-gray-700 border-gray-300 hover:border-[#1E376E]"
+                      }`}
+                    >
+                      {selected && <CheckCircle className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />}
                       {opt}
-                    </option>
-                  ))}
-                </select>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
             <div>
               <Label text="Area of Interest" required />
-              <div className="relative">
-                <Target className="absolute left-3 top-3.5 text-gray-400 w-4 h-4" />
-                <select
-                  name="focusAreas"
-                  value={form.focusAreas}
-                  onChange={handleChange}
-                  className="w-full border pl-9 p-3 rounded-lg shadow-sm focus:ring-2 focus:ring-[#357FE9] text-sm"
-                  required
-                >
-                  <option value="">Select an option</option>
-                  {focusAreaOptions.map((opt) => (
-                    <option key={opt} value={opt}>
+              <span className="text-gray-500 text-xs ml-2">(select all that apply)</span>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {focusAreaOptions.map((opt) => {
+                  const selected = form.focusAreas.includes(opt);
+                  return (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => toggleMultiSelect("focusAreas", opt)}
+                      className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
+                        selected
+                          ? "bg-[#1E376E] text-white border-[#1E376E]"
+                          : "bg-gray-50 text-gray-700 border-gray-300 hover:border-[#1E376E]"
+                      }`}
+                    >
+                      {selected && <CheckCircle className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />}
                       {opt}
-                    </option>
-                  ))}
-                </select>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>

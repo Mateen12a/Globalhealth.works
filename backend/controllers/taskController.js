@@ -76,16 +76,19 @@ exports.createTask = async (req, res) => {
     const attachments =
       req.files?.attachments?.map((f) => `/uploads/tasks/${f.filename}`) || [];
 
+    const parseArray = (value) => {
+      if (!value) return [];
+      if (Array.isArray(value)) return value;
+      try { return JSON.parse(value); } catch {}
+      return value.split(",").map((v) => v.trim());
+    };
+
     const newTask = new Task({
       title,
       summary,
       description,
-      requiredSkills: requiredSkills
-        ? requiredSkills.split(",").map((s) => s.trim())
-        : [],
-      focusAreas: focusAreas
-        ? focusAreas.split(",").map((f) => f.trim())
-        : [],
+      requiredSkills: parseArray(requiredSkills),
+      focusAreas: parseArray(focusAreas),
       location,
       duration,
       startDate,
@@ -95,26 +98,32 @@ exports.createTask = async (req, res) => {
 
     await newTask.save();
 
-    // Fetch owner data
-    const owner = await User.findById(req.user.id);
+    // Send email notifications (non-blocking, don't crash if templates missing)
+    try {
+      const owner = await User.findById(req.user.id);
 
-    // Send task creation confirmation email to the user
-    const userHtml = Templates.taskCreatedUserNotice(owner, newTask);
-    await sendMail(owner.email, "Your Task Has Been Created", userHtml);
+      if (typeof Templates.taskCreatedUserNotice === 'function') {
+        const userHtml = Templates.taskCreatedUserNotice(owner, newTask);
+        await sendMail(owner.email, "Your Task Has Been Created", userHtml);
+      }
 
-    // Notify all admins (email + in-app)
-    const admins = await User.find({ role: "admin" });
-    for (const admin of admins) {
-      const html = Templates.newTaskAdminAlert(newTask, owner);
-      await sendMail(admin.email, "New Task Submitted", html);
-      
-      await createNotification(
-        admin._id,
-        "task",
-        `New task "${newTask.title}" posted by ${owner.firstName} ${owner.lastName}`,
-        `/dashboard/admin/tasks`,
-        { title: "New Task Posted", sendEmail: false }
-      );
+      const admins = await User.find({ role: "admin" });
+      for (const admin of admins) {
+        if (typeof Templates.newTaskAdminAlert === 'function') {
+          const html = Templates.newTaskAdminAlert(newTask, owner);
+          await sendMail(admin.email, "New Task Submitted", html);
+        }
+        
+        await createNotification(
+          admin._id,
+          "task",
+          `New task "${newTask.title}" posted by ${owner.firstName} ${owner.lastName}`,
+          `/dashboard/admin/tasks`,
+          { title: "New Task Posted", sendEmail: false }
+        );
+      }
+    } catch (emailErr) {
+      console.warn("Non-critical: Email notification failed during task creation:", emailErr.message);
     }
 
     res.status(201).json(newTask);

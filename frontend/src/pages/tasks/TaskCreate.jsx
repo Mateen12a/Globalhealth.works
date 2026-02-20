@@ -122,8 +122,8 @@ export default function TaskCreate() {
     title: "",
     summary: "",
     description: "",
-    requiredSkills: "",
-    focusAreas: "",
+    requiredSkills: [],
+    focusAreas: [],
     duration: "",
     startDate: "",
   });
@@ -137,8 +137,8 @@ export default function TaskCreate() {
     if (!formData.title.trim()) newErrors.title = "Title is required";
     if (!formData.summary.trim()) newErrors.summary = "Summary is required";
     if (!formData.description.trim()) newErrors.description = "Description is required";
-    if (!formData.requiredSkills) newErrors.requiredSkills = "Please select an expertise area";
-    if (!formData.focusAreas) newErrors.focusAreas = "Please select a focus area";
+    if (!formData.requiredSkills.length) newErrors.requiredSkills = "Please select at least one expertise area";
+    if (!formData.focusAreas.length) newErrors.focusAreas = "Please select at least one focus area";
     if (!formData.duration.trim()) newErrors.duration = "Duration is required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -161,6 +161,19 @@ export default function TaskCreate() {
     setAttachments((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const toggleMultiSelect = (name, value) => {
+    setFormData((prev) => {
+      const current = prev[name];
+      const updated = current.includes(value)
+        ? current.filter((v) => v !== value)
+        : [...current, value];
+      return { ...prev, [name]: updated };
+    });
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: null }));
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
@@ -168,7 +181,13 @@ export default function TaskCreate() {
     setLoading(true);
     try {
       const payload = new FormData();
-      for (const key in formData) payload.append(key, formData[key]);
+      for (const key in formData) {
+        if (Array.isArray(formData[key])) {
+          payload.append(key, JSON.stringify(formData[key]));
+        } else {
+          payload.append(key, formData[key]);
+        }
+      }
       for (const file of attachments) {
         payload.append("attachments", file);
       }
@@ -278,26 +297,74 @@ export default function TaskCreate() {
               </div>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
-              <SelectField
-                label="Support Needed / Expertise"
-                name="requiredSkills"
-                options={expertiseOptions}
-                required
-                formData={formData}
-                errors={errors}
-                handleChange={handleChange}
-              />
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                  Support Needed / Expertise
+                  <span className="text-red-500 ml-1">*</span>
+                  <span className="text-[var(--color-text-muted)] ml-2 text-xs font-normal">(select all that apply)</span>
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {expertiseOptions.map((option) => {
+                    const selected = formData.requiredSkills.includes(option);
+                    return (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => toggleMultiSelect("requiredSkills", option)}
+                        className={`px-4 py-2 rounded-full text-sm font-medium border transition-all ${
+                          selected
+                            ? "bg-[#1E376E] text-white border-[#1E376E]"
+                            : "bg-[var(--color-bg-secondary)] text-[var(--color-text)] border-[var(--color-border)] hover:border-[#1E376E]"
+                        }`}
+                      >
+                        {selected && <CheckCircle className="w-4 h-4 inline mr-1.5 -mt-0.5" />}
+                        {option}
+                      </button>
+                    );
+                  })}
+                </div>
+                {errors.requiredSkills && (
+                  <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    {errors.requiredSkills}
+                  </p>
+                )}
+              </div>
 
-              <SelectField
-                label="Area of Interest"
-                name="focusAreas"
-                options={focusAreas}
-                required
-                formData={formData}
-                errors={errors}
-                handleChange={handleChange}
-              />
+              <div>
+                <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
+                  Area of Interest
+                  <span className="text-red-500 ml-1">*</span>
+                  <span className="text-[var(--color-text-muted)] ml-2 text-xs font-normal">(select all that apply)</span>
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {focusAreas.map((option) => {
+                    const selected = formData.focusAreas.includes(option);
+                    return (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => toggleMultiSelect("focusAreas", option)}
+                        className={`px-4 py-2 rounded-full text-sm font-medium border transition-all ${
+                          selected
+                            ? "bg-[#1E376E] text-white border-[#1E376E]"
+                            : "bg-[var(--color-bg-secondary)] text-[var(--color-text)] border-[var(--color-border)] hover:border-[#1E376E]"
+                        }`}
+                      >
+                        {selected && <CheckCircle className="w-4 h-4 inline mr-1.5 -mt-0.5" />}
+                        {option}
+                      </button>
+                    );
+                  })}
+                </div>
+                {errors.focusAreas && (
+                  <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    {errors.focusAreas}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 
