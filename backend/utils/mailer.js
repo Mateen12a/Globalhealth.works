@@ -423,7 +423,13 @@ const Templates = {
           <strong style="color:${COLORS.textDark};">The GlobalHealth.Works Team</strong>
         </p>
       `;
-    },
+
+    return emailLayout({
+      title: `Welcome to GlobalHealth.Works - ${roleTitle} Registration`,
+      preheader: `Your ${roleTitle} account is pending approval`,
+      content: isSolutionProvider ? solutionProviderContent : taskOwnerContent,
+    });
+  },
 
   rejectionNotice: (user, reason) =>
     emailLayout({

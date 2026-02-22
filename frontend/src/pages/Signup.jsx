@@ -35,6 +35,7 @@ const expertiseOptions = [
   "Program Management & Operations",
   "Communications & Engagement",
   "Policy & Strategy",
+  "Research & Analysis",
 ];
 const affiliations = [
   "NGO / Non-profit",

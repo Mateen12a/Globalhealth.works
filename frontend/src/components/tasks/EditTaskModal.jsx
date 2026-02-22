@@ -24,6 +24,7 @@ export default function EditTaskModal({ task, onClose, onUpdated }) {
     "Program Management & Operations",
     "Communications & Engagement",
     "Policy & Strategy",
+    "Research & Analysis",
   ];
 
   const focusAreaOptions = [

@@ -113,12 +113,17 @@ exports.register = async (req, res) => {
     }
 
     await user.save();
-    // Notify admin of new registration
-    await sendMail(
-      user.email,
-      "Welcome to GlobalHealth.Works",
-      Templates.welcomePending(user)
-    );
+
+    // Welcome email - wrapped in try-catch to prevent registration failure
+    try {
+      await sendMail(
+        user.email,
+        "Welcome to GlobalHealth.Works",
+        Templates.welcomePending(user)
+      );
+    } catch (welcomeEmailErr) {
+      console.error("Welcome email error (registration still succeeded):", welcomeEmailErr);
+    }
 
     // Admin notification block - wrapped in try-catch to prevent registration failure
     try {

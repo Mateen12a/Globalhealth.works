@@ -87,7 +87,7 @@ function validateName(name, fieldName = 'Name') {
     return { valid: false, error: `${fieldName} cannot exceed ${validationRules.names.maxLength} characters` };
   }
   
-  if (!/^[a-zA-Z\s\-'\.]+$/.test(trimmed)) {
+  if (!/^[\p{L}\s\-'\.]+$/u.test(trimmed)) {
     return { valid: false, error: `${fieldName} can only contain letters, spaces, hyphens, apostrophes, and periods` };
   }
 
