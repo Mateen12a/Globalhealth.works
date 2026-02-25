@@ -29,7 +29,13 @@ const messageController = require("./controllers/messageController");
 const conversationController = require("./controllers/conversationController");
 
 dotenv.config();
+const Matowatch = require('matowatch');
 
+Matowatch.init({
+  apiKey: 'pm_6f9095f95ae296707cfb57ecf8c10ab5dec37efa3ed42a0c138beaaeec4e4256',
+  endpoint: 'https://matowatch.com',
+  environment: 'production'
+});
 // Rate limiting - 100 requests per 15 minutes per IP
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -54,14 +60,6 @@ const server = http.createServer(app);
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
   ? process.env.ALLOWED_ORIGINS.split(',') 
   : ['http://localhost:5000', 'http://localhost:3000'];
-
-// Add Replit production domains
-if (process.env.REPLIT_DEV_DOMAIN) {
-  allowedOrigins.push(`https://${process.env.REPLIT_DEV_DOMAIN}`);
-}
-if (process.env.REPLIT_DOMAINS) {
-  process.env.REPLIT_DOMAINS.split(',').forEach(d => allowedOrigins.push(`https://${d}`));
-}
 
 // Also allow globalhealth.works domain
 allowedOrigins.push('https://globalhealth.works');
