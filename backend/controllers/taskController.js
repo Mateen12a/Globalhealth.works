@@ -7,6 +7,7 @@ const fs = require("fs");
 const path = require("path");
 const { sendMail, Templates } = require("../utils/mailer");
 const { validateTaskCreation, validateTaskTitle, validateTaskDescription, validateTaskSummary } = require("../utils/validation");
+const { uploadBuffer, deleteFile } = require("../utils/cloudStorage");
 
 // === File upload security config ===
 const MAX_FILES = 5;
@@ -24,15 +25,7 @@ const ALLOWED_MIMES = [
 const uploadDir = path.join(__dirname, "..", "uploads", "tasks");
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
-    // Sanitized filename with random component
-    const ext = path.extname(file.originalname);
-    const name = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
-    cb(null, name);
-  },
-});
+const storage = multer.memoryStorage();
 
 const upload = multer({ 
   storage,
@@ -73,8 +66,13 @@ exports.createTask = async (req, res) => {
       });
     }
 
-    const attachments =
-      req.files?.attachments?.map((f) => `/uploads/tasks/${f.filename}`) || [];
+    const attachments = [];
+    if (req.files?.attachments) {
+      for (const f of req.files.attachments) {
+        const url = await uploadBuffer(f.buffer, f.originalname, "tasks", f.mimetype);
+        attachments.push(url);
+      }
+    }
 
     const parseArray = (value) => {
       if (!value) return [];
@@ -198,10 +196,10 @@ exports.updateTask = async (req, res) => {
 
     // === Handle attachments ===
     if (req.files && req.files.attachments) {
-      const newFiles = req.files.attachments.map(
-        (file) => `/uploads/tasks/${file.filename}`
-      );
-      task.attachments = [...task.attachments, ...newFiles];
+      for (const file of req.files.attachments) {
+        const url = await uploadBuffer(file.buffer, file.originalname, "tasks", file.mimetype);
+        task.attachments.push(url);
+      }
     }
 
     if (req.body.removeAttachments) {
@@ -211,10 +209,14 @@ exports.updateTask = async (req, res) => {
       for (const fileUrl of toRemove) {
         task.attachments = task.attachments.filter((a) => a !== fileUrl);
 
-        const filePath = path.join(__dirname, "..", fileUrl.replace(/^\//, ""));
-        fs.unlink(filePath, (err) => {
-          if (err) console.error("File delete error:", err.message);
-        });
+        if (fileUrl.includes("cloudinary")) {
+          await deleteFile(fileUrl);
+        } else {
+          const filePath = path.join(__dirname, "..", fileUrl.replace(/^\//, ""));
+          fs.unlink(filePath, (err) => {
+            if (err) console.error("File delete error:", err.message);
+          });
+        }
       }
     }
 

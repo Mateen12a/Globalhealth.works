@@ -8,6 +8,7 @@ const fs = require("fs");
 const { sendMail, Templates } = require("../utils/mailer");
 const createNotification = require("../utils/createNotification");
 const { validateProposalCreation } = require("../utils/validation");
+const { uploadBuffer } = require("../utils/cloudStorage");
 
 // Create a proposal (multipart/form-data if attachments)
 exports.createProposal = async (req, res) => {
@@ -49,7 +50,8 @@ exports.createProposal = async (req, res) => {
         const attachments = [];
         if (req.files && req.files.length > 0) {
           for (const f of req.files) {
-            attachments.push(`/uploads/proposals/${f.filename}`);
+            const url = await uploadBuffer(f.buffer, f.originalname, "proposals", f.mimetype);
+            attachments.push(url);
           }
         }
         
@@ -80,11 +82,11 @@ exports.createProposal = async (req, res) => {
       }
     }
 
-    // files handling (multer placed files in req.files)
     const attachments = [];
     if (req.files && req.files.length > 0) {
       for (const f of req.files) {
-        attachments.push(`/uploads/proposals/${f.filename}`);
+        const url = await uploadBuffer(f.buffer, f.originalname, "proposals", f.mimetype);
+        attachments.push(url);
       }
     }
 

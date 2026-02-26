@@ -8,6 +8,7 @@ const Conversation = require("../models/Conversation");
 const Notification = require("../models/Notification");
 const { sendMail, Templates } = require("../utils/mailer");
 const createNotification = require("../utils/createNotification");
+const { uploadBuffer } = require("../utils/cloudStorage");
 
 function buildAdminContext(reqUser, dbAdmin) {
   if (dbAdmin && dbAdmin.firstName) {
@@ -553,12 +554,13 @@ exports.sendAdminMessage = async (req, res) => {
     const attachments = [];
     if (req.files && req.files.length > 0) {
       for (const file of req.files) {
+        const url = await uploadBuffer(file.buffer, file.originalname, "admin-messages", file.mimetype);
         attachments.push({
-          filename: file.filename,
+          filename: file.originalname,
           originalName: file.originalname,
           mimetype: file.mimetype,
           size: file.size,
-          path: `/uploads/admin-messages/${file.filename}`
+          path: url
         });
       }
     }

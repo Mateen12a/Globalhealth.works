@@ -9,6 +9,7 @@ const Conversation = require("../models/Conversation");
 const User = require("../models/User");
 const createNotification = require("../utils/createNotification");
 const { sendMail, Templates } = require("../utils/mailer");
+const { uploadBuffer } = require("../utils/cloudStorage");
 
 // ---------- CONFIG ----------
 const MAX_FILES = 5;
@@ -26,14 +27,7 @@ const ALLOWED_MIMES = [
 const uploadDir = path.join(__dirname, "..", "uploads", "messages");
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadDir),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const name = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
-    cb(null, name);
-  }
-});
+const storage = multer.memoryStorage();
 
 const upload = multer({
   storage,
@@ -147,25 +141,20 @@ exports.markMessageSeen = async (messageId, userId) => {
 // ---------- HELPERS ----------
 const isImage = (mimetype) => mimetype.startsWith("image/");
 
-const buildAttachmentsFromFiles = (files) => {
+const buildAttachmentsFromFiles = async (files) => {
   if (!files || files.length === 0) return [];
-  return files.map((f) => {
-    const relative = path.relative(path.join(__dirname, ".."), f.path).replace(/\\/g, "/");
-    return {
-      type: isImage(f.mimetype)
-        ? "image"
-        : f.mimetype.startsWith("video")
-        ? "video"
-        : f.mimetype.startsWith("audio")
-        ? "audio"
-        : "file",
-      url: `/${relative}`,
+  const results = [];
+  for (const f of files) {
+    const url = await uploadBuffer(f.buffer, f.originalname, "messages", f.mimetype);
+    results.push({
+      type: isImage(f.mimetype) ? "image" : f.mimetype.startsWith("video") ? "video" : f.mimetype.startsWith("audio") ? "audio" : "file",
+      url,
       fileName: f.originalname,
       fileSize: f.size,
       mimeType: f.mimetype,
-      storage: "local"
-    };
-  });
+    });
+  }
+  return results;
 };
 
 // ---------- CONTROLLERS (UPDATED) ----------
@@ -220,7 +209,7 @@ exports.sendMessage = async (req, res) => {
     }
 
     // 3. Construct attachments
-    const attachments = buildAttachmentsFromFiles(req.files);
+    const attachments = await buildAttachmentsFromFiles(req.files);
 
     // 4. Create message
     const message = new Message({
@@ -383,7 +372,7 @@ exports.editMessage = async (req, res) => {
 
     // If new attachments uploaded, add them (req.files)
     if (req.files && req.files.length > 0) {
-      const newAttachments = buildAttachmentsFromFiles(req.files);
+      const newAttachments = await buildAttachmentsFromFiles(req.files);
       msg.attachments = msg.attachments.concat(newAttachments);
     }
 

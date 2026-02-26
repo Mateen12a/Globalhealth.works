@@ -17,28 +17,10 @@ const {
   resetPassword,
 } = require("../controllers/authController");
 
-// Avatar upload setup
-const avatarStorage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/avatars/");
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname));
-  },
-});
-const uploadAvatarFile = multer({ storage: avatarStorage });
+const uploadAvatarFile = multer({ storage: multer.memoryStorage() });
 
-// CV upload setup ✅
-const cvStorage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/cv/");
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname));
-  },
-});
 const uploadCVFile = multer({
-  storage: cvStorage,
+  storage: multer.memoryStorage(),
   fileFilter: (req, file, cb) => {
     const allowed = [".pdf", ".doc", ".docx"];
     const ext = path.extname(file.originalname).toLowerCase();

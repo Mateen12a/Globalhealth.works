@@ -11,6 +11,7 @@ const {
   validateTaskOwnerRegistration,
   validateSolutionProviderRegistration,
 } = require("../utils/validation");
+const { uploadBuffer, deleteFile } = require("../utils/cloudStorage");
 
 // Register
 exports.register = async (req, res) => {
@@ -223,11 +224,16 @@ exports.uploadCV = async (req, res) => {
     if (!req.file) return res.status(400).json({ msg: "No file uploaded" });
 
     const user = await User.findById(req.user.id);
-    if (user.cvFile && fs.existsSync(path.join(__dirname, "..", user.cvFile))) {
-      fs.unlinkSync(path.join(__dirname, "..", user.cvFile));
+    if (user.cvFile) {
+      if (user.cvFile.includes("cloudinary")) {
+        await deleteFile(user.cvFile);
+      } else {
+        const oldPath = path.join(__dirname, "..", user.cvFile);
+        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      }
     }
 
-    const fileUrl = `/uploads/cv/${req.file.filename}`;
+    const fileUrl = await uploadBuffer(req.file.buffer, req.file.originalname, "cv", req.file.mimetype);
     user.cvFile = fileUrl;
     await user.save();
 
@@ -249,21 +255,26 @@ exports.uploadCVPublic = async (req, res) => {
       return res.status(400).json({ msg: "Email is required to link CV" });
     }
 
+    const fileUrl = await uploadBuffer(req.file.buffer, req.file.originalname, "cv", req.file.mimetype);
+
     const user = await User.findOne({ email });
     if (!user) {
-      // If user does not exist yet, just save CV with temp name or store separately
       return res.status(200).json({
         msg: "CV uploaded successfully. Link it after registration.",
-        url: `/uploads/cv/${req.file.filename}`,
+        url: fileUrl,
       });
     }
 
     // If user exists (maybe registered already), attach CV
-    if (user.cvFile && fs.existsSync(path.join(__dirname, "..", user.cvFile))) {
-      fs.unlinkSync(path.join(__dirname, "..", user.cvFile));
+    if (user.cvFile) {
+      if (user.cvFile.includes("cloudinary")) {
+        await deleteFile(user.cvFile);
+      } else {
+        const oldPath = path.join(__dirname, "..", user.cvFile);
+        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      }
     }
 
-    const fileUrl = `/uploads/cv/${req.file.filename}`;
     user.cvFile = fileUrl;
     await user.save();
 
@@ -692,13 +703,17 @@ exports.uploadAvatar = async (req, res) => {
     const user = await User.findById(req.user.id);
 
     if (user.profileImage && user.profileImage !== "/uploads/default.jpg") {
-      const oldPath = path.join(__dirname, "..", user.profileImage);
-      if (fs.existsSync(oldPath)) {
-        fs.unlinkSync(oldPath);
+      if (user.profileImage.includes("cloudinary")) {
+        await deleteFile(user.profileImage);
+      } else {
+        const oldPath = path.join(__dirname, "..", user.profileImage);
+        if (fs.existsSync(oldPath)) {
+          fs.unlinkSync(oldPath);
+        }
       }
     }
 
-    const fileUrl = `/uploads/avatars/${req.file.filename}`;
+    const fileUrl = await uploadBuffer(req.file.buffer, req.file.originalname, "avatars", req.file.mimetype);
     user.profileImage = fileUrl;
     await user.save();
 
@@ -715,9 +730,13 @@ exports.resetAvatar = async (req, res) => {
     const user = await User.findById(req.user.id);
 
     if (user.profileImage && user.profileImage !== "/uploads/default.jpg") {
-      const oldPath = path.join(__dirname, "..", user.profileImage);
-      if (fs.existsSync(oldPath)) {
-        fs.unlinkSync(oldPath);
+      if (user.profileImage.includes("cloudinary")) {
+        await deleteFile(user.profileImage);
+      } else {
+        const oldPath = path.join(__dirname, "..", user.profileImage);
+        if (fs.existsSync(oldPath)) {
+          fs.unlinkSync(oldPath);
+        }
       }
     }
 

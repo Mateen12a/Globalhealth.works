@@ -47,14 +47,7 @@ const router = express.Router();
 const adminMsgUploadDir = path.join(__dirname, "..", "uploads", "admin-messages");
 if (!fs.existsSync(adminMsgUploadDir)) fs.mkdirSync(adminMsgUploadDir, { recursive: true });
 
-const adminMsgStorage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, adminMsgUploadDir),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const name = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
-    cb(null, name);
-  }
-});
+const adminMsgStorage = multer.memoryStorage();
 
 const adminMsgUpload = multer({
   storage: adminMsgStorage,
