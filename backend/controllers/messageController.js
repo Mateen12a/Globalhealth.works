@@ -131,7 +131,7 @@ exports.markMessageSeen = async (messageId, userId) => {
   }
   
   // Authorization: Only the receiver can mark as seen
-  if (message.receiver.toString() !== userId) {
+  if (message.receiver.toString() !== userId.toString()) {
     throw new Error("Not authorized: only the receiver can mark messages as seen");
   }
   

@@ -160,7 +160,7 @@ exports.getProposalsForTask = async (req, res) => {
     const task = await Task.findById(taskId);
     if (!task) return res.status(404).json({ msg: "Task not found" });
 
-    if (task.owner.toString() !== userId && userRole !== "admin") {
+    if (task.owner.toString() !== userId.toString() && userRole !== "admin") {
       return res.status(403).json({ msg: "Not authorized" });
     }
 
@@ -241,7 +241,7 @@ exports.updateProposalStatus = async (req, res) => {
   const proposal = await Proposal.findById(proposalId).populate("task");
   if (!proposal) return res.status(404).json({ msg: "Proposal not found" });
   
-  if (proposal.toUser.toString() !== userId && proposal.task.owner.toString() !== userId) {
+  if (proposal.toUser.toString() !== userId.toString() && proposal.task.owner.toString() !== userId.toString()) {
     return res.status(403).json({ msg: "Not authorized" });
   }
   
@@ -384,7 +384,7 @@ exports.withdrawProposal = async (req, res) => {
     const proposal = await Proposal.findById(proposalId).populate('task');
     if (!proposal) return res.status(404).json({ msg: "Proposal not found" });
 
-    if (proposal.fromUser.toString() !== userId) return res.status(403).json({ msg: "Not authorized" });
+    if (proposal.fromUser.toString() !== userId.toString()) return res.status(403).json({ msg: "Not authorized" });
 
     proposal.status = "withdrawn";
     await proposal.save();
