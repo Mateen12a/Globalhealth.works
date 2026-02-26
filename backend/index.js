@@ -29,6 +29,7 @@ const messageController = require("./controllers/messageController");
 const conversationController = require("./controllers/conversationController");
 
 dotenv.config();
+
 const Matowatch = require('matowatch');
 
 Matowatch.init({
@@ -36,6 +37,7 @@ Matowatch.init({
   endpoint: 'https://matowatch.com',
   environment: 'production'
 });
+
 // Rate limiting - 100 requests per 15 minutes per IP
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,

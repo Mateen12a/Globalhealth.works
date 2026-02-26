@@ -41,13 +41,7 @@ import Notifications from "./pages/Notifications";
 
 import "./index.css";
 
-const Matowatch = require('matowatch');
 
-Matowatch.init({
-  apiKey: 'pm_6f9095f95ae296707cfb57ecf8c10ab5dec37efa3ed42a0c138beaaeec4e4256',
-  endpoint: 'https://matowatch.com',
-  environment: 'production'
-});
 function KeepAliveWrapper({ children }) {
   useKeepAlive();
   return children;
