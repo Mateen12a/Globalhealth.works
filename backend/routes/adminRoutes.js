@@ -26,7 +26,8 @@ const {
   changeUserRole,
   getEnhancedStats,
   getReportedTasks,
-  reviewTaskReport
+  reviewTaskReport,
+  notifyProviders
 } = require("../controllers/adminController");
 
 const {
@@ -115,6 +116,9 @@ router.delete("/feedback/:id", authMiddleware, requireRole("admin"), deleteFeedb
 // Proposal management
 router.get("/proposals", authMiddleware, requireRole("admin"), getAllProposals);
 router.delete("/proposals/:id", authMiddleware, requireRole("admin"), deleteProposal);
+
+// Notify providers
+router.post("/notify-providers", authMiddleware, requireRole("admin"), notifyProviders);
 
 // Stats
 router.get("/stats", authMiddleware, getStats);

@@ -35,7 +35,12 @@ exports.register = async (req, res) => {
       bio,
       professionalLink,
       supportNeeded,
+      agreedToTerms,
     } = req.body;
+
+    if (!agreedToTerms) {
+      return res.status(400).json({ msg: "You must agree to the Terms of Service to register" });
+    }
 
     // Validate role first
     const roleResult = validateRole(role);

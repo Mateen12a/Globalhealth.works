@@ -904,3 +904,55 @@ exports.permanentlyDeleteUser = async (req, res) => {
     res.status(500).json({ msg: "Server error" });
   }
 };
+
+exports.notifyProviders = async (req, res) => {
+  try {
+    const providers = await User.find({
+      role: "solutionProvider",
+      isApproved: true,
+      status: "active"
+    });
+
+    if (providers.length === 0) {
+      return res.status(404).json({ msg: "No verified solution providers found" });
+    }
+
+    const tasks = await Task.find({ status: "published" }).sort({ createdAt: -1 });
+
+    if (tasks.length === 0) {
+      return res.status(404).json({ msg: "No published tasks available" });
+    }
+
+    let sent = 0;
+    let failed = 0;
+
+    for (const provider of providers) {
+      try {
+        const result = await sendMail(
+          provider.email,
+          `${tasks.length} Task${tasks.length !== 1 ? 's' : ''} Available on GlobalHealth.Works`,
+          Templates.taskAlertForProviders(provider, tasks)
+        );
+        if (result.error) {
+          failed++;
+        } else {
+          sent++;
+        }
+      } catch (err) {
+        console.error(`Failed to send task alert to ${provider.email}:`, err);
+        failed++;
+      }
+    }
+
+    res.json({
+      msg: `Task notifications sent to ${sent} provider${sent !== 1 ? 's' : ''}${failed > 0 ? `, ${failed} failed` : ''}`,
+      sent,
+      failed,
+      totalProviders: providers.length,
+      totalTasks: tasks.length
+    });
+  } catch (err) {
+    console.error("Notify providers error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+};

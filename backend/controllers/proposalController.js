@@ -150,16 +150,17 @@ exports.createProposal = async (req, res) => {
   }
 };
 
-// Get proposals for a task (task owner only)
+// Get proposals for a task (task owner or admin)
 exports.getProposalsForTask = async (req, res) => {
   try {
     const taskId = req.params.taskId;
     const userId = req.user.id;
+    const userRole = req.user.role;
 
     const task = await Task.findById(taskId);
     if (!task) return res.status(404).json({ msg: "Task not found" });
 
-    if (task.owner.toString() !== userId) {
+    if (task.owner.toString() !== userId && userRole !== "admin") {
       return res.status(403).json({ msg: "Not authorized" });
     }
 

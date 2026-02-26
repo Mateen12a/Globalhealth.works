@@ -7,6 +7,7 @@ import {
   Info,
   Upload,
   Loader2,
+  Check,
 } from "lucide-react";
 import CountrySelect from "../components/CountrySelect";
 import PhoneInput from "react-phone-input-2";
@@ -49,7 +50,12 @@ const affiliations = [
   "Faith-Based Organisation",
   "Other",
 ];
-const genders = ["Female", "Male", "Prefer not to say", "Prefer to self-describe"];
+const genders = [
+  "Female",
+  "Male",
+  "Prefer not to say",
+  "Prefer to self-describe",
+];
 
 export default function Signup() {
   const [role, setRole] = useState(null);
@@ -59,28 +65,41 @@ export default function Signup() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#F9FAFB] to-[#EEF2F7] p-6">
         <Link to="/" className="mb-8">
-          <img src={logo} alt="GlobalHealth.Works" className="h-20 w-auto object-contain" />
+          <img
+            src={logo}
+            alt="GlobalHealth.Works"
+            className="h-20 w-auto object-contain"
+          />
         </Link>
-        <h2 className="text-4xl font-extrabold text-[#1E376E] mb-8">Join the Community</h2>
+        <h2 className="text-4xl font-extrabold text-[#1E376E] mb-8">
+          Join the Community
+        </h2>
         <div className="grid md:grid-cols-2 gap-8 w-full max-w-3xl">
           <button
             onClick={() => setRole("taskOwner")}
             className="border border-[#357FE9] bg-white shadow-md p-8 rounded-2xl hover:bg-[#357FE9] hover:text-white transition transform hover:scale-[1.02]"
           >
             <h3 className="text-2xl font-semibold">Task Owner</h3>
-            <p className="text-sm mt-2 text-gray-600">Post global health tasks & connect with experts</p>
+            <p className="text-sm mt-2 text-gray-600">
+              Post global health tasks & connect with experts
+            </p>
           </button>
           <button
             onClick={() => setRole("solutionProvider")}
             className="border border-[#E96435] bg-white shadow-md p-8 rounded-2xl hover:bg-[#E96435] hover:text-white transition transform hover:scale-[1.02]"
           >
             <h3 className="text-2xl font-semibold">Solution Provider</h3>
-            <p className="text-sm mt-2 text-gray-600">Work on tasks and showcase your skills.</p>
+            <p className="text-sm mt-2 text-gray-600">
+              Work on tasks and showcase your skills.
+            </p>
           </button>
         </div>
         <p className="mt-8 text-gray-700">
           Already have an account?{" "}
-          <Link to="/login" className="text-[#357FE9] font-semibold hover:underline">
+          <Link
+            to="/login"
+            className="text-[#357FE9] font-semibold hover:underline"
+          >
             Log in
           </Link>
         </p>
@@ -88,9 +107,10 @@ export default function Signup() {
     );
   }
 
-  return <SignupForm role={role} navigate={navigate} goBack={() => setRole(null)} />;
+  return (
+    <SignupForm role={role} navigate={navigate} goBack={() => setRole(null)} />
+  );
 }
-
 
 function SignupForm({ role, navigate, goBack }) {
   const [formData, setFormData] = useState({
@@ -111,6 +131,7 @@ function SignupForm({ role, navigate, goBack }) {
     bio: "",
     professionalLink: "",
     resume: null,
+    agreedToTerms: false,
   });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -144,7 +165,8 @@ function SignupForm({ role, navigate, goBack }) {
     }
   };
   const handleFileChange = (e) => {
-    if (e.target.files && e.target.files[0]) setFormData({ ...formData, resume: e.target.files[0] });
+    if (e.target.files && e.target.files[0])
+      setFormData({ ...formData, resume: e.target.files[0] });
   };
 
   const handleMultiSelect = (field, value) => {
@@ -152,7 +174,9 @@ function SignupForm({ role, navigate, goBack }) {
       const exists = prev[field].includes(value);
       return {
         ...prev,
-        [field]: exists ? prev[field].filter((v) => v !== value) : [...prev[field], value],
+        [field]: exists
+          ? prev[field].filter((v) => v !== value)
+          : [...prev[field], value],
       };
     });
   };
@@ -164,13 +188,24 @@ function SignupForm({ role, navigate, goBack }) {
     number: /[0-9]/.test(formData.password),
     special: /[^A-Za-z0-9]/.test(formData.password),
   };
-  const passwordStrength = Object.values(passwordCriteria).filter(Boolean).length;
+  const passwordStrength =
+    Object.values(passwordCriteria).filter(Boolean).length;
   const passwordsMatch = formData.password === formData.confirmPassword;
   const isPasswordValid = passwordStrength === 5;
 
   // merged requiredFields logic
   const requiredFields = useMemo(() => {
-    const fields = ["title", "firstName", "lastName", "email", "password", "confirmPassword", "phone", "country", "gender"];
+    const fields = [
+      "title",
+      "firstName",
+      "lastName",
+      "email",
+      "password",
+      "confirmPassword",
+      "phone",
+      "country",
+      "gender",
+    ];
     if (role === "taskOwner") {
       fields.push("organisationName", "organisationType");
     } else if (role === "solutionProvider") {
@@ -183,79 +218,85 @@ function SignupForm({ role, navigate, goBack }) {
 
   const missingFields = requiredFields.filter((f) => {
     if (f === "expertise") return formData.expertise.length === 0;
-    if (f === "confirmPassword") return !formData.confirmPassword || !passwordsMatch;
+    if (f === "confirmPassword")
+      return !formData.confirmPassword || !passwordsMatch;
     return !formData[f];
   });
 
-  const hasValidationErrors = emailError || orgNameError || !isPasswordValid || !passwordsMatch;
-  const allFilled = missingFields.length === 0 && !hasValidationErrors;
+  const hasValidationErrors =
+    emailError || orgNameError || !isPasswordValid || !passwordsMatch;
+  const allFilled =
+    missingFields.length === 0 &&
+    !hasValidationErrors &&
+    formData.agreedToTerms;
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  if (!allFilled) return;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!allFilled) return;
 
-  // Make sure nothing remains from old sessions
-  localStorage.clear(); 
-  setLoading(true);
-  try {
-    // 1️⃣ Register user
-    const res = await fetch(`${API_URL}/api/auth/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...formData, role }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      alert(data.msg || "Registration failed");
-      setLoading(false);
-      return;
-    }
-
-    // 2️⃣ Upload CV if solutionProvider
-    if (role === "solutionProvider" && formData.resume) {
-      const cvForm = new FormData();
-      cvForm.append("cv", formData.resume);
-
-      const cvRes = await fetch(`${API_URL}/api/auth/upload-cv`, {
+    // Make sure nothing remains from old sessions
+    localStorage.clear();
+    setLoading(true);
+    try {
+      // 1️⃣ Register user
+      const res = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${data.tempToken}` }, // temporary token only for CV upload
-        body: cvForm,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...formData, role }),
       });
 
-      const cvData = await cvRes.json();
-      if (cvRes.ok) console.log("CV uploaded:", cvData.url);
-      else console.warn("CV upload failed:", cvData.msg);
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.msg || "Registration failed");
+        setLoading(false);
+        return;
+      }
+
+      // 2️⃣ Upload CV if solutionProvider
+      if (role === "solutionProvider" && formData.resume) {
+        const cvForm = new FormData();
+        cvForm.append("cv", formData.resume);
+
+        const cvRes = await fetch(`${API_URL}/api/auth/upload-cv`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${data.tempToken}` }, // temporary token only for CV upload
+          body: cvForm,
+        });
+
+        const cvData = await cvRes.json();
+        if (cvRes.ok) console.log("CV uploaded:", cvData.url);
+        else console.warn("CV upload failed:", cvData.msg);
+      }
+
+      // 3️⃣ Ensure no login occurs
+      // Remove any token/state that could log in the user
+      delete data.tempToken;
+      delete data.user;
+      delete data.role;
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      sessionStorage.removeItem("token");
+      sessionStorage.removeItem("user");
+
+      // 4️⃣ Show success modal
+      setShowSuccessModal(true);
+    } catch (err) {
+      console.error("Register error:", err);
+      alert("Something went wrong. Try again.");
+    } finally {
+      setLoading(false);
     }
-
-    // 3️⃣ Ensure no login occurs
-    // Remove any token/state that could log in the user
-    delete data.tempToken;
-    delete data.user;
-    delete data.role;
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("user");
-
-    // 4️⃣ Show success modal
-    setShowSuccessModal(true);
-
-  } catch (err) {
-    console.error("Register error:", err);
-    alert("Something went wrong. Try again.");
-  } finally {
-    setLoading(false);
-  }
-};
-
-
+  };
 
   const Label = ({ text, required, optional }) => (
     <label className="block font-semibold text-gray-800 mb-1">
       {text} {required && <span className="text-red-500">*</span>}
-      {optional && <span className="text-gray-400 font-normal text-sm ml-1">(Optional)</span>}
+      {optional && (
+        <span className="text-gray-400 font-normal text-sm ml-1">
+          (Optional)
+        </span>
+      )}
     </label>
   );
 
@@ -274,13 +315,18 @@ const handleSubmit = async (e) => {
         }}
       >
         <div className="flex items-center mb-4">
-          <button type="button" onClick={goBack} className="flex items-center text-gray-600 hover:text-[#357FE9]">
+          <button
+            type="button"
+            onClick={goBack}
+            className="flex items-center text-gray-600 hover:text-[#357FE9]"
+          >
             <ArrowLeft className="w-5 h-5 mr-1" /> Back
           </button>
         </div>
 
         <h2 className="text-3xl font-bold text-[#1E376E] mb-4">
-          {role === "taskOwner" ? "Task Owner" : "Solution Provider"} Registration
+          {role === "taskOwner" ? "Task Owner" : "Solution Provider"}{" "}
+          Registration
         </h2>
 
         {/* Name Section */}
@@ -296,7 +342,9 @@ const handleSubmit = async (e) => {
             >
               <option value="">Select</option>
               {titles.map((t) => (
-                <option key={t} value={t}>{t}</option>
+                <option key={t} value={t}>
+                  {t}
+                </option>
               ))}
             </select>
           </div>
@@ -361,25 +409,37 @@ const handleSubmit = async (e) => {
 
           {formData.password && (
             <div className="mt-3 p-3 bg-gray-50 rounded-lg border">
-              <p className="text-sm font-medium text-gray-700 mb-2">Password Requirements:</p>
+              <p className="text-sm font-medium text-gray-700 mb-2">
+                Password Requirements:
+              </p>
               <div className="grid grid-cols-1 gap-1.5 text-xs">
-                <div className={`flex items-center gap-2 ${passwordCriteria.minLength ? "text-green-600" : "text-gray-500"}`}>
+                <div
+                  className={`flex items-center gap-2 ${passwordCriteria.minLength ? "text-green-600" : "text-gray-500"}`}
+                >
                   <span>{passwordCriteria.minLength ? "✓" : "○"}</span>
                   <span>At least 8 characters</span>
                 </div>
-                <div className={`flex items-center gap-2 ${passwordCriteria.uppercase ? "text-green-600" : "text-gray-500"}`}>
+                <div
+                  className={`flex items-center gap-2 ${passwordCriteria.uppercase ? "text-green-600" : "text-gray-500"}`}
+                >
                   <span>{passwordCriteria.uppercase ? "✓" : "○"}</span>
                   <span>At least one uppercase letter (A-Z)</span>
                 </div>
-                <div className={`flex items-center gap-2 ${passwordCriteria.lowercase ? "text-green-600" : "text-gray-500"}`}>
+                <div
+                  className={`flex items-center gap-2 ${passwordCriteria.lowercase ? "text-green-600" : "text-gray-500"}`}
+                >
                   <span>{passwordCriteria.lowercase ? "✓" : "○"}</span>
                   <span>At least one lowercase letter (a-z)</span>
                 </div>
-                <div className={`flex items-center gap-2 ${passwordCriteria.number ? "text-green-600" : "text-gray-500"}`}>
+                <div
+                  className={`flex items-center gap-2 ${passwordCriteria.number ? "text-green-600" : "text-gray-500"}`}
+                >
                   <span>{passwordCriteria.number ? "✓" : "○"}</span>
                   <span>At least one number (0-9)</span>
                 </div>
-                <div className={`flex items-center gap-2 ${passwordCriteria.special ? "text-green-600" : "text-gray-500"}`}>
+                <div
+                  className={`flex items-center gap-2 ${passwordCriteria.special ? "text-green-600" : "text-gray-500"}`}
+                >
                   <span>{passwordCriteria.special ? "✓" : "○"}</span>
                   <span>At least one special character (!@#$%^&*)</span>
                 </div>
@@ -391,10 +451,10 @@ const handleSubmit = async (e) => {
                       passwordStrength <= 2
                         ? "bg-red-500"
                         : passwordStrength === 3
-                        ? "bg-yellow-400"
-                        : passwordStrength === 4
-                        ? "bg-blue-400"
-                        : "bg-green-500"
+                          ? "bg-yellow-400"
+                          : passwordStrength === 4
+                            ? "bg-blue-400"
+                            : "bg-green-500"
                     }`}
                     style={{ width: `${(passwordStrength / 5) * 100}%` }}
                   ></div>
@@ -414,7 +474,9 @@ const handleSubmit = async (e) => {
               value={formData.confirmPassword}
               onChange={handleChange}
               className={`w-full border p-3 rounded-lg shadow-sm pr-10 focus:ring-2 focus:ring-[#357FE9] ${
-                formData.confirmPassword && !passwordsMatch ? "border-red-500" : ""
+                formData.confirmPassword && !passwordsMatch
+                  ? "border-red-500"
+                  : ""
               }`}
               required
             />
@@ -482,7 +544,9 @@ const handleSubmit = async (e) => {
                 className={`w-full border p-3 rounded-lg shadow-sm mt-1 focus:ring-2 focus:ring-[#357FE9] ${orgNameError ? "border-red-500" : ""}`}
                 required
               />
-              <p className="text-gray-500 text-xs mt-1">Minimum 2 characters required</p>
+              <p className="text-gray-500 text-xs mt-1">
+                Minimum 2 characters required
+              </p>
               {orgNameError && (
                 <p className="text-red-500 text-xs mt-1">{orgNameError}</p>
               )}
@@ -499,7 +563,9 @@ const handleSubmit = async (e) => {
               >
                 <option value="">Select</option>
                 {orgTypes.map((o) => (
-                  <option key={o} value={o}>{o}</option>
+                  <option key={o} value={o}>
+                    {o}
+                  </option>
                 ))}
               </select>
             </div>
@@ -522,7 +588,9 @@ const handleSubmit = async (e) => {
               >
                 <option value="">Select your affiliation</option>
                 {affiliations.map((a) => (
-                  <option key={a} value={a}>{a}</option>
+                  <option key={a} value={a}>
+                    {a}
+                  </option>
                 ))}
               </select>
             </div>
@@ -612,7 +680,9 @@ const handleSubmit = async (e) => {
           >
             <option value="">Select</option>
             {genders.map((g) => (
-              <option key={g} value={g}>{g}</option>
+              <option key={g} value={g}>
+                {g}
+              </option>
             ))}
           </select>
           {formData.gender === "Prefer to self-describe" && (
@@ -652,8 +722,50 @@ const handleSubmit = async (e) => {
           />
         </div>
 
+        {/* Terms of Service Agreement */}
+        <div className="mt-6">
+          <label className="flex items-start gap-3 cursor-pointer group">
+            <div
+              onClick={() =>
+                setFormData({
+                  ...formData,
+                  agreedToTerms: !formData.agreedToTerms,
+                })
+              }
+              className={`w-5 h-5 mt-0.5 flex-shrink-0 rounded border-2 flex items-center justify-center transition-all ${
+                formData.agreedToTerms
+                  ? "bg-[#357FE9] border-[#357FE9]"
+                  : "border-gray-300 group-hover:border-[#357FE9]"
+              }`}
+            >
+              {formData.agreedToTerms && (
+                <Check className="w-3.5 h-3.5 text-white" />
+              )}
+            </div>
+            <span className="text-sm text-gray-700">
+              I agree to the{" "}
+              <a
+                href="/terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#357FE9] font-semibold hover:underline"
+                onClick={(e) => e.stopPropagation()}
+              >
+                Terms of Service
+              </a>
+            </span>
+          </label>
+          {!formData.agreedToTerms &&
+            missingFields.length === 0 &&
+            !hasValidationErrors && (
+              <p className="text-red-500 text-xs mt-1">
+                You must agree to the Terms of Service to continue
+              </p>
+            )}
+        </div>
+
         {/* Submit button + tooltip */}
-        <div className="relative mt-6">
+        <div className="relative mt-4">
           <button
             type="submit"
             disabled={!allFilled || loading}
@@ -667,7 +779,8 @@ const handleSubmit = async (e) => {
           >
             {loading ? (
               <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" /> Creating Account...
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" /> Creating
+                Account...
               </>
             ) : (
               "Create Account"
@@ -695,37 +808,44 @@ const handleSubmit = async (e) => {
                     {field.replace(/([A-Z])/g, " $1")}
                   </li>
                 ))}
+                {!formData.agreedToTerms && <li>Agree to Terms of Service</li>}
               </ul>
             </div>
           )}
         </div>
       </form>
       {showSuccessModal && (
-  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 text-center animate-fadeIn">
-      <img src={logo} alt="GlobalHealth.Works" className="h-16 mx-auto mb-4" />
-      <h2 className="text-2xl font-bold text-[#1E376E] mb-3">
-        Registration Recieved
-      </h2>
-      <p className="text-gray-600 text-sm mb-6">
-        Thanks for registering. Your account is now 
-        pending review. We aim to approve accounts within 24-48 hours.
-        We'll email you once verified.
-      </p>
-      <button
-        onClick={() => {
-          ["token", "user", "role"].forEach((k) => localStorage.removeItem(k));
-          window.location.reload();
-        }}
-        className="w-full py-3 rounded-lg font-semibold bg-gradient-to-r from-[#357FE9] to-[#1E376E] text-white hover:opacity-90 transition-all duration-300"
-      >
-        Close
-      </button>
-    </div>
-  </div>
-)}
-<style>
-{`
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 text-center animate-fadeIn">
+            <img
+              src={logo}
+              alt="GlobalHealth.Works"
+              className="h-16 mx-auto mb-4"
+            />
+            <h2 className="text-2xl font-bold text-[#1E376E] mb-3">
+              Registration Recieved
+            </h2>
+            <p className="text-gray-600 text-sm mb-6">
+              Thanks for registering. Your account is now pending review. We aim
+              to approve accounts within 24-48 hours. We'll email you once
+              verified.
+            </p>
+            <button
+              onClick={() => {
+                ["token", "user", "role"].forEach((k) =>
+                  localStorage.removeItem(k),
+                );
+                window.location.reload();
+              }}
+              className="w-full py-3 rounded-lg font-semibold bg-gradient-to-r from-[#357FE9] to-[#1E376E] text-white hover:opacity-90 transition-all duration-300"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+      <style>
+        {`
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
@@ -734,8 +854,7 @@ const handleSubmit = async (e) => {
     animation: fadeIn 0.4s ease-out forwards;
   }
 `}
-</style>
-
+      </style>
     </div>
   );
 }

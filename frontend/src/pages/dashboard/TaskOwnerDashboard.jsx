@@ -172,52 +172,50 @@ export default function TaskOwnerDashboard() {
             className="grid md:grid-cols-2 xl:grid-cols-3 gap-6"
           >
             {tasks.map((task) => (
-              <motion.div
-                key={task._id}
-                variants={item}
-                whileHover={{ y: -4, boxShadow: "0 12px 24px -8px rgba(0,0,0,0.15)" }}
-                className="card p-6 group cursor-pointer relative overflow-hidden"
-              >
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-light)] opacity-0 group-hover:opacity-100 transition-opacity" />
-                
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-bold text-[var(--color-text)] truncate group-hover:text-[var(--color-primary-light)] transition-colors">
-                      {task.title}
-                    </h3>
-                    <p className="text-xs text-[var(--color-text-muted)] mt-1">
-                      Created {new Date(task.createdAt).toLocaleDateString()}
-                    </p>
+              <Link key={task._id} to={`/tasks/${task._id}`} className="block">
+                <motion.div
+                  variants={item}
+                  whileHover={{ y: -4, boxShadow: "0 12px 24px -8px rgba(0,0,0,0.15)" }}
+                  className="card p-6 group cursor-pointer relative overflow-hidden"
+                >
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-light)] opacity-0 group-hover:opacity-100 transition-opacity" />
+                  
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg font-bold text-[var(--color-text)] truncate group-hover:text-[var(--color-primary-light)] transition-colors">
+                        {task.title}
+                      </h3>
+                      <p className="text-xs text-[var(--color-text-muted)] mt-1">
+                        Created {new Date(task.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <span className="ml-3 p-2.5 rounded-xl bg-[var(--color-bg-secondary)] group-hover:bg-[var(--color-primary)] text-[var(--color-text-secondary)] group-hover:text-white transition-all shadow-sm">
+                      <ExternalLink className="w-4 h-4" />
+                    </span>
                   </div>
-                  <Link
-                    to={`/tasks/${task._id}`}
-                    className="ml-3 p-2.5 rounded-xl bg-[var(--color-bg-secondary)] hover:bg-[var(--color-primary)] text-[var(--color-text-secondary)] hover:text-white transition-all shadow-sm"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                  </Link>
-                </div>
-                
-                <p className="text-sm text-[var(--color-text-secondary)] line-clamp-2 mb-4 leading-relaxed">
-                  {task.summary}
-                </p>
-                
-                <div className="flex items-center gap-2 flex-wrap pt-3 border-t border-[var(--color-border)]">
-                  <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${getStatusColor(task.status)}`}>
-                    {getStatusIcon(task.status)}
-                    <span className="capitalize">{task.status}</span>
-                  </span>
-                  {task.applicants?.length > 0 && (
-                    <span className="px-3 py-1.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
-                      {task.applicants.length} applicant{task.applicants.length !== 1 ? 's' : ''}
+                  
+                  <p className="text-sm text-[var(--color-text-secondary)] line-clamp-2 mb-4 leading-relaxed">
+                    {task.summary}
+                  </p>
+                  
+                  <div className="flex items-center gap-2 flex-wrap pt-3 border-t border-[var(--color-border)]">
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold ${getStatusColor(task.status)}`}>
+                      {getStatusIcon(task.status)}
+                      <span className="capitalize">{task.status}</span>
                     </span>
-                  )}
-                  {task.fundingStatus && (
-                    <span className="px-3 py-1.5 rounded-full text-xs font-medium bg-[var(--color-accent-light)]/20 text-[var(--color-accent)]">
-                      {task.fundingStatus}
-                    </span>
-                  )}
-                </div>
-              </motion.div>
+                    {task.applicants?.length > 0 && (
+                      <span className="px-3 py-1.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                        {task.applicants.length} applicant{task.applicants.length !== 1 ? 's' : ''}
+                      </span>
+                    )}
+                    {task.fundingStatus && (
+                      <span className="px-3 py-1.5 rounded-full text-xs font-medium bg-[var(--color-accent-light)]/20 text-[var(--color-accent)]">
+                        {task.fundingStatus}
+                      </span>
+                    )}
+                  </div>
+                </motion.div>
+              </Link>
             ))}
           </motion.div>
         )}

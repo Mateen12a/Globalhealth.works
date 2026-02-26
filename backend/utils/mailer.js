@@ -1215,6 +1215,52 @@ const Templates = {
       `,
     }),
 
+  taskAlertForProviders: (provider, tasks) => {
+    const taskRows = tasks.map(task => {
+      const skills = (task.requiredSkills || []).slice(0, 3).join(', ') || 'Not specified';
+      return `
+        <tr>
+          <td style="padding:16px 20px;border-bottom:1px solid ${COLORS.border};">
+            <h3 style="color:${COLORS.textDark};font-size:16px;margin:0 0 6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">${task.title}</h3>
+            <p style="color:${COLORS.textLight};font-size:14px;margin:0 0 8px;line-height:1.5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">${(task.summary || '').substring(0, 150)}${(task.summary || '').length > 150 ? '...' : ''}</p>
+            <p style="color:${COLORS.primary};font-size:12px;margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;"><strong>Expertise:</strong> ${skills}</p>
+          </td>
+        </tr>`;
+    }).join('');
+
+    return emailLayout({
+      title: 'New Tasks Available on GlobalHealth.Works',
+      preheader: `${tasks.length} task${tasks.length !== 1 ? 's' : ''} available for you to explore`,
+      content: `
+        ${p(`Dear ${provider.firstName},`)}
+        ${p(`We wanted to let you know about <strong>${tasks.length} available task${tasks.length !== 1 ? 's' : ''}</strong> on GlobalHealth.Works that may match your expertise.`, { spacingAfter: 24 })}
+
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:${COLORS.bgLight};border-radius:12px;border:1px solid ${COLORS.border};margin-bottom:24px;">
+          ${taskRows}
+        </table>
+
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+          <tr>
+            <td align="center">
+              <!--[if mso]>
+              <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://globalhealth.works/tasks" style="height:48px;v-text-anchor:middle;width:220px;" arcsize="17%" strokecolor="${COLORS.accent}" fillcolor="${COLORS.accent}">
+              <w:anchorlock/>
+              <center style="color:#ffffff;font-family:sans-serif;font-size:15px;font-weight:bold;">Browse All Tasks</center>
+              </v:roundrect>
+              <![endif]-->
+              <!--[if !mso]><!-->
+              <a href="https://globalhealth.works/tasks" style="display:inline-block;padding:14px 28px;background-color:${COLORS.accent};color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600;font-size:15px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">Browse All Tasks</a>
+              <!--<![endif]-->
+            </td>
+          </tr>
+        </table>
+
+        ${spacer(24)}
+        ${p(`Best regards,<br><strong style="color:${COLORS.textDark};">The GlobalHealth.Works Team</strong>`, { size: 14, spacingAfter: 0 })}
+      `,
+    });
+  },
+
   proposalWithdrawn: (applicant, task) =>
     emailLayout({
       title: "Proposal Withdrawn",

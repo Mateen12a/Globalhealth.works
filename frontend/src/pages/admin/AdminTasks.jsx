@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Search, ExternalLink, CheckCircle, XCircle, Trash2, Loader2, Eye, Clock } from "lucide-react";
+import { Search, ExternalLink, CheckCircle, XCircle, Trash2, Loader2, Eye, Clock, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
 
@@ -21,6 +21,8 @@ export default function AdminTasks() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [actionLoading, setActionLoading] = useState({});
+  const [notifyLoading, setNotifyLoading] = useState(false);
+  const [notifyResult, setNotifyResult] = useState(null);
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -65,6 +67,25 @@ export default function AdminTasks() {
       console.error("Task moderation error:", err);
     } finally {
       setActionLoading((prev) => ({ ...prev, [id]: null }));
+    }
+  };
+
+  const handleNotifyProviders = async () => {
+    if (!window.confirm("Send email notifications about available tasks to all verified Solution Providers?")) return;
+    setNotifyLoading(true);
+    setNotifyResult(null);
+    try {
+      const res = await fetch(`${API_URL}/api/admin/notify-providers`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setNotifyResult({ success: res.ok, msg: data.msg });
+    } catch (err) {
+      setNotifyResult({ success: false, msg: "Failed to send notifications" });
+    } finally {
+      setNotifyLoading(false);
+      setTimeout(() => setNotifyResult(null), 5000);
     }
   };
 
@@ -117,7 +138,22 @@ export default function AdminTasks() {
             className="w-full pl-10 pr-4 py-2.5 border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text)] rounded-xl focus:ring-2 focus:ring-[var(--color-primary-light)] focus:border-transparent"
           />
         </div>
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={handleNotifyProviders}
+          disabled={notifyLoading}
+          className="flex items-center gap-2 px-4 py-2.5 bg-[var(--color-primary)] text-white rounded-xl font-medium text-sm hover:bg-[var(--color-primary-light)] transition-colors disabled:opacity-50 whitespace-nowrap"
+        >
+          {notifyLoading ? <Spinner size={16} /> : <Mail className="w-4 h-4" />}
+          {notifyLoading ? "Sending..." : "Notify Providers"}
+        </motion.button>
       </div>
+      {notifyResult && (
+        <div className={`mb-4 px-4 py-3 rounded-xl text-sm font-medium ${notifyResult.success ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
+          {notifyResult.msg}
+        </div>
+      )}
 
       <div className="overflow-x-auto rounded-xl border border-[var(--color-border)]">
         <table className="w-full">
