@@ -58,7 +58,10 @@ export default function Login() {
           console.error("Failed to fetch session version:", err);
         }
 
-        if (data.user.role === "taskOwner") navigate("/dashboard/to");
+        const redirectTo = searchParams.get("redirect");
+        if (redirectTo && data.user.role === "solutionProvider") {
+          navigate(redirectTo);
+        } else if (data.user.role === "taskOwner") navigate("/dashboard/to");
         else if (data.user.role === "solutionProvider") navigate("/dashboard/sp");
         else if (data.user.role === "admin") navigate("/dashboard/admin");
         else navigate("/");

@@ -1243,13 +1243,13 @@ const Templates = {
           <tr>
             <td align="center">
               <!--[if mso]>
-              <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://globalhealth.works/tasks" style="height:48px;v-text-anchor:middle;width:220px;" arcsize="17%" strokecolor="${COLORS.accent}" fillcolor="${COLORS.accent}">
+              <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://globalhealth.works/browse-tasks" style="height:48px;v-text-anchor:middle;width:220px;" arcsize="17%" strokecolor="${COLORS.accent}" fillcolor="${COLORS.accent}">
               <w:anchorlock/>
               <center style="color:#ffffff;font-family:sans-serif;font-size:15px;font-weight:bold;">Browse All Tasks</center>
               </v:roundrect>
               <![endif]-->
               <!--[if !mso]><!-->
-              <a href="https://globalhealth.works/tasks" style="display:inline-block;padding:14px 28px;background-color:${COLORS.accent};color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600;font-size:15px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">Browse All Tasks</a>
+              <a href="https://globalhealth.works/browse-tasks" style="display:inline-block;padding:14px 28px;background-color:${COLORS.accent};color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600;font-size:15px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">Browse All Tasks</a>
               <!--<![endif]-->
             </td>
           </tr>

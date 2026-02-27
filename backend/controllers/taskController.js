@@ -2,6 +2,7 @@ const Task = require("../models/Task");
 const User = require("../models/User");
 const Proposal = require("../models/Proposal");
 const createNotification = require("../utils/createNotification");
+const { createBulkNotifications } = require("../utils/createNotification");
 const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
@@ -118,6 +119,22 @@ exports.createTask = async (req, res) => {
           `New task "${newTask.title}" posted by ${owner.firstName} ${owner.lastName}`,
           `/dashboard/admin/tasks`,
           { title: "New Task Posted", sendEmail: false }
+        );
+      }
+      const providers = await User.find({
+        role: "solutionProvider",
+        isApproved: true,
+        status: "active"
+      }).select("_id");
+
+      if (providers.length > 0) {
+        const providerIds = providers.map(p => p._id);
+        await createBulkNotifications(
+          providerIds,
+          "task",
+          `New task available: "${newTask.title}"`,
+          `/tasks/${newTask._id}`,
+          { title: "New Task Available", sendEmail: false }
         );
       }
     } catch (emailErr) {
