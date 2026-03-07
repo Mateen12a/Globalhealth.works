@@ -9,7 +9,6 @@ import {
   Eye,
   User,
   Calendar,
-  DollarSign,
   Clock,
   CheckCircle,
   XCircle,
@@ -189,7 +188,6 @@ export default function AdminProposals() {
                     <th className="px-4 py-3 text-left text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">Applicant</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">Task</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">Status</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">Budget</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">Date</th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">Actions</th>
                   </tr>
@@ -227,11 +225,6 @@ export default function AdminProposals() {
                       </td>
                       <td className="px-4 py-3">
                         {getStatusBadge(proposal.status)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="text-sm text-[var(--color-text)]">
-                          {proposal.proposedBudget ? `$${proposal.proposedBudget.toLocaleString()}` : "-"}
-                        </span>
                       </td>
                       <td className="px-4 py-3">
                         <span className="text-sm text-[var(--color-text-secondary)]">
@@ -339,17 +332,6 @@ export default function AdminProposals() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  {selectedProposal.proposedBudget && (
-                    <div className="bg-[var(--color-bg-secondary)] rounded-xl p-3">
-                      <div className="flex items-center gap-2 text-[var(--color-text-secondary)] mb-1">
-                        <DollarSign className="w-4 h-4" />
-                        <span className="text-xs uppercase">Budget</span>
-                      </div>
-                      <p className="text-lg font-semibold text-[var(--color-text)]">
-                        ${selectedProposal.proposedBudget.toLocaleString()}
-                      </p>
-                    </div>
-                  )}
                   {selectedProposal.proposedDuration && (
                     <div className="bg-[var(--color-bg-secondary)] rounded-xl p-3">
                       <div className="flex items-center gap-2 text-[var(--color-text-secondary)] mb-1">

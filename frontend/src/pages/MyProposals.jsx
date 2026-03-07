@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FileText, Clock, CheckCircle, XCircle, AlertCircle, ExternalLink, Loader2, DollarSign, Calendar, ArrowUpRight } from "lucide-react";
+import { FileText, Clock, CheckCircle, XCircle, AlertCircle, ExternalLink, Loader2, Calendar, ArrowUpRight } from "lucide-react";
 import DashboardLayout from "../components/dashboard/DashboardLayout";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -150,12 +150,6 @@ export default function MyProposals() {
                           </p>
                           
                           <div className="flex flex-wrap items-center gap-4 mt-3">
-                            {p.proposedBudget && (
-                              <div className="flex items-center gap-1.5 text-sm text-gray-600">
-                                <DollarSign className="w-4 h-4 text-emerald-500" />
-                                <span className="font-medium">${p.proposedBudget.toLocaleString()}</span>
-                              </div>
-                            )}
                             {p.proposedTimeline && (
                               <div className="flex items-center gap-1.5 text-sm text-gray-600">
                                 <Calendar className="w-4 h-4 text-blue-500" />

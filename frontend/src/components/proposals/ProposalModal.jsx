@@ -2,7 +2,6 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   FileText,
-  DollarSign,
   Clock,
   Paperclip,
   X,
@@ -18,7 +17,6 @@ const API_URL = import.meta.env.VITE_API_URL;
 export default function ProposalModal({ taskId, onClose, onSubmitted }) {
   const token = localStorage.getItem("token");
   const [message, setMessage] = useState("");
-  const [budget, setBudget] = useState("");
   const [duration, setDuration] = useState("");
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -68,7 +66,6 @@ export default function ProposalModal({ taskId, onClose, onSubmitted }) {
       const form = new FormData();
       form.append("task", taskId);
       form.append("message", message);
-      if (budget) form.append("proposedBudget", budget);
       if (duration) form.append("proposedDuration", duration);
       files.forEach((f) => form.append("attachments", f));
 
@@ -156,37 +153,18 @@ export default function ProposalModal({ taskId, onClose, onSubmitted }) {
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block font-semibold text-[var(--color-text)] mb-2">
-                  Proposed Duration
-                </label>
-                <div className="relative">
-                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] w-5 h-5" />
-                  <input
-                    value={duration}
-                    onChange={(e) => setDuration(e.target.value)}
-                    placeholder="e.g., 4 weeks, 2 months"
-                    className="w-full border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text)] pl-11 p-3 rounded-xl focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none transition-all"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-semibold text-[var(--color-text)] mb-2">
-                  Proposed Budget (USD)
-                </label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] w-5 h-5" />
-                  <input
-                    type="number"
-                    min="0"
-                    value={budget}
-                    onChange={(e) => setBudget(e.target.value)}
-                    placeholder="Enter amount"
-                    className="w-full border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text)] pl-11 p-3 rounded-xl focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none transition-all"
-                  />
-                </div>
+            <div>
+              <label className="block font-semibold text-[var(--color-text)] mb-2">
+                Proposed Duration
+              </label>
+              <div className="relative">
+                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] w-5 h-5" />
+                <input
+                  value={duration}
+                  onChange={(e) => setDuration(e.target.value)}
+                  placeholder="e.g., 4 weeks, 2 months"
+                  className="w-full border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text)] pl-11 p-3 rounded-xl focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent outline-none transition-all"
+                />
               </div>
             </div>
 

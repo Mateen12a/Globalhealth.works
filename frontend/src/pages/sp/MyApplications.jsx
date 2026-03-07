@@ -1,7 +1,7 @@
 // src/pages/sp/MyApplications.jsx
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Briefcase, Clock, CheckCircle, XCircle, Loader2, MessageCircle, DollarSign, Calendar, FileText, Ban, Award, AlertTriangle, RefreshCw } from "lucide-react";
+import { ArrowLeft, Briefcase, Clock, CheckCircle, XCircle, Loader2, MessageCircle, Calendar, FileText, Ban, Award, AlertTriangle, RefreshCw } from "lucide-react";
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -198,12 +198,6 @@ export default function MyApplications() {
                     </div>
 
                     <div className="space-y-2 text-sm text-[var(--color-text-secondary)] mb-4">
-                      {task.proposal?.proposedBudget && (
-                        <div className="flex items-center gap-2">
-                          <DollarSign className="w-4 h-4 text-[var(--color-text-muted)]" />
-                          <span>Proposed: ${task.proposal.proposedBudget.toLocaleString()}</span>
-                        </div>
-                      )}
                       {task.proposal?.proposedDuration && (
                         <div className="flex items-center gap-2">
                           <Calendar className="w-4 h-4 text-[var(--color-text-muted)]" />

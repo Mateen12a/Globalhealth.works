@@ -13,7 +13,7 @@ const { uploadBuffer } = require("../utils/cloudStorage");
 // Create a proposal (multipart/form-data if attachments)
 exports.createProposal = async (req, res) => {
   try {
-    const { task: taskId, message, proposedBudget, proposedDuration } = req.body;
+    const { task: taskId, message, proposedDuration } = req.body;
     const fromUserId = req.user.id;
 
     // Backend validation
@@ -56,7 +56,6 @@ exports.createProposal = async (req, res) => {
         }
         
         existingProposal.message = message;
-        existingProposal.proposedBudget = proposedBudget ? Number(proposedBudget) : undefined;
         existingProposal.proposedDuration = proposedDuration;
         existingProposal.attachments = attachments.length > 0 ? attachments : existingProposal.attachments;
         existingProposal.status = 'pending';
@@ -96,7 +95,6 @@ exports.createProposal = async (req, res) => {
       toUser: task.owner._id,
       message,
       attachments,
-      proposedBudget: proposedBudget ? Number(proposedBudget) : undefined,
       proposedDuration,
     });
 
