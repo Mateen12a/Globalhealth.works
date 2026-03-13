@@ -31,6 +31,7 @@ import MyApplications from "./pages/sp/MyApplications";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminTasks from "./pages/admin/AdminTasks";
 import AdminProposals from "./pages/admin/AdminProposals";
+import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import MessagesPage from "./pages/messages/MessagesPage";
 import PublicProfile from "./pages/PublicProfile";
 import About from "./pages/static/About";
@@ -111,6 +112,12 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="/admin/proposals" element={
           <RoleGuard allowedRoles={["admin"]}>
             <AdminProposals />
+          </RoleGuard>
+        } />
+
+        <Route path="/admin/analytics" element={
+          <RoleGuard allowedRoles={["admin"]}>
+            <AdminAnalytics />
           </RoleGuard>
         } />
         

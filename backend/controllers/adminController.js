@@ -446,10 +446,13 @@ exports.createAdmin = async (req, res) => {
 
     await admin.save();
 
+    const createdByAdmin = await User.findById(req.user.id).select("firstName lastName");
+    const creatorName = createdByAdmin ? `${createdByAdmin.firstName} ${createdByAdmin.lastName}` : null;
+
     await sendMail(
       email,
-      "Welcome to GlobalHealth.Works Admin Team",
-      Templates.userApprovalNotice({ firstName, lastName, email, role: "admin" })
+      "Welcome to GlobalHealth.Works — Your Admin Access",
+      Templates.adminWelcomeEmail({ firstName, lastName, email }, password, creatorName)
     );
 
     res.status(201).json({ msg: "Admin created successfully", admin: { ...admin.toObject(), password: undefined } });
@@ -955,6 +958,190 @@ exports.notifyProviders = async (req, res) => {
     });
   } catch (err) {
     console.error("Notify providers error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+exports.getAnalytics = async (req, res) => {
+  try {
+    const Proposal = require("../models/Proposal");
+    const { userType, period, startDate, endDate } = req.query;
+
+    // Determine date range
+    const now = new Date();
+    let start;
+    let groupFormat;
+    let labelFormat;
+
+    if (startDate && endDate) {
+      start = new Date(startDate);
+      const end = new Date(endDate);
+      const diffDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+      if (diffDays <= 31) {
+        groupFormat = { year: { $year: "$createdAt" }, month: { $month: "$createdAt" }, day: { $dayOfMonth: "$createdAt" } };
+        labelFormat = "day";
+      } else if (diffDays <= 180) {
+        groupFormat = { year: { $year: "$createdAt" }, week: { $week: "$createdAt" } };
+        labelFormat = "week";
+      } else {
+        groupFormat = { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } };
+        labelFormat = "month";
+      }
+    } else {
+      switch (period) {
+        case "7d":
+          start = new Date(now - 7 * 24 * 60 * 60 * 1000);
+          groupFormat = { year: { $year: "$createdAt" }, month: { $month: "$createdAt" }, day: { $dayOfMonth: "$createdAt" } };
+          labelFormat = "day";
+          break;
+        case "30d":
+          start = new Date(now - 30 * 24 * 60 * 60 * 1000);
+          groupFormat = { year: { $year: "$createdAt" }, month: { $month: "$createdAt" }, day: { $dayOfMonth: "$createdAt" } };
+          labelFormat = "day";
+          break;
+        case "90d":
+          start = new Date(now - 90 * 24 * 60 * 60 * 1000);
+          groupFormat = { year: { $year: "$createdAt" }, week: { $week: "$createdAt" } };
+          labelFormat = "week";
+          break;
+        case "6m":
+          start = new Date(now - 180 * 24 * 60 * 60 * 1000);
+          groupFormat = { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } };
+          labelFormat = "month";
+          break;
+        case "1y":
+          start = new Date(now - 365 * 24 * 60 * 60 * 1000);
+          groupFormat = { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } };
+          labelFormat = "month";
+          break;
+        default:
+          start = new Date(0);
+          groupFormat = { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } };
+          labelFormat = "month";
+      }
+    }
+
+    const dateFilter = { createdAt: { $gte: start } };
+    if (startDate && endDate) {
+      dateFilter.createdAt.$lte = new Date(endDate);
+    }
+
+    // User role filter
+    let userRoleFilter = {};
+    if (userType === "solutionProvider") userRoleFilter = { role: "solutionProvider" };
+    else if (userType === "taskOwner") userRoleFilter = { role: "taskOwner" };
+    else userRoleFilter = { role: { $in: ["solutionProvider", "taskOwner"] } };
+
+    // User growth over time
+    const userGrowthRaw = await User.aggregate([
+      { $match: { ...dateFilter, ...userRoleFilter } },
+      { $group: { _id: groupFormat, count: { $sum: 1 } } },
+      { $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1, "_id.week": 1 } }
+    ]);
+
+    // Task creation over time
+    const taskGrowthRaw = await Task.aggregate([
+      { $match: dateFilter },
+      { $group: { _id: groupFormat, count: { $sum: 1 } } },
+      { $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1, "_id.week": 1 } }
+    ]);
+
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const formatLabel = (id) => {
+      if (labelFormat === "day") return `${months[id.month - 1]} ${id.day}`;
+      if (labelFormat === "week") return `W${id.week} '${String(id.year).slice(2)}`;
+      return `${months[id.month - 1]} '${String(id.year).slice(2)}`;
+    };
+
+    const userGrowth = userGrowthRaw.map(d => ({ label: formatLabel(d._id), users: d.count }));
+    const taskGrowth = taskGrowthRaw.map(d => ({ label: formatLabel(d._id), tasks: d.count }));
+
+    // Merge into combined timeline
+    const allLabels = [...new Set([...userGrowth.map(d => d.label), ...taskGrowth.map(d => d.label)])];
+    const timeline = allLabels.map(label => ({
+      label,
+      users: userGrowth.find(d => d.label === label)?.users || 0,
+      tasks: taskGrowth.find(d => d.label === label)?.tasks || 0,
+    }));
+
+    // Role distribution
+    const spCount = await User.countDocuments({ role: "solutionProvider", createdAt: { $gte: start } });
+    const toCount = await User.countDocuments({ role: "taskOwner", createdAt: { $gte: start } });
+
+    // Approval status breakdown
+    const approvedCount = await User.countDocuments({ ...userRoleFilter, isApproved: true, createdAt: { $gte: start } });
+    const pendingCount = await User.countDocuments({ ...userRoleFilter, isApproved: false, rejectionReason: { $exists: false }, createdAt: { $gte: start } });
+    const rejectedCount = await User.countDocuments({ ...userRoleFilter, rejectionReason: { $exists: true, $ne: null }, createdAt: { $gte: start } });
+
+    // Task status breakdown
+    const taskStatusBreakdown = await Task.aggregate([
+      { $match: dateFilter },
+      { $group: { _id: "$status", count: { $sum: 1 } } }
+    ]);
+
+    // Proposal stats
+    let proposalStats = { total: 0, accepted: 0, pending: 0, withdrawn: 0 };
+    try {
+      proposalStats.total = await Proposal.countDocuments({ createdAt: { $gte: start } });
+      proposalStats.accepted = await Proposal.countDocuments({ status: "accepted", createdAt: { $gte: start } });
+      proposalStats.pending = await Proposal.countDocuments({ status: "pending", createdAt: { $gte: start } });
+      proposalStats.withdrawn = await Proposal.countDocuments({ status: "withdrawn", createdAt: { $gte: start } });
+    } catch(e) {}
+
+    // Cumulative user totals (all-time for summary cards)
+    const totalSP = await User.countDocuments({ role: "solutionProvider" });
+    const totalTO = await User.countDocuments({ role: "taskOwner" });
+    const totalAll = await User.countDocuments({ role: { $in: ["solutionProvider", "taskOwner"] } });
+    const totalTasks = await Task.countDocuments();
+    const totalProposals = await Proposal.countDocuments().catch(() => 0);
+
+    // New this period
+    const newUsersThisPeriod = await User.countDocuments({ ...userRoleFilter, createdAt: { $gte: start } });
+    const newTasksThisPeriod = await Task.countDocuments({ createdAt: { $gte: start } });
+
+    // Country breakdown (top 10)
+    const countryBreakdown = await User.aggregate([
+      { $match: { ...userRoleFilter, country: { $exists: true, $ne: null, $ne: "" } } },
+      { $group: { _id: "$country", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 10 }
+    ]);
+
+    // Organization type breakdown
+    const orgTypeBreakdown = await User.aggregate([
+      { $match: { ...userRoleFilter, organizationType: { $exists: true, $ne: null, $ne: "" } } },
+      { $group: { _id: "$organizationType", count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]);
+
+    res.json({
+      timeline,
+      labelFormat,
+      period: period || "all",
+      roleDistribution: [
+        { name: "Solution Providers", value: spCount, color: "#357FE9" },
+        { name: "Task Owners", value: toCount, color: "#E96435" }
+      ],
+      approvalStatus: [
+        { name: "Approved", value: approvedCount, color: "#34A853" },
+        { name: "Pending", value: pendingCount, color: "#F59E0B" },
+        { name: "Rejected", value: rejectedCount, color: "#EF4444" }
+      ],
+      taskStatusBreakdown: taskStatusBreakdown.map(d => ({ name: d._id, value: d.count })),
+      proposals: proposalStats,
+      summary: {
+        totalUsers: totalAll,
+        totalSP,
+        totalTO,
+        totalTasks,
+        totalProposals,
+        newUsersThisPeriod,
+        newTasksThisPeriod,
+      },
+      countryBreakdown: countryBreakdown.map(d => ({ name: d._id, value: d.count })),
+      orgTypeBreakdown: orgTypeBreakdown.map(d => ({ name: d._id, value: d.count })),
+    });
+  } catch (err) {
+    console.error("Analytics error:", err);
     res.status(500).json({ msg: "Server error" });
   }
 };

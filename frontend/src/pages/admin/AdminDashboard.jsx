@@ -14,7 +14,8 @@ import {
   FileText,
   Activity,
   Briefcase,
-  UserCheck
+  UserCheck,
+  BarChart2
 } from "lucide-react";
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
 import AdminUsers from "./AdminUsers";
@@ -117,6 +118,13 @@ export default function AdminDashboard() {
           >
             <Mail size={18} />
             Admin Messaging
+          </Link>
+          <Link
+            to="/admin/analytics"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] font-medium hover:bg-[var(--color-bg-secondary)] transition-colors"
+          >
+            <BarChart2 size={18} />
+            Analytics
           </Link>
           {isSuperAdmin && (
             <span className="ml-auto inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-100 text-purple-700 text-sm font-medium">

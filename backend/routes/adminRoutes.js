@@ -27,7 +27,8 @@ const {
   getEnhancedStats,
   getReportedTasks,
   reviewTaskReport,
-  notifyProviders
+  notifyProviders,
+  getAnalytics
 } = require("../controllers/adminController");
 
 const {
@@ -116,5 +117,6 @@ router.post("/notify-providers", authMiddleware, requireRole("admin"), notifyPro
 // Stats
 router.get("/stats", authMiddleware, getStats);
 router.get("/enhanced-stats", authMiddleware, requireRole("admin"), getEnhancedStats);
+router.get("/analytics", authMiddleware, requireRole("admin"), getAnalytics);
 
 module.exports = router;
