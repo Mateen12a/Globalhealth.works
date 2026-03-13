@@ -640,6 +640,149 @@ exports.resetPassword = async (req, res) => {
   }
 };
 
+// Accept Admin Invite
+exports.acceptAdminInvite = async (req, res) => {
+  try {
+    const { token, password } = req.body;
+
+    if (!token || !password) {
+      return res.status(400).json({ msg: "Invite token and password are required" });
+    }
+
+    const user = await User.findOne({
+      inviteToken: token,
+      inviteTokenExpiry: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ msg: "This invitation link is invalid or has expired. Please ask an admin to resend your invite." });
+    }
+
+    if (user.password) {
+      return res.status(400).json({ msg: "This invite has already been accepted. You can log in with your credentials." });
+    }
+
+    const { validatePassword } = require("../utils/validation");
+    const passwordResult = validatePassword(password);
+    if (!passwordResult.valid) {
+      return res.status(400).json({ msg: passwordResult.errors[0], errors: passwordResult.errors });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    user.password = hashedPassword;
+    user.isApproved = true;
+    user.isActive = true;
+    user.inviteToken = undefined;
+    user.inviteTokenExpiry = undefined;
+
+    await user.save();
+
+    const otherAdmins = await User.find({
+      role: "admin",
+      _id: { $ne: user._id },
+      isActive: true,
+      password: { $exists: true, $ne: null },
+    }).select("firstName lastName email");
+
+    const emailResults = await Promise.allSettled(
+      otherAdmins.map((admin) =>
+        sendMail(
+          admin.email,
+          `${user.firstName} ${user.lastName} Has Joined the Admin Team`,
+          Templates.adminInviteAcceptedNotification(user, admin)
+        ).then((result) => {
+          if (result?.error) {
+            console.error(`Failed to notify admin ${admin.email}:`, result.error);
+          }
+          return result;
+        })
+      )
+    );
+    const failed = emailResults.filter((r) => r.status === "rejected");
+    if (failed.length > 0) {
+      console.error(`${failed.length} admin notification(s) failed to send`);
+    }
+
+    res.json({ msg: "Your account is set up! You can now log in." });
+  } catch (err) {
+    console.error("Accept admin invite error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
+// Validate Admin Invite Token
+exports.validateInviteToken = async (req, res) => {
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(400).json({ valid: false, msg: "Token is required" });
+    }
+
+    const user = await User.findOne({
+      inviteToken: token,
+      inviteTokenExpiry: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({ valid: false, msg: "This invitation link is invalid or has expired" });
+    }
+
+    if (user.password) {
+      return res.status(400).json({ valid: false, msg: "This invite has already been accepted" });
+    }
+
+    res.json({ valid: true, firstName: user.firstName, lastName: user.lastName, email: user.email });
+  } catch (err) {
+    console.error("Validate invite token error:", err);
+    res.status(500).json({ valid: false, msg: "Server error" });
+  }
+};
+
+// Change Password (authenticated)
+exports.changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ msg: "Current password and new password are required" });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ msg: "User not found" });
+    }
+
+    if (!user.password) {
+      return res.status(400).json({ msg: "Your account does not have a password set. Please use the forgot password flow." });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ msg: "Current password is incorrect" });
+    }
+
+    const { validatePassword } = require("../utils/validation");
+    const passwordResult = validatePassword(newPassword);
+    if (!passwordResult.valid) {
+      return res.status(400).json({ msg: passwordResult.errors[0], errors: passwordResult.errors });
+    }
+
+    if (currentPassword === newPassword) {
+      return res.status(400).json({ msg: "New password must be different from your current password" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+
+    res.json({ msg: "Password changed successfully" });
+  } catch (err) {
+    console.error("Change password error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
 // GET /me
 exports.getMe = async (req, res) => {
   try {

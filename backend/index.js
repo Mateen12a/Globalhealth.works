@@ -33,9 +33,9 @@ dotenv.config();
 const Matowatch = require('matowatch');
 
 Matowatch.init({
-  apiKey: 'pm_6f9095f95ae296707cfb57ecf8c10ab5dec37efa3ed42a0c138beaaeec4e4256',
+  apiKey: process.env.MATOWATCH_API_KEY || '',
   endpoint: 'https://matowatch.com',
-  environment: 'production'
+  environment: process.env.NODE_ENV || 'development'
 });
 
 // Rate limiting - 100 requests per 15 minutes per IP
@@ -342,6 +342,18 @@ app.get("/api/auth/session-version", (req, res) => res.json({ version: SESSION_V
 
 // Serve frontend for all non-API routes (SPA support)
 const fs = require("fs");
+let devProxy = null;
+if (process.env.NODE_ENV !== "production") {
+  try {
+    const { createProxyMiddleware } = require("http-proxy-middleware");
+    devProxy = createProxyMiddleware({
+      target: "http://localhost:5000",
+      changeOrigin: true,
+      ws: true,
+    });
+  } catch {}
+}
+
 app.use((req, res, next) => {
   if (req.path.startsWith("/api") || req.path.startsWith("/uploads") || req.path.startsWith("/socket.io")) {
     return next();
@@ -349,6 +361,8 @@ app.use((req, res, next) => {
   const indexPath = path.join(frontendDist, "index.html");
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
+  } else if (devProxy) {
+    return devProxy(req, res, next);
   } else {
     res.send("GlobalHealth.Works API + Socket.IO running");
   }

@@ -22,6 +22,7 @@ import TaskOwnerDashboard from "./pages/dashboard/TaskOwnerDashboard";
 import SolutionProviderDashboard from "./pages/dashboard/SolutionProviderDashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminLogin from "./pages/admin/AdminLogin";
+import AcceptAdminInvite from "./pages/AcceptAdminInvite";
 import AdminOnboarding from "./pages/admin/AdminOnboarding";
 import AdminMessaging from "./pages/admin/AdminMessaging";
 import TaskCreate from "./pages/tasks/TaskCreate";
@@ -59,6 +60,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin/accept-invite" element={<AcceptAdminInvite />} />
         <Route path="/dashboard" element={<DashboardRouter />} />
         
         <Route path="/dashboard/to" element={

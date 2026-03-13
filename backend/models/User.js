@@ -104,6 +104,10 @@ const userSchema = new mongoose.Schema(
     // Forgot password fields
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date },
+
+    // Admin invite fields
+    inviteToken: { type: String },
+    inviteTokenExpiry: { type: Date },
   },
   { timestamps: true }
 );

@@ -82,6 +82,7 @@ export default function Settings() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordMessage, setPasswordMessage] = useState({
     type: "",
@@ -248,20 +249,39 @@ export default function Settings() {
     }
   };
 
+  const passwordRules = [
+    { label: "At least 8 characters", test: (p) => p.length >= 8 },
+    { label: "One uppercase letter", test: (p) => /[A-Z]/.test(p) },
+    { label: "One lowercase letter", test: (p) => /[a-z]/.test(p) },
+    { label: "One number", test: (p) => /[0-9]/.test(p) },
+    { label: "One special character", test: (p) => /[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/`~]/.test(p) },
+  ];
+
+  const passwordStrength = newPassword
+    ? Math.round((passwordRules.filter((r) => r.test(newPassword)).length / passwordRules.length) * 100)
+    : 0;
+
+  const strengthLabel = passwordStrength <= 20 ? "Very Weak" : passwordStrength <= 40 ? "Weak" : passwordStrength <= 60 ? "Fair" : passwordStrength <= 80 ? "Strong" : "Very Strong";
+  const strengthColor = passwordStrength <= 20 ? "bg-red-500" : passwordStrength <= 40 ? "bg-orange-500" : passwordStrength <= 60 ? "bg-yellow-500" : passwordStrength <= 80 ? "bg-blue-500" : "bg-green-500";
+  const allPasswordRulesPassed = passwordStrength === 100;
+  const passwordsMatch = newPassword && confirmPassword && newPassword === confirmPassword;
+
   const handlePasswordChange = async (e) => {
     e.preventDefault();
     setPasswordMessage({ type: "", text: "" });
 
-    if (newPassword !== confirmPassword) {
-      setPasswordMessage({ type: "error", text: "New passwords do not match" });
+    if (!currentPassword) {
+      setPasswordMessage({ type: "error", text: "Please enter your current password" });
       return;
     }
 
-    if (newPassword.length < 8) {
-      setPasswordMessage({
-        type: "error",
-        text: "Password must be at least 8 characters",
-      });
+    if (!allPasswordRulesPassed) {
+      setPasswordMessage({ type: "error", text: "New password doesn't meet all security requirements" });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordMessage({ type: "error", text: "New passwords do not match" });
       return;
     }
 
@@ -402,20 +422,22 @@ export default function Settings() {
 
               <form onSubmit={handlePasswordChange} className="space-y-4">
                 {passwordMessage.text && (
-                  <div
-                    className={`p-4 rounded-xl flex items-center gap-3 ${
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`p-4 rounded-xl flex items-start gap-3 ${
                       passwordMessage.type === "error"
                         ? "bg-red-50 text-red-600 border border-red-200"
                         : "bg-emerald-50 text-emerald-600 border border-emerald-200"
                     }`}
                   >
                     {passwordMessage.type === "error" ? (
-                      <AlertTriangle className="w-5 h-5" />
+                      <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" />
                     ) : (
-                      <CheckCircle className="w-5 h-5" />
+                      <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
                     )}
-                    {passwordMessage.text}
-                  </div>
+                    <span className="text-sm">{passwordMessage.text}</span>
+                  </motion.div>
                 )}
 
                 <div>
@@ -426,22 +448,16 @@ export default function Settings() {
                     <input
                       type={showCurrentPassword ? "text" : "password"}
                       value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      onChange={(e) => { setCurrentPassword(e.target.value); setPasswordMessage({ type: "", text: "" }); }}
                       className="input-field pr-10"
                       required
                     />
                     <button
                       type="button"
-                      onClick={() =>
-                        setShowCurrentPassword(!showCurrentPassword)
-                      }
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
                     >
-                      {showCurrentPassword ? (
-                        <EyeOff size={18} />
-                      ) : (
-                        <Eye size={18} />
-                      )}
+                      {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
                 </div>
@@ -454,45 +470,98 @@ export default function Settings() {
                     <input
                       type={showNewPassword ? "text" : "password"}
                       value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
+                      onChange={(e) => { setNewPassword(e.target.value); setPasswordMessage({ type: "", text: "" }); }}
                       className="input-field pr-10"
                       required
-                      minLength={8}
                     />
                     <button
                       type="button"
                       onClick={() => setShowNewPassword(!showNewPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
                     >
-                      {showNewPassword ? (
-                        <EyeOff size={18} />
-                      ) : (
-                        <Eye size={18} />
-                      )}
+                      {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
-                  <p className="text-xs text-[var(--color-text-muted)] mt-1">
-                    Minimum 8 characters
-                  </p>
+
+                  {newPassword && (
+                    <div className="mt-3 space-y-3">
+                      <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-xs text-[var(--color-text-muted)]">Password Strength</span>
+                          <span className={`text-xs font-medium ${passwordStrength >= 80 ? 'text-green-600' : passwordStrength >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
+                            {strengthLabel}
+                          </span>
+                        </div>
+                        <div className="w-full bg-[var(--color-bg-secondary)] rounded-full h-1.5 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-300 ${strengthColor}`}
+                            style={{ width: `${passwordStrength}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-1">
+                        {passwordRules.map((rule) => {
+                          const passed = rule.test(newPassword);
+                          return (
+                            <div key={rule.label} className="flex items-center gap-2">
+                              {passed ? (
+                                <CheckCircle className="w-3.5 h-3.5 text-green-500" />
+                              ) : (
+                                <div className="w-3.5 h-3.5 rounded-full border border-[var(--color-border)]" />
+                              )}
+                              <span className={`text-xs ${passed ? 'text-green-600' : 'text-[var(--color-text-muted)]'}`}>
+                                {rule.label}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
                     Confirm New Password
                   </label>
-                  <input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="input-field"
-                    required
-                  />
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => { setConfirmPassword(e.target.value); setPasswordMessage({ type: "", text: "" }); }}
+                      className="input-field pr-10"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                    >
+                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  {confirmPassword && (
+                    <div className="flex items-center gap-2 mt-1.5">
+                      {passwordsMatch ? (
+                        <>
+                          <CheckCircle className="w-3.5 h-3.5 text-green-500" />
+                          <span className="text-xs text-green-600">Passwords match</span>
+                        </>
+                      ) : (
+                        <>
+                          <AlertTriangle className="w-3.5 h-3.5 text-red-500" />
+                          <span className="text-xs text-red-600">Passwords do not match</span>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <button
                   type="submit"
-                  disabled={passwordLoading}
-                  className="btn-primary flex items-center gap-2"
+                  disabled={passwordLoading || !allPasswordRulesPassed || !passwordsMatch}
+                  className="btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Lock size={18} />
                   {passwordLoading ? "Changing..." : "Change Password"}

@@ -17,7 +17,8 @@ const {
   approveUser,
   rejectUser,
   getAllAdmins,
-  createAdmin,
+  inviteAdmin,
+  resendAdminInvite,
   deleteAdmin,
   getAdminConversations,
   createAdminConversation,
@@ -83,7 +84,8 @@ router.delete("/user/:id/permanent", authMiddleware, requireRole("admin"), perma
 
 // Admin management
 router.get("/admins", authMiddleware, requireRole("admin"), getAllAdmins);
-router.post("/create-admin", authMiddleware, requireRole("admin"), createAdmin);
+router.post("/invite-admin", authMiddleware, requireRole("admin"), inviteAdmin);
+router.post("/admins/:id/resend-invite", authMiddleware, requireRole("admin"), resendAdminInvite);
 router.delete("/admins/:id", authMiddleware, requireRole("admin"), deleteAdmin);
 
 // Admin messaging

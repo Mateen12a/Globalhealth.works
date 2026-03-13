@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { UserPlus, Mail, User, Lock, Eye, EyeOff, CheckCircle, X, Shield, Send, Trash2, AlertCircle } from "lucide-react";
+import { UserPlus, Mail, User, CheckCircle, X, Shield, Send, Trash2, AlertCircle, RefreshCw, Clock } from "lucide-react";
 import DashboardLayout from "../../components/dashboard/DashboardLayout";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -13,10 +13,9 @@ export default function AdminOnboarding() {
     firstName: "",
     lastName: "",
     email: "",
-    password: "",
   });
-  const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [resendingId, setResendingId] = useState(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -53,7 +52,7 @@ export default function AdminOnboarding() {
     setError("");
 
     try {
-      const res = await fetch(`${API_URL}/api/admin/create-admin`, {
+      const res = await fetch(`${API_URL}/api/admin/invite-admin`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -65,21 +64,45 @@ export default function AdminOnboarding() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.msg || "Failed to create admin");
+        throw new Error(data.msg || "Failed to send invitation");
       }
 
-      setSuccess("Admin created successfully! They will receive an email with login instructions.");
-      setFormData({ firstName: "", lastName: "", email: "", password: "" });
+      setSuccess(data.msg || "Invitation sent successfully! They have 48 hours to accept.");
+      setFormData({ firstName: "", lastName: "", email: "" });
       fetchAdmins();
       
       setTimeout(() => {
         setShowModal(false);
         setSuccess("");
-      }, 2000);
+      }, 3000);
     } catch (err) {
       setError(err.message);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleResendInvite = async (adminId) => {
+    setResendingId(adminId);
+    try {
+      const res = await fetch(`${API_URL}/api/admin/admins/${adminId}/resend-invite`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setSuccess(data.msg || "Invitation resent successfully");
+        setTimeout(() => setSuccess(""), 3000);
+      } else {
+        setError(data.msg || "Failed to resend invitation");
+        setTimeout(() => setError(""), 3000);
+      }
+    } catch (err) {
+      setError("Failed to resend invitation");
+      setTimeout(() => setError(""), 3000);
+    } finally {
+      setResendingId(null);
     }
   };
 
@@ -100,9 +123,37 @@ export default function AdminOnboarding() {
     }
   };
 
+  const getAdminStatus = (admin) => {
+    if (admin.hasSetupAccount) {
+      return { label: "Active", color: "bg-green-100 text-green-700", dot: "bg-green-500" };
+    }
+    if (admin.inviteTokenExpiry && new Date(admin.inviteTokenExpiry) > new Date()) {
+      return { label: "Invite Pending", color: "bg-amber-100 text-amber-700", dot: "bg-amber-500" };
+    }
+    return { label: "Invite Expired", color: "bg-red-100 text-red-700", dot: "bg-red-500" };
+  };
+
   return (
     <DashboardLayout role="admin" title="Admin Management">
       <div className="space-y-6">
+        {(success || error) && !showModal && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className={`p-4 rounded-xl flex items-start gap-3 ${
+              success ? "bg-green-50 border border-green-200" : "bg-red-50 border border-red-200"
+            }`}
+          >
+            {success ? (
+              <CheckCircle size={18} className="text-green-500 flex-shrink-0 mt-0.5" />
+            ) : (
+              <AlertCircle size={18} className="text-red-500 flex-shrink-0 mt-0.5" />
+            )}
+            <p className={`text-sm ${success ? "text-green-600" : "text-red-600"}`}>{success || error}</p>
+          </motion.div>
+        )}
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -110,16 +161,16 @@ export default function AdminOnboarding() {
         >
           <div>
             <h2 className="text-2xl font-bold text-[var(--color-text)]">Admin Team</h2>
-            <p className="text-[var(--color-text-secondary)]">Manage platform administrators</p>
+            <p className="text-[var(--color-text-secondary)]">Invite and manage platform administrators</p>
           </div>
           <motion.button
-            onClick={() => setShowModal(true)}
+            onClick={() => { setShowModal(true); setError(""); setSuccess(""); }}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className="btn-primary flex items-center gap-2"
           >
             <UserPlus size={18} />
-            Add New Admin
+            Invite Admin
           </motion.button>
         </motion.div>
 
@@ -136,7 +187,7 @@ export default function AdminOnboarding() {
           ) : admins.length === 0 ? (
             <div className="p-8 text-center">
               <Shield size={48} className="mx-auto text-[var(--color-text-muted)] mb-4" />
-              <p className="text-[var(--color-text-secondary)]">No other admins found. Add your first team member!</p>
+              <p className="text-[var(--color-text-secondary)]">No other admins found. Invite your first team member!</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -151,40 +202,65 @@ export default function AdminOnboarding() {
                   </tr>
                 </thead>
                 <tbody>
-                  {admins.map((admin) => (
-                    <tr key={admin._id} className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg-secondary)]/50 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-light)] flex items-center justify-center text-white font-semibold">
-                            {admin.firstName?.[0]}{admin.lastName?.[0]}
+                  {admins.map((admin) => {
+                    const status = getAdminStatus(admin);
+                    const isPending = !admin.hasSetupAccount;
+                    return (
+                      <tr key={admin._id} className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg-secondary)]/50 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-light)] flex items-center justify-center text-white font-semibold">
+                              {admin.firstName?.[0]}{admin.lastName?.[0]}
+                            </div>
+                            <div>
+                              <p className="font-medium text-[var(--color-text)]">{admin.firstName} {admin.lastName}</p>
+                              <p className="text-xs text-[var(--color-text-muted)]">Administrator</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-medium text-[var(--color-text)]">{admin.firstName} {admin.lastName}</p>
-                            <p className="text-xs text-[var(--color-text-muted)]">Administrator</p>
+                        </td>
+                        <td className="px-6 py-4 text-[var(--color-text-secondary)]">{admin.email}</td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${status.color}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
+                            {status.label}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-[var(--color-text-secondary)]">
+                          {isPending ? (
+                            <span className="flex items-center gap-1 text-amber-600">
+                              <Clock size={14} />
+                              Awaiting setup
+                            </span>
+                          ) : admin.createdAt && !isNaN(new Date(admin.createdAt).getTime()) ? (
+                            new Date(admin.createdAt).toLocaleDateString()
+                          ) : (
+                            <span className="text-[var(--color-text-muted)]">&mdash;</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            {isPending && (
+                              <button
+                                onClick={() => handleResendInvite(admin._id)}
+                                disabled={resendingId === admin._id}
+                                className="p-2 rounded-lg text-blue-500 hover:bg-blue-50 transition-colors disabled:opacity-50"
+                                title="Resend invitation"
+                              >
+                                <RefreshCw size={18} className={resendingId === admin._id ? "animate-spin" : ""} />
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleDeleteAdmin(admin._id)}
+                              className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+                              title="Remove admin"
+                            >
+                              <Trash2 size={18} />
+                            </button>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-[var(--color-text-secondary)]">{admin.email}</td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                          Active
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-[var(--color-text-secondary)]">
-                        {new Date(admin.createdAt).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <button
-                          onClick={() => handleDeleteAdmin(admin._id)}
-                          className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
-                          title="Remove admin"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -214,8 +290,8 @@ export default function AdminOnboarding() {
                     <UserPlus size={20} />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-[var(--color-text)]">Add New Admin</h3>
-                    <p className="text-sm text-[var(--color-text-secondary)]">Create a new administrator account</p>
+                    <h3 className="text-lg font-bold text-[var(--color-text)]">Invite Admin</h3>
+                    <p className="text-sm text-[var(--color-text-secondary)]">Send an invitation to join as admin</p>
                   </div>
                 </div>
                 <button
@@ -240,6 +316,12 @@ export default function AdminOnboarding() {
                     <p className="text-sm text-green-600">{success}</p>
                   </div>
                 )}
+
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                  <p className="text-sm text-blue-700">
+                    The invited person will receive an email with a link to set their password. The invitation expires in 48 hours.
+                  </p>
+                </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -285,34 +367,8 @@ export default function AdminOnboarding() {
                       onChange={handleChange}
                       required
                       className="w-full pl-12 pr-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-light)]"
-                      placeholder="admin@globalhealth.works"
+                      placeholder="admin@example.com"
                     />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-[var(--color-text)] mb-2">
-                    Password
-                  </label>
-                  <div className="relative">
-                    <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      name="password"
-                      value={formData.password}
-                      onChange={handleChange}
-                      required
-                      minLength={8}
-                      className="w-full pl-12 pr-12 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-light)]"
-                      placeholder="Min 8 characters"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
-                    >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
                   </div>
                 </div>
 
@@ -334,7 +390,7 @@ export default function AdminOnboarding() {
                     ) : (
                       <>
                         <Send size={18} />
-                        Create Admin
+                        Send Invitation
                       </>
                     )}
                   </button>

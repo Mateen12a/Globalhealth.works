@@ -409,55 +409,126 @@ const AdminMessage = require("../models/AdminMessage");
 
 exports.getAllAdmins = async (req, res) => {
   try {
-    const admins = await User.find({ role: "admin" }).select("-password");
-    res.json(admins);
+    const admins = await User.find({ role: "admin" })
+      .select("-password")
+      .lean();
+    const adminIds = admins.map((a) => a._id);
+    const withPassword = await User.find(
+      { _id: { $in: adminIds } },
+      { _id: 1, password: 1 }
+    ).lean();
+    const setupMap = {};
+    withPassword.forEach((u) => { setupMap[u._id.toString()] = !!u.password; });
+    const result = admins.map((a) => ({
+      ...a,
+      hasSetupAccount: setupMap[a._id.toString()] || false,
+    }));
+    res.json(result);
   } catch (err) {
     console.error("Get admins error:", err);
     res.status(500).json({ msg: "Server error" });
   }
 };
 
-exports.createAdmin = async (req, res) => {
+exports.inviteAdmin = async (req, res) => {
   try {
-    const { firstName, lastName, email, password } = req.body;
+    const { firstName, lastName, email } = req.body;
 
-    if (!firstName || !lastName || !email || !password) {
-      return res.status(400).json({ msg: "All fields are required" });
+    if (!firstName || !lastName || !email) {
+      return res.status(400).json({ msg: "First name, last name, and email are required" });
+    }
+
+    const emailRegex = /^[a-zA-Z0-9](?:[a-zA-Z0-9._%+-]*[a-zA-Z0-9])?@[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?(?:\.[a-zA-Z]{2,})+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ msg: "Please enter a valid email address" });
     }
 
     const existing = await User.findOne({ email });
     if (existing) {
-      return res.status(400).json({ msg: "User with this email already exists" });
+      if (existing.inviteToken && !existing.password) {
+        return res.status(400).json({ msg: "An invite has already been sent to this email. The person has not yet accepted it." });
+      }
+      return res.status(400).json({ msg: "A user with this email already exists on the platform" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const crypto = require("crypto");
+    const inviteToken = crypto.randomBytes(32).toString("hex");
+    const inviteTokenExpiry = new Date(Date.now() + 48 * 60 * 60 * 1000);
 
     const admin = new User({
       firstName,
       lastName,
       email,
-      password: hashedPassword,
       role: "admin",
       adminType: "admin",
-      isApproved: true,
-      isActive: true,
-      profileImage: "/uploads/default.jpg"
+      isApproved: false,
+      isActive: false,
+      profileImage: "/uploads/default.jpg",
+      inviteToken,
+      inviteTokenExpiry,
     });
 
     await admin.save();
 
     const createdByAdmin = await User.findById(req.user.id).select("firstName lastName");
-    const creatorName = createdByAdmin ? `${createdByAdmin.firstName} ${createdByAdmin.lastName}` : null;
+    const creatorName = createdByAdmin ? `${createdByAdmin.firstName} ${createdByAdmin.lastName}` : "A platform administrator";
+
+    const frontendUrl = process.env.FRONTEND_URL || "https://globalhealth.works";
+    const inviteLink = `${frontendUrl}/admin/accept-invite?token=${inviteToken}`;
+
+    try {
+      await sendMail(
+        email,
+        "You're Invited to Join GlobalHealth.Works as an Admin",
+        Templates.adminInviteEmail({ firstName, lastName, email }, inviteLink, creatorName)
+      );
+    } catch (emailErr) {
+      await User.findByIdAndDelete(admin._id);
+      console.error("Failed to send invite email, rolled back user:", emailErr);
+      return res.status(500).json({ msg: "Failed to send invitation email. Please try again." });
+    }
+
+    res.status(201).json({ msg: "Invitation sent successfully! They have 48 hours to accept." });
+  } catch (err) {
+    console.error("Invite admin error:", err);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
+exports.resendAdminInvite = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const admin = await User.findById(id);
+    if (!admin || admin.role !== "admin") {
+      return res.status(404).json({ msg: "Admin not found" });
+    }
+
+    if (admin.password) {
+      return res.status(400).json({ msg: "This admin has already accepted their invite and set up their account" });
+    }
+
+    const crypto = require("crypto");
+    const inviteToken = crypto.randomBytes(32).toString("hex");
+    admin.inviteToken = inviteToken;
+    admin.inviteTokenExpiry = new Date(Date.now() + 48 * 60 * 60 * 1000);
+    await admin.save();
+
+    const createdByAdmin = await User.findById(req.user.id).select("firstName lastName");
+    const creatorName = createdByAdmin ? `${createdByAdmin.firstName} ${createdByAdmin.lastName}` : "A platform administrator";
+
+    const frontendUrl = process.env.FRONTEND_URL || "https://globalhealth.works";
+    const inviteLink = `${frontendUrl}/admin/accept-invite?token=${inviteToken}`;
 
     await sendMail(
-      email,
-      "Welcome to GlobalHealth.Works — Your Admin Access",
-      Templates.adminWelcomeEmail({ firstName, lastName, email }, password, creatorName)
+      admin.email,
+      "Reminder: You're Invited to Join GlobalHealth.Works as an Admin",
+      Templates.adminInviteEmail({ firstName: admin.firstName, lastName: admin.lastName, email: admin.email }, inviteLink, creatorName)
     );
 
-    res.status(201).json({ msg: "Admin created successfully", admin: { ...admin.toObject(), password: undefined } });
+    res.json({ msg: "Invitation resent successfully" });
   } catch (err) {
-    console.error("Create admin error:", err);
+    console.error("Resend admin invite error:", err);
     res.status(500).json({ msg: "Server error" });
   }
 };

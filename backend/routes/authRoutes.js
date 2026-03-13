@@ -15,6 +15,9 @@ const {
   forgotPassword,
   resendVerificationCode,
   resetPassword,
+  acceptAdminInvite,
+  validateInviteToken,
+  changePassword,
 } = require("../controllers/authController");
 
 const uploadAvatarFile = multer({ storage: multer.memoryStorage() });
@@ -42,6 +45,13 @@ router.post("/reset-password", resetPassword);
 router.get("/validate", authMiddleware, (req, res) => {
   res.json({ valid: true, userId: req.userId });
 });
+
+// Admin invite acceptance (public - no auth needed)
+router.get("/validate-invite", validateInviteToken);
+router.post("/accept-invite", acceptAdminInvite);
+
+// Change password (authenticated)
+router.put("/change-password", authMiddleware, changePassword);
 
 // Profile routes
 router.get("/me", authMiddleware, getMe);

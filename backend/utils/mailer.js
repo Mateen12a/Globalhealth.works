@@ -1295,6 +1295,118 @@ const Templates = {
       `,
     }),
 
+  adminInviteEmail: (admin, inviteLink, invitedBy) =>
+    emailLayout({
+      title: "You're Invited to Join GlobalHealth.Works",
+      preheader: `${invitedBy} has invited you to join GlobalHealth.Works as an administrator`,
+      content: `
+        <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+          <tr>
+            <td style="padding-bottom:28px;">
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                <tr>
+                  <td style="background:linear-gradient(135deg,${COLORS.primary} 0%,#2B4A8C 100%);border-radius:12px;padding:32px;text-align:center;">
+                    <p style="margin:0 0 8px;font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.7);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">ADMIN INVITATION</p>
+                    <h2 style="margin:0;font-size:26px;font-weight:700;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">Hello, ${admin.firstName}!</h2>
+                    <p style="margin:12px 0 0;font-size:15px;color:rgba(255,255,255,0.85);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">You've been invited to join the admin team.</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding-bottom:24px;">
+              <p style="margin:0 0 16px;font-size:15px;color:${COLORS.textDark};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">Hi <strong>${admin.firstName} ${admin.lastName}</strong>,</p>
+              <p style="margin:0;font-size:15px;color:${COLORS.textLight};line-height:1.6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                <strong style="color:${COLORS.textDark};">${invitedBy}</strong> has invited you to join <strong style="color:${COLORS.primary};">GlobalHealth.Works</strong> as an Administrator. 
+                Click the button below to set up your password and activate your account.
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding-bottom:24px;">
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#FFF7ED;border:1px solid #FED7AA;border-radius:10px;">
+                <tr>
+                  <td style="padding:16px 20px;">
+                    <p style="margin:0;font-size:14px;color:#9A3412;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                      <strong>&#9200; This invitation expires in 48 hours.</strong> Please accept it before then or ask the admin team to resend it.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="text-align:center;padding-bottom:28px;">
+              <!--[if mso]>
+              <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${inviteLink}" style="height:50px;v-text-anchor:middle;width:260px;" arcsize="16%" strokecolor="${COLORS.primary}" fillcolor="${COLORS.primary}">
+                <w:anchorlock/>
+                <center style="color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:700;">Accept Invitation</center>
+              </v:roundrect>
+              <![endif]-->
+              <!--[if !mso]><!-->
+              <a href="${inviteLink}" style="display:inline-block;padding:15px 44px;background-color:${COLORS.primary};color:#ffffff;text-decoration:none;border-radius:10px;font-weight:700;font-size:16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;letter-spacing:0.3px;">Accept Invitation &rarr;</a>
+              <!--<![endif]-->
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding-bottom:28px;">
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:12px;">
+                <tr>
+                  <td style="padding:20px 24px;">
+                    <p style="margin:0 0 12px;font-size:14px;font-weight:700;color:#1D4ED8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">&#128737; As an Admin, You Will Be Able To</p>
+                    <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                      <tr><td style="padding:4px 0;"><p style="margin:0;font-size:14px;color:#1E3A8A;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">&#10003;&nbsp; Review and approve/reject user registrations</p></td></tr>
+                      <tr><td style="padding:4px 0;"><p style="margin:0;font-size:14px;color:#1E3A8A;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">&#10003;&nbsp; Manage platform tasks and proposals</p></td></tr>
+                      <tr><td style="padding:4px 0;"><p style="margin:0;font-size:14px;color:#1E3A8A;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">&#10003;&nbsp; Monitor platform analytics and growth</p></td></tr>
+                      <tr><td style="padding:4px 0;"><p style="margin:0;font-size:14px;color:#1E3A8A;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">&#10003;&nbsp; Handle user feedback and reports</p></td></tr>
+                      <tr><td style="padding:4px 0;"><p style="margin:0;font-size:14px;color:#1E3A8A;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">&#10003;&nbsp; Communicate via the admin messaging system</p></td></tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding-bottom:24px;">
+              <p style="margin:0;font-size:13px;color:${COLORS.textLight};line-height:1.5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                If the button doesn't work, copy and paste this link into your browser:<br>
+                <a href="${inviteLink}" style="color:${COLORS.primary};word-break:break-all;">${inviteLink}</a>
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td>
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#FEF3C7;border:1px solid #FDE68A;border-radius:10px;">
+                <tr>
+                  <td style="padding:16px 20px;">
+                    <p style="margin:0;font-size:13px;color:#92400E;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                      <strong>&#128274; Security Notice:</strong> If you did not expect to receive this invitation, please disregard this email or contact the platform team at <a href="mailto:admin@globalhealth.works" style="color:#92400E;">admin@globalhealth.works</a>.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding-top:28px;">
+              <p style="margin:0;font-size:14px;color:${COLORS.textLight};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                Best regards,<br>
+                <strong style="color:${COLORS.textDark};">The GlobalHealth.Works Team</strong>
+              </p>
+            </td>
+          </tr>
+        </table>
+      `,
+    }),
+
   adminWelcomeEmail: (admin, temporaryPassword, createdBy) =>
     emailLayout({
       title: "Welcome to the GlobalHealth.Works Admin Team",
@@ -1439,6 +1551,93 @@ const Templates = {
 
           <tr>
             <td style="padding-top:28px;">
+              <p style="margin:0;font-size:14px;color:${COLORS.textLight};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                Best regards,<br>
+                <strong style="color:${COLORS.textDark};">The GlobalHealth.Works Team</strong>
+              </p>
+            </td>
+          </tr>
+        </table>
+      `,
+    }),
+
+  adminInviteAcceptedNotification: (newAdmin, recipientAdmin) =>
+    emailLayout({
+      title: "New Admin Has Joined the Team",
+      preheader: `${newAdmin.firstName} ${newAdmin.lastName} has accepted their admin invitation and is now active`,
+      content: `
+        <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+          <tr>
+            <td style="padding-bottom:28px;">
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                <tr>
+                  <td style="background:linear-gradient(135deg,${COLORS.success} 0%,#059669 100%);border-radius:12px;padding:32px;text-align:center;">
+                    <p style="margin:0 0 8px;font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.7);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">TEAM UPDATE</p>
+                    <h2 style="margin:0;font-size:26px;font-weight:700;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">New Admin Joined!</h2>
+                    <p style="margin:12px 0 0;font-size:15px;color:rgba(255,255,255,0.85);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">Your team just got stronger.</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding-bottom:24px;">
+              <p style="margin:0 0 16px;font-size:15px;color:${COLORS.textDark};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">Hi <strong>${recipientAdmin.firstName}</strong>,</p>
+              <p style="margin:0;font-size:15px;color:${COLORS.textLight};line-height:1.6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                Great news! <strong style="color:${COLORS.textDark};">${newAdmin.firstName} ${newAdmin.lastName}</strong> has accepted their admin invitation and has successfully set up their account on <strong style="color:${COLORS.primary};">GlobalHealth.Works</strong>.
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding-bottom:28px;">
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:${COLORS.bgLight};border:1px solid ${COLORS.border};border-radius:12px;">
+                <tr>
+                  <td style="padding:24px;">
+                    <p style="margin:0 0 16px;font-size:14px;font-weight:700;color:${COLORS.textDark};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">&#128100; New Team Member Details</p>
+                    <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                      <tr>
+                        <td style="padding:8px 0;border-bottom:1px solid ${COLORS.border};">
+                          <p style="margin:0;font-size:13px;color:${COLORS.textLight};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">Name</p>
+                          <p style="margin:4px 0 0;font-size:15px;font-weight:600;color:${COLORS.textDark};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">${newAdmin.firstName} ${newAdmin.lastName}</p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding:8px 0;border-bottom:1px solid ${COLORS.border};">
+                          <p style="margin:0;font-size:13px;color:${COLORS.textLight};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">Email</p>
+                          <p style="margin:4px 0 0;font-size:15px;font-weight:600;color:${COLORS.textDark};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">${newAdmin.email}</p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding:8px 0;">
+                          <p style="margin:0;font-size:13px;color:${COLORS.textLight};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">Role</p>
+                          <p style="margin:4px 0 0;font-size:15px;font-weight:600;color:${COLORS.primary};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">Administrator</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding-bottom:24px;">
+              <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;">
+                <tr>
+                  <td style="padding:16px 20px;">
+                    <p style="margin:0;font-size:14px;color:#1D4ED8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+                      <strong>&#128161; Tip:</strong> You can view and manage all admins from the <strong>Admin Management</strong> page in your dashboard.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding-top:16px;">
               <p style="margin:0;font-size:14px;color:${COLORS.textLight};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
                 Best regards,<br>
                 <strong style="color:${COLORS.textDark};">The GlobalHealth.Works Team</strong>
