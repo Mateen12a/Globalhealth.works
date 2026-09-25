@@ -1,7 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react-swc'
 import tailwindcss from '@tailwindcss/vite'
-import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -9,14 +8,16 @@ export default defineConfig({
     react(),
     tailwindcss()
   ],
-  resolve: {
-    alias: {
-      '@assets': path.resolve(__dirname, '../attached_assets'),
-    },
+  // VITE_API_URL is inlined at build/dev time. Default to '' (same-origin,
+  // uses the /api proxy in dev) so an unset variable can never produce
+  // 'undefined/api/...' requests in the served bundle.
+  define: {
+    'import.meta.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL ?? ''),
   },
   server: {
     host: '0.0.0.0',
-    port: 5000,
+    port: Number(process.env.PORT) || 5000,
+    strictPort: true,
     allowedHosts: true,
     proxy: {
       '/api': {

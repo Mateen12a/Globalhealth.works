@@ -1,0 +1,11 @@
+{
+  "name": "recruitment-office-game",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The Recruitment Office — a narrative browser game about health workforce migration.",
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "build": "node scripts/build.mjs"
+  }
+}

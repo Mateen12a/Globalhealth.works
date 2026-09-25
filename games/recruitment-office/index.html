@@ -1,0 +1,619 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Recruitment Office</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root{
+    --ink:#1a1c1a;
+    --paper:#e8e4d9;
+    --paper2:#dcd7c8;
+    --teal:#006893;
+    --amber:#f9b517;
+    --red:#a8321f;
+    --green:#4a7c44;
+    --line:#bcb6a4;
+    --shadow:rgba(40,38,30,.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--paper);
+    background-image:
+      repeating-linear-gradient(0deg,transparent,transparent 27px,rgba(40,38,30,.04) 28px),
+      radial-gradient(circle at 20% 10%, rgba(0,104,147,.05), transparent 60%);
+    color:var(--ink);
+    font-family:'Newsreader',Georgia,serif;
+    display:flex;justify-content:center;
+    padding:24px 16px;
+    min-height:100vh;
+  }
+  .frame{
+    width:100%;max-width:780px;
+    background:var(--paper2);
+    border:1px solid var(--line);
+    box-shadow:0 18px 50px var(--shadow);
+    position:relative;
+  }
+  .frame::before{
+    content:"";position:absolute;inset:0;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='80' height='80' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E");
+    pointer-events:none;mix-blend-mode:multiply;
+  }
+
+  header{
+    background:var(--teal);
+    color:var(--paper);
+    padding:18px 26px 16px;
+    display:flex;justify-content:space-between;align-items:flex-end;
+    border-bottom:3px solid var(--amber);
+  }
+  header h1{font-size:21px;font-weight:600;letter-spacing:.3px;line-height:1.1}
+  header .sub{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;
+    letter-spacing:1.5px;text-transform:uppercase;opacity:.8;margin-top:4px;
+  }
+  header .week{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;text-align:right;letter-spacing:1px;
+  }
+  header .week b{font-size:20px;display:block;letter-spacing:0}
+  .back{
+    display:inline-block;margin-top:10px;
+    font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1.5px;
+    text-transform:uppercase;color:var(--paper);opacity:.75;text-decoration:none;
+    transition:opacity .2s;
+  }
+  .back:hover{opacity:1;text-decoration:underline}
+
+  .meters{
+    display:grid;grid-template-columns:repeat(2,1fr);
+    gap:1px;background:var(--line);border-bottom:1px solid var(--line);
+  }
+  .meter{background:var(--paper2);padding:11px 16px}
+  .meter .lab{
+    font-family:'IBM Plex Mono',monospace;font-size:9.5px;
+    letter-spacing:1.3px;text-transform:uppercase;
+    display:flex;justify-content:space-between;color:#5a564a;
+  }
+  .meter .lab .v{color:var(--ink);font-weight:600}
+  .bar{height:7px;background:#c9c3b2;margin-top:6px;position:relative;overflow:hidden}
+  .bar span{position:absolute;inset:0;width:50%;transition:width .7s cubic-bezier(.4,0,.2,1),background .4s}
+  .meter.hidden{display:none}
+
+  .stage{padding:26px 30px 12px}
+  .act-tag{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:2px;
+    text-transform:uppercase;color:var(--teal);margin-bottom:14px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .act-tag::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  /* ---- IMAGE SLOT ----------------------------------------------------
+     Collapsed to nothing by default. It only takes up space and draws a
+     border once a card actually has artwork (i.e. .has-art is applied).
+     Set a card's `art:` field to a file path and the slot appears.
+     -------------------------------------------------------------------- */
+  .plate{display:none}
+  .plate.has-art{
+    display:block;
+    width:100%;aspect-ratio:3/2;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-bottom:none;
+    position:relative;overflow:hidden;
+  }
+  .plate.has-art img{width:100%;height:100%;object-fit:cover;display:block}
+
+  .memo{
+    background:var(--paper);border:1px solid var(--line);
+    padding:20px 22px;position:relative;
+    box-shadow:2px 3px 0 rgba(40,38,30,.06);
+  }
+  .memo .stamp{
+    position:absolute;top:14px;right:16px;
+    font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1.5px;
+    border:1.5px solid var(--red);color:var(--red);
+    padding:3px 8px;transform:rotate(-6deg);opacity:.7;text-transform:uppercase;
+  }
+  .memo .from{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;
+    color:#6a665a;text-transform:uppercase;margin-bottom:12px;padding-right:70px;
+  }
+  .memo .title{font-size:18px;font-weight:600;margin-bottom:10px;line-height:1.25}
+  .memo .body{font-size:15.5px;line-height:1.6;color:#34322c}
+  .memo .body em{color:var(--teal);font-style:italic}
+
+  .choices{margin-top:18px;display:flex;flex-direction:column;gap:10px;padding-bottom:14px}
+  .choice{
+    text-align:left;background:var(--paper);border:1px solid var(--line);
+    padding:13px 16px;cursor:pointer;
+    font-family:'Newsreader',serif;font-size:15px;color:var(--ink);
+    transition:all .18s;line-height:1.4;
+  }
+  .choice:hover{border-color:var(--teal);background:#eef0ec;transform:translateX(3px)}
+  .choice .frame-tag{
+    display:block;font-family:'IBM Plex Mono',monospace;font-size:9.5px;
+    letter-spacing:1px;color:var(--teal);text-transform:uppercase;margin-bottom:4px;
+  }
+
+  .feedback{padding:18px 30px 0;min-height:10px}
+  .feedback .res{
+    background:var(--paper);border-left:3px solid var(--teal);
+    padding:14px 18px;font-size:14.5px;line-height:1.55;color:#34322c;animation:fade .4s;
+  }
+  .feedback .deltas{
+    margin-top:10px;display:flex;flex-wrap:wrap;gap:8px;
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.5px;
+  }
+  .delta{padding:3px 8px;border:1px solid var(--line);background:var(--paper2)}
+  .delta.up{color:var(--green);border-color:var(--green)}
+  .delta.down{color:var(--red);border-color:var(--red)}
+
+  /* ---- Staffing consequence alert ---- */
+  .alert{
+    margin-top:12px;padding:13px 16px 14px;
+    font-size:14.5px;line-height:1.55;color:#34322c;
+    background:#f3e8e2;border:1px solid #d9b8ad;
+    border-left:4px solid var(--red);
+    animation:fade .45s;position:relative;
+  }
+  .alert-tag{
+    display:block;font-family:'IBM Plex Mono',monospace;
+    font-size:9.5px;letter-spacing:1.4px;text-transform:uppercase;
+    color:var(--red);margin-bottom:6px;font-weight:600;
+  }
+  .alert-strained{
+    background:#f4efe0;border-left-color:var(--amber);
+  }
+  .alert-strained .alert-tag{color:#a07d0a}
+  .alert-serious{
+    background:#f3e6df;border-left-color:#c0521f;
+  }
+  .alert-serious .alert-tag{color:#c0521f}
+  .alert-critical{
+    background:#f1ded9;border-left-color:var(--red);
+  }
+  .next{
+    margin:16px 30px 26px;width:calc(100% - 60px);
+    background:var(--teal);color:var(--paper);border:none;padding:13px;
+    font-family:'IBM Plex Mono',monospace;font-size:11px;
+    letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:background .2s;
+  }
+  .next:hover{background:#00506f}
+
+  .ending{padding:34px 32px 40px;animation:fade .6s}
+  .ending .plate.has-art{margin-bottom:22px;border:1px solid var(--line)}
+  .ending .v{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:2px;
+    text-transform:uppercase;color:var(--red);margin:0 0 16px;
+  }
+  .ending h2{font-size:25px;font-weight:600;line-height:1.2;margin-bottom:16px}
+  .ending p{font-size:16px;line-height:1.65;color:#34322c;margin-bottom:14px}
+  .ending .restart{
+    margin-top:18px;background:var(--ink);color:var(--paper);border:none;
+    padding:13px 24px;font-family:'IBM Plex Mono',monospace;font-size:11px;
+    letter-spacing:2px;text-transform:uppercase;cursor:pointer;
+  }
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .hide{display:none}
+</style>
+</head>
+<body>
+<div class="frame">
+  <header>
+    <div>
+      <h1>The Recruitment Office</h1>
+      <div class="sub">Dept. of Health &middot; Northmere &middot; Workforce Division</div>
+      <a class="back" href="/">&larr; GlobalHealth.Works</a>
+    </div>
+    <div class="week">WEEK<b id="week">01</b></div>
+  </header>
+
+  <div class="meters" id="meters">
+    <div class="meter" data-k="staffing"><div class="lab"><span>Health Service Staffing</span><span class="v">50</span></div><div class="bar"><span></span></div></div>
+    <div class="meter" data-k="treasury"><div class="lab"><span>Treasury Approval</span><span class="v">50</span></div><div class="bar"><span></span></div></div>
+    <div class="meter" data-k="ethics"><div class="lab"><span>International Standing</span><span class="v">50</span></div><div class="bar"><span></span></div></div>
+    <div class="meter" data-k="goodwill"><div class="lab"><span>Nzuri Goodwill</span><span class="v">50</span></div><div class="bar"><span></span></div></div>
+    <div class="meter career hidden" data-k="career"><div class="lab"><span>Career Standing</span><span class="v">50</span></div><div class="bar"><span></span></div></div>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="act-tag" id="acttag">Act I &middot; The Reasonable Officer</div>
+
+    <!-- IMAGE SLOT: stays collapsed until a card has `art` set -->
+    <div class="plate" id="plate"></div>
+
+    <div class="memo" id="memo">
+      <div class="stamp">Internal</div>
+      <div class="from" id="from"></div>
+      <div class="title" id="title"></div>
+      <div class="body" id="bodytext"></div>
+    </div>
+    <div class="choices" id="choices"></div>
+  </div>
+
+  <div class="feedback" id="feedback"></div>
+  <button class="next hide" id="next">Proceed &rsaquo;&rsaquo;</button>
+</div>
+
+<script>
+/* =========================================================================
+   ART PIPELINE
+   -------------------------------------------------------------------------
+   Each card has an `art` field. Leave it null to show the placeholder plate
+   with the designer brief. When artwork arrives, set:
+       art: "art/01-rota-board.svg"
+   Spec for the designer: 3:2 aspect ratio, single-colour line art on
+   transparent background, no human figures. Ink colour #006893 or #1a1c1a.
+   ========================================================================= */
+
+const M = {staffing:50, treasury:50, ethics:50, goodwill:50, career:50};
+let week = 1, idx = 0, careerRevealed = false;
+
+const cards = [
+  /* ---------------- ACT I ---------------- */
+  {act:1,
+   art:null,
+   artBrief:"Plate 01",
+   artDesc:"An empty staff rota board. Gaps in the grid where names should be.",
+   from:"FROM: Director General, Workforce Division",
+   title:"Welcome to the Division.",
+   body:"Our health service is short ten thousand nurses. Domestic training will not close the gap for a decade. There is a willing pool of qualified professionals in <em>Nzuri</em>, a partner nation with whom we share deep historic ties. Your remit: keep our wards staffed, lawfully and ethically. How will you open?",
+   options:[
+     {label:"Launch a 'managed migration partnership' with Nzuri's government.", frame:"Bilateral Cooperation",
+      res:"Nzuri's ministry signs. Recruiters mobilise within the month. The first cohort is confirmed for departure.",
+      d:{staffing:+12, treasury:+6, goodwill:+5, ethics:-4}},
+     {label:"Invest in domestic training instead; recruit abroad only as a stopgap.", frame:"Self-Sufficiency",
+      res:"The programme is funded. The first graduates will qualify in four years. The Treasury notes the cost and the wait.",
+      d:{staffing:+2, treasury:-10, ethics:+8, goodwill:+2}},
+     {label:"Adopt the voluntary Code of Practice and recruit within it.", frame:"Ethical Recruitment",
+      res:"The Code bars active recruitment from listed countries. Nzuri is not currently listed. Recruitment proceeds within the guidance.",
+      d:{staffing:+8, treasury:+3, ethics:+3, goodwill:+1}},
+   ]},
+
+  {act:1,
+   art:null,
+   artBrief:"Plate 02",
+   artDesc:"A ledger, two columns. One filled in. The other blank.",
+   from:"FROM: Treasury Special Adviser",
+   title:"On the matter of cost.",
+   body:"Training a domestic nurse costs Northmere a great deal. A trained Nzurian nurse arrives <em>fully qualified</em>, at no cost to us. Nzuri paid for that education. The Treasury would like you to lean into the efficiency.",
+   options:[
+     {label:"Expand recruitment aggressively. The savings are real.", frame:"Fiscal Prudence",
+      res:"Intake doubles. Northmere records the saving against its training budget. The corresponding cost to Nzuri appears in no ledger held here.",
+      d:{staffing:+10, treasury:+12, ethics:-8, goodwill:-4}},
+     {label:"Hold steady. Quietly fund a few training places in Nzuri in return.", frame:"Reciprocity",
+      res:"The fund covers one college wing in Nzuri. That college's next three graduating cohorts apply to Northmere.",
+      d:{staffing:+4, treasury:-3, ethics:+5, goodwill:+6}},
+     {label:"Ask whether we are draining Nzuri's own health system.", frame:"Due Diligence",
+      res:"The question is logged. A review is commissioned, to report in eighteen months. Recruitment continues in the interim.",
+      d:{staffing:0, treasury:-2, ethics:+6, goodwill:+3}},
+   ]},
+
+  {act:1,
+   art:null,
+   artBrief:"Plate 03",
+   artDesc:"A lectern and a microphone. No speaker present.",
+   from:"FROM: Communications Office",
+   title:"The press are asking.",
+   body:"A journalist wants to know whether Northmere is 'poaching' nurses from a poorer country. We need a line. The nurses, for their part, are sending money home and are glad of the work.",
+   options:[
+     {label:"'These are individuals exercising their freedom to migrate.'", frame:"Personal Choice",
+      res:"The line runs. Coverage reframes the story around individual choice. No follow-up is filed.",
+      d:{ethics:-5, treasury:+4, staffing:+3, goodwill:+2}},
+     {label:"'We follow a strict ethical Code of Practice.'", frame:"Compliance",
+      res:"Accurate. The Code is voluntary, and its exemptions are not raised. The journalist files and moves on.",
+      d:{ethics:-2, treasury:+2, staffing:+2}},
+     {label:"Concede the tension publicly and promise a review.", frame:"Transparency",
+      res:"The admission is quoted widely. Advocacy groups welcome it. The Treasury asks who cleared the line.",
+      d:{ethics:+9, treasury:-7, goodwill:+4}},
+   ]},
+
+  /* ---------------- ACT II ---------------- */
+  {act:2,
+   art:null,
+   artBrief:"Plate 04",
+   artDesc:"A hospital corridor. An empty nurses' station.",
+   from:"FROM: Embassy, Nzuri",
+   title:"Nzuri is starting to notice.",
+   body:"Nzuri's own hospitals now report rota gaps. Their health minister, the same one who signed the partnership, is under domestic pressure. He asks, privately, that Northmere slow down.",
+   options:[
+     {label:"Decline politely. Our wards come first.", frame:"National Interest",
+      res:"Recruitment continues at pace. The minister's office stops returning the embassy's calls.",
+      d:{staffing:+8, treasury:+5, goodwill:-15, ethics:-6}},
+     {label:"Offer a 'training corridor': send some nurses back to teach.", frame:"Circular Migration",
+      res:"The corridor is announced. Fourteen nurses return in the first year. Two thousand arrive in Northmere over the same period.",
+      d:{staffing:+2, goodwill:+8, ethics:+4, treasury:-4}},
+     {label:"Agree to a temporary cap on recruitment from Nzuri.", frame:"Restraint",
+      res:"The cap holds. Nzuri's ministry is publicly appreciative. Your staffing projections are revised downward and the Treasury requests an explanation.",
+      d:{staffing:-10, goodwill:+12, ethics:+8, treasury:-8}},
+   ]},
+
+  {act:2,
+   art:null,
+   artBrief:"Plate 05",
+   artDesc:"A document. A name hovering just above the line, not yet on it.",
+   from:"FROM: WHO Monitoring (cc: Comms)",
+   title:"Nzuri may be added to the safeguarding list.",
+   body:"The international safeguarding list, the one that bars active recruitment, is being revised. Nzuri may soon appear on it. If it does, your single largest pipeline closes overnight.",
+   options:[
+     {label:"Front-load recruitment now, before the list changes.", frame:"Timely Action",
+      res:"Two years of planned intake is processed in a single quarter. Staffing rises sharply. The surge is later cited in the monitoring report.",
+      d:{staffing:+14, treasury:+8, ethics:-14, goodwill:-10}},
+     {label:"Lobby quietly to keep Nzuri off the list.", frame:"Diplomatic Engagement",
+      res:"Representations are made through the usual channels. Nzuri does not appear on this cycle's list. The decision is not minuted.",
+      d:{staffing:+6, treasury:+3, ethics:-9, goodwill:-3}},
+     {label:"Accept the listing and start winding the pipeline down.", frame:"Good Faith",
+      res:"The pipeline narrows over two quarters. Ward vacancies rise. Your Director General begins copying his own director into your correspondence.",
+      d:{staffing:-12, treasury:-9, ethics:+14, goodwill:+10}},
+   ]},
+
+  {act:2,
+   art:null,
+   artBrief:"Plate 06",
+   artDesc:"Two office chairs. One turned away.",
+   from:"FROM: Director General (marked PERSONAL)",
+   reveal:true,
+   title:"A word about your future.",
+   body:"\"You're doing well. The numbers are good and the right people have noticed you. Keep the wards full and there's a grade promotion in this for you. Don't,\" he adds lightly, \"overthink the Nzuri business.\"",
+   bodyFn:function(M){
+     if(M.staffing < 45){
+       // Wards are visibly short: the offer becomes a warning dressed as concern.
+       return "\"Let's be frank. The vacancy numbers aren't where they need to be, and people have noticed. I know your reasons, and between us I even respect them. But reasons don't staff wards. Fill them, and there's still a grade promotion in this for you. Keep this up,\" he adds, not unkindly, \"and there won't be.\"";
+     }
+     // Wards are full: the warm version.
+     return "\"You're doing well. The numbers are good and the right people have noticed you. Keep the wards full and there's a grade promotion in this for you. Don't,\" he adds lightly, \"overthink the Nzuri business.\"";
+   },
+   options:[
+     {label:"Take the hint. Deliver the numbers.", frame:"Pragmatism",
+      res:"Your name is added to the promotion list. The Nzuri file is not discussed again.",
+      d:{staffing:+9, treasury:+8, career:+15, ethics:-10, goodwill:-6}},
+     {label:"Thank him, but keep raising the ethical questions.", frame:"Conscience",
+      res:"The promotion is not mentioned again. Your submissions continue to be acknowledged, and continue not to be actioned.",
+      d:{career:-14, ethics:+12, goodwill:+5, treasury:-5}},
+     {label:"Say nothing. Keep your head down and your options open.", frame:"Survival",
+      res:"You neither commit nor object. The programme continues at its existing pace.",
+      d:{career:+4, staffing:+4, ethics:-4}},
+   ]},
+
+  /* ---------------- ACT III ---------------- */
+  {act:3,
+   art:null,
+   artBrief:"Plate 07",
+   artDesc:"A rising graph line, seen from behind, through frosted glass.",
+   from:"FROM: The Lancet (forwarded by Comms)",
+   title:"\"The Quiet Collapse of Nzuri's Health System.\"",
+   body:"A study lands. Maternal mortality in Nzuri has risen for the first time in twenty years. The authors draw a line to the nurse exodus, and they name Northmere's programme. <em>Your</em> programme.",
+   options:[
+     {label:"Dispute the methodology. Correlation, not causation.", frame:"Rigour",
+      res:"Comms issues the rebuttal. It is carried in two outlets. The study's findings are not withdrawn.",
+      d:{ethics:-12, career:+4, goodwill:-10, treasury:+2}},
+     {label:"Announce a compensation and 'health-system strengthening' fund.", frame:"Partnership",
+      res:"The fund is announced at a value of forty million. Nzuri's health ministry estimates the replacement cost of its lost workforce at nine times that.",
+      d:{ethics:+6, goodwill:+8, treasury:-10, staffing:-2}},
+     {label:"Recommend pausing the entire Nzuri programme.", frame:"Accountability",
+      res:"The recommendation is submitted in writing and enters the departmental record. It is not adopted.",
+      d:{ethics:+16, goodwill:+14, staffing:-16, treasury:-14, career:-18}},
+   ]},
+
+  {act:3,
+   art:null,
+   artBrief:"Plate 08",
+   artDesc:"A half-drafted resignation letter beside a keyboard.",
+   from:"FROM: Yourself",
+   title:"You consider leaving.",
+   body:"You draft a resignation. Then you read it back. The wards still need staffing; if not you, someone less careful. Your family depends on the salary. The programme would continue without you, exactly as it is. So what, precisely, would leaving achieve?",
+   options:[
+     {label:"Stay. Better a careful hand on the lever than a careless one.", frame:"Harm Reduction",
+      res:"You delete the draft. You remain in post, and the programme remains under your administration.",
+      d:{career:+6, staffing:+4, ethics:-6}},
+     {label:"Resign, and say publicly why.", frame:"Exit & Voice",
+      res:"Your resignation is reported for four days. A successor is appointed within the fortnight. The recruitment schedule is unchanged.",
+      d:{career:-20, ethics:+18, goodwill:+8}},
+     {label:"Stay, and start quietly building the off-ramp from within.", frame:"The Long Game",
+      res:"You remain, and begin redirecting the programme by degrees. The work is slow, and its results will not be visible for years.",
+      d:{career:-4, ethics:+9, goodwill:+6, staffing:-3, treasury:-4}},
+   ]},
+];
+
+/* ---- ENDINGS: thresholds tightened so CAPTURED is the default outcome ---- */
+const endings = {
+  career: {
+    art:null, brief:"Plate 09", desc:"A letter of commendation in an open personnel file.",
+    v:"Outcome", h:"You were promoted.",
+    p:"The wards stayed full. The right people noticed. You never gave an order that was cruel, never signed anything unlawful, and were never once required to think of yourself as the villain of this. Nzuri's health system is quieter now. Your file records only that the Division met its targets."
+  },
+  unfinished: {
+    art:null, brief:"Plate 10", desc:"A submission in a departmental file, closed.",
+    v:"Outcome", h:"Your position was noted, and did not prevail.",
+    p:"You slowed the pipeline. You made the argument in writing, more than once, and it entered the record. The wards you were responsible for ran short. Your standing in the Division did not recover. Whether your restraint preserved anything in Nzuri was never measured, and no mechanism existed that would have measured it."
+  },
+  sustained: {
+    art:null, brief:"Plate 11", desc:"A set of scales, level, held by a hand out of frame.",
+    v:"Outcome", h:"Nothing failed. Nothing was resolved.",
+    p:"The wards stayed staffed and Nzuri stayed standing. You held competing priorities in balance for as long as you held the post, through sustained effort and close attention. The wider arrangements were unchanged when you left. What you achieved rested on you personally, and may not outlast your presence at the desk."
+  },
+  captured: {
+    art:null, brief:"Plate 12", desc:"An empty desk. An in-tray, still full.",
+    v:"Outcome", h:"Nobody decided this. It happened anyway.",
+    p:"No single choice was monstrous. Each was defensible in the week it was made, and each was made for reasons that would survive an audit. Together they hollowed out a health system, and the process was recorded throughout as partnership, as compliance, as individual choice. You were never ordered to do harm. You were given targets, and you met them."
+  }
+};
+
+function resolveEnding(M){
+  const {staffing:s, treasury:t, ethics:e, goodwill:g, career:c} = M;
+  // TIGHTENED: 'Sustained' now requires genuinely holding all four high.
+  if(e >= 62 && g >= 62 && s >= 55 && t >= 45) return endings.sustained;
+  // Clear institutional success at clear ethical cost.
+  if(s >= 60 && e < 38) return endings.career;
+  // Clear ethical stand, clearly paid for.
+  if(e >= 68 && s < 42) return endings.unfinished;
+  // Everything else: the default.
+  return endings.captured;
+}
+
+const meterEls = {};
+document.querySelectorAll('.meter').forEach(m=>{meterEls[m.dataset.k]=m;});
+
+function clamp(v){return Math.max(0,Math.min(100,v));}
+function colorFor(k,v){
+  if(k==='ethics'||k==='goodwill') return v<35?'#a8321f':v<60?'#f9b517':'#4a7c44';
+  if(k==='career') return '#f9b517';
+  return v<25?'#a8321f':v<50?'#f9b517':'#006893';
+}
+function renderMeters(){
+  for(const k in M){
+    const el=meterEls[k]; if(!el) continue;
+    el.querySelector('.v').textContent=Math.round(M[k]);
+    const bar=el.querySelector('.bar span');
+    bar.style.width=M[k]+'%';
+    bar.style.background=colorFor(k,M[k]);
+  }
+}
+
+/* Renders artwork only if the object has an `art` path.
+   With art === null the slot stays collapsed and invisible. */
+function renderPlate(el, obj){
+  if(obj && obj.art){
+    el.classList.add('has-art');
+    el.innerHTML='<img src="'+obj.art+'" alt="">';
+  } else {
+    el.classList.remove('has-art');
+    el.innerHTML='';
+  }
+}
+
+function renderCard(){
+  const c=cards[idx];
+  document.getElementById('week').textContent=String(week).padStart(2,'0');
+  document.getElementById('acttag').innerHTML=
+    c.act===1?'Act I &middot; The Reasonable Officer':
+    c.act===2?'Act II &middot; The Meters Diverge':'Act III &middot; The Reckoning';
+  if(c.reveal && !careerRevealed){
+    careerRevealed=true;
+    // Apply any career penalties banked while the meter was still hidden.
+    if(bankedCareerHit){
+      M.career=clamp(M.career+bankedCareerHit);
+      bankedCareerHit=0;
+    }
+    meterEls.career.classList.remove('hidden');
+    renderMeters();
+  }
+  renderPlate(document.getElementById('plate'), c);
+  document.getElementById('from').textContent=c.from;
+  document.getElementById('title').textContent=c.title;
+  document.getElementById('bodytext').innerHTML = c.bodyFn ? c.bodyFn(M) : c.body;
+  const ch=document.getElementById('choices');ch.innerHTML='';
+  c.options.forEach(o=>{
+    const b=document.createElement('button');b.className='choice';
+    b.innerHTML='<span class="frame-tag">'+o.frame+'</span>'+o.label;
+    b.onclick=()=>choose(o);ch.appendChild(b);
+  });
+  document.getElementById('feedback').innerHTML='';
+  document.getElementById('next').classList.add('hide');
+}
+
+/* ---- STAFFING CONSEQUENCE LAYER --------------------------------------
+   When wards run short, the department notices. This is a cost the player
+   absorbs, not a nudge to relent: the reaction is reported, and at the
+   serious and critical bands it also nicks Career Standing, because in a
+   real department presiding over emptying wards damages an official
+   regardless of how principled the reason. Each band fires once, the
+   first time staffing crosses into it, so it doesn't nag every turn.
+   --------------------------------------------------------------------- */
+const staffingBands = [
+  {key:"critical", at:25, careerHit:-8,
+   text:"A ward closes to new admissions and it reaches the papers and HSM (the Health Service Magazine). The Director General's office asks, in writing, for an account of how staffing was allowed to reach this point."},
+  {key:"serious", at:35, careerHit:-5,
+   text:"The Treasury Special Adviser circulates the vacancy rate to the executive board. Two wards are now running on agency cover. Your name is brought up when the figures are mentioned."},
+  {key:"strained", at:45, careerHit:0,
+   text:"The Director General's office requests a staffing recovery plan by month end. It is informally noted, without much comment or direct attribution, that vacancies have risen during your watch."},
+];
+let bandsFired = {};
+let bankedCareerHit = 0;   // penalties incurred before Career Standing is visible
+
+function staffingConsequence(){
+  const s = M.staffing;
+  // Find the most severe band we've newly entered.
+  for(const band of staffingBands){        // ordered critical -> strained
+    if(s < band.at && !bandsFired[band.key]){
+      bandsFired[band.key] = true;
+      if(band.careerHit){
+        if(careerRevealed){
+          M.career = clamp(M.career + band.careerHit);
+        } else {
+          bankedCareerHit += band.careerHit;  // apply the moment the meter appears
+        }
+      }
+      return band;
+    }
+  }
+  return null;
+}
+
+function choose(o){
+  for(const k in o.d){M[k]=clamp(M[k]+o.d[k]);}
+  const consequence = staffingConsequence();
+  renderMeters();
+  document.getElementById('choices').innerHTML='';
+  let deltas='';
+  const nm={staffing:'Staffing',treasury:'Treasury',ethics:'Int. Standing',
+            goodwill:'Nzuri Goodwill',career:'Career'};
+  for(const k in o.d){
+    if(o.d[k]===0)continue;
+    const up=o.d[k]>0;
+    deltas+='<span class="delta '+(up?'up':'down')+'">'+nm[k]+' '+(up?'+':'')+o.d[k]+'</span>';
+  }
+  // If a consequence applied a career hit, surface it as an extra delta chip.
+  if(consequence && consequence.careerHit && careerRevealed){
+    deltas+='<span class="delta down">Career '+consequence.careerHit+'</span>';
+  }
+  let html='<div class="res">'+o.res+'<div class="deltas">'+deltas+'</div></div>';
+  if(consequence){
+    html+='<div class="alert alert-'+consequence.key+'">'+
+          '<span class="alert-tag">Staffing &middot; '+consequence.key+'</span>'+
+          consequence.text+'</div>';
+  }
+  document.getElementById('feedback').innerHTML=html;
+  document.getElementById('next').classList.remove('hide');
+}
+
+document.getElementById('next').onclick=()=>{
+  idx++;week+=3;
+  if(idx>=cards.length){showEnding();return;}
+  renderCard();
+  document.getElementById('stage').scrollIntoView({behavior:'smooth',block:'start'});
+};
+
+function showEnding(){
+  const E=resolveEnding(M);
+  document.getElementById('stage').classList.add('hide');
+  document.getElementById('feedback').classList.add('hide');
+  document.getElementById('next').classList.add('hide');
+
+  const div=document.createElement('div');
+  div.className='ending';
+  div.innerHTML=
+    '<div class="plate" id="eplate"></div>'+
+    '<div class="v">'+E.v+'</div>'+
+    '<h2>'+E.h+'</h2>'+
+    '<p>'+E.p+'</p>'+
+    '<p style="font-size:13.5px;color:#6a665a;font-style:italic">Final position &mdash; Staffing '+Math.round(M.staffing)+
+    ' &middot; Treasury '+Math.round(M.treasury)+' &middot; International Standing '+Math.round(M.ethics)+
+    ' &middot; Nzuri Goodwill '+Math.round(M.goodwill)+
+    (careerRevealed?' &middot; Career Standing '+Math.round(M.career):'')+'</p>'+
+    '<button class="restart" onclick="location.reload()">Play Again</button>';
+  document.querySelector('.frame').appendChild(div);
+
+  renderPlate(document.getElementById('eplate'), E);
+}
+
+renderMeters();
+renderCard();
+</script>
+</body>
+</html>

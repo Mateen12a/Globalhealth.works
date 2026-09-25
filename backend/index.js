@@ -55,7 +55,7 @@ const authLimiter = rateLimit({
 });
 
 const app = express();
-app.set('trust proxy', 1); // Trust first proxy for rate limiting behind Replit's proxy
+app.set('trust proxy', 1); // Trust first proxy for rate limiting behind a reverse proxy
 const server = http.createServer(app);
 
 // CORS configuration - build allowed origins list
@@ -161,6 +161,10 @@ app.use(helmet({
   contentSecurityPolicy: false, // Disable CSP for SPA compatibility
   crossOriginEmbedderPolicy: false,
   crossOriginResourcePolicy: { policy: "cross-origin" }, // Allow images/files to load from different origins
+  // The dev preview panel embeds the app in an iframe on a different origin,
+  // which X-Frame-Options: SAMEORIGIN would block ("refused to connect").
+  // Keep clickjacking protection in production; disable it in development.
+  frameguard: process.env.NODE_ENV === "production" ? { action: "sameorigin" } : false,
 }));
 
 // Compression
@@ -312,8 +316,13 @@ io.on("connection", (socket) => {
 // ==================== MONGO ====================
 const User = require("./models/User");
 
+if (!process.env.MONGO_URI) {
+  console.warn("MONGO_URI not configured — running without database (sandbox mode).");
+} else {
 mongoose
-  .connect(process.env.MONGO_URI)
+  .connect(process.env.MONGO_URI, {
+    serverSelectionTimeoutMS: 8000,
+  })
   .then(async () => {
     console.log("MongoDB connected");
     const result = await User.updateMany(
@@ -333,6 +342,7 @@ mongoose
     }
   })
   .catch((err) => console.error("MongoDB error:", err));
+}
 
 // Health check route
 app.get("/api/health", (req, res) => res.json({ status: "ok", timestamp: new Date().toISOString() }));

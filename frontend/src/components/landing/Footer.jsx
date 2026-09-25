@@ -11,6 +11,14 @@ export default function Footer() {
           <p className="text-gray-300 text-sm md:text-base">
             Where Global Health Problems Meet Global Health Solutions.
           </p>
+          <a
+            href="/recruitment-office/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block mt-4 text-sm md:text-base font-medium text-blue-300 hover:text-white hover:underline transition-colors"
+          >
+            Play The Recruitment Office &rarr;
+          </a>
         </div>
 
         {/* Legal */}

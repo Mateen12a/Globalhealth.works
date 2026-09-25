@@ -257,9 +257,9 @@ export default function DashboardLayout({ children, role: propRole, title }) {
   return (
     <div className="min-h-screen flex bg-[var(--color-bg)]">
 
-      {/* Desktop sidebar — animated width */}
+      {/* Desktop sidebar — animated width, pinned to viewport so Log out stays visible on long pages */}
       <motion.aside
-        className="hidden md:flex flex-shrink-0 relative"
+        className="hidden md:flex flex-shrink-0 self-start sticky top-0 h-screen"
         animate={{ width: collapsed ? 64 : 256 }}
         transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
       >

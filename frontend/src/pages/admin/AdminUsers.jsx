@@ -756,13 +756,17 @@ export default function AdminUsers({ embedded = false }) {
     </div>
   );
 
+  // NOTE: UsersContent/LoadingState are defined inside this component, so they
+  // must be CALLED as functions (not rendered as <UsersContent />). Rendering
+  // them as JSX components gives them a new type every render, which remounts
+  // the whole table (and the search input) on every keystroke and drops focus.
   if (embedded) {
-    return loading ? <LoadingState /> : <UsersContent />;
+    return loading ? LoadingState() : UsersContent();
   }
 
   return (
     <DashboardLayout role="Admin" title="Manage Users">
-      {loading ? <LoadingState /> : <UsersContent />}
+      {loading ? LoadingState() : UsersContent()}
     </DashboardLayout>
   );
 }

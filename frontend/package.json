@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "predev": "node scripts/copy-game.mjs",
+    "prebuild": "node scripts/copy-game.mjs",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"

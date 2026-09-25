@@ -1,0 +1,13 @@
+{
+  "name": "global-health-works",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Global Health Works — marketplace connecting global health problems with global health solutions.",
+  "scripts": {
+    "dev": "node scripts/dev-all.mjs",
+    "build:frontend": "npm run build --prefix frontend",
+    "build:game": "npm run build --prefix games/recruitment-office",
+    "start:backend": "npm start --prefix backend",
+    "lint:frontend": "npm run lint --prefix frontend"
+  }
+}
